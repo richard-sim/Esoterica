@@ -9,6 +9,8 @@
 #include "System/Time/Timers.h"
 #include "System/Algorithm/TopologicalSort.h"
 
+#include "System/Types/Arrays.h"
+
 #include <eastl/sort.h>
 #include <fstream>
 #include <iostream>

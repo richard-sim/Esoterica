@@ -8,7 +8,9 @@
                     "Name": "FloorMesh",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_mesh": "data://Demo/RenderDemo/floor/floor.msh"
+                        "m_name": "FloorMesh",
+                        "m_transform": "0.000000,-0.000000,0.000000,0.000000,0.000000,-0.222681,1.000000",
+                        "m_mesh": "data://demo/renderdemo/floor/floor.msh"
                     }
                 }
             ]
@@ -20,9 +22,10 @@
                     "Name": "MatBallMeshBronze",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_materialOverrides/0": "data://Demo/RenderDemo/materials/bronze.mtrl",
-                        "m_transform": "0.000000,-0.000000,0.000100,-0.000000,0.000000,2.000000,2.000000,2.000000,2.000000",
-                        "m_mesh": "data://Demo/RenderDemo/matball/matball.msh"
+                        "m_name": "MatBallMeshBronze",
+                        "m_transform": "0.000000,-0.000000,0.000100,-0.000000,0.000000,2.000000,2.000000",
+                        "m_materialOverrides/0": "data://demo/renderdemo/materials/bronze.mtrl",
+                        "m_mesh": "data://demo/renderdemo/matball/matball.msh"
                     }
                 }
             ]
@@ -34,9 +37,10 @@
                     "Name": "MatBallMeshCopper",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_materialOverrides/0": "data://Demo/RenderDemo/materials/copper.mtrl",
-                        "m_transform": "0.000000,-0.000000,0.000100,5.000000,0.000000,2.000000,2.000000,2.000000,2.000000",
-                        "m_mesh": "data://Demo/RenderDemo/matball/matball.msh"
+                        "m_name": "MatBallMeshCopper",
+                        "m_transform": "0.000000,-0.000000,0.000100,5.000000,0.000000,2.000000,2.000000",
+                        "m_materialOverrides/0": "data://demo/renderdemo/materials/copper.mtrl",
+                        "m_mesh": "data://demo/renderdemo/matball/matball.msh"
                     }
                 }
             ]
@@ -48,9 +52,10 @@
                     "Name": "MatBallMeshOldIron",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_materialOverrides/0": "data://Demo/RenderDemo/materials/old_iron.mtrl",
-                        "m_transform": "0.000000,-0.000000,0.000100,10.000000,0.000000,2.000000,2.000000,2.000000,2.000000",
-                        "m_mesh": "data://Demo/RenderDemo/matball/matball.msh"
+                        "m_name": "MatBallMeshOldIron",
+                        "m_transform": "0.000000,-0.000000,0.000100,10.000000,0.000000,2.000000,2.000000",
+                        "m_materialOverrides/0": "data://demo/renderdemo/materials/old_iron.mtrl",
+                        "m_mesh": "data://demo/renderdemo/matball/matball.msh"
                     }
                 }
             ]
@@ -62,9 +67,10 @@
                     "Name": "MatBallMeshScratchedGold",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_materialOverrides/0": "data://Demo/RenderDemo/materials/scratched_gold.mtrl",
-                        "m_transform": "0.000000,-0.000000,0.000100,15.000000,0.000000,2.000000,2.000000,2.000000,2.000000",
-                        "m_mesh": "data://Demo/RenderDemo/matball/matball.msh"
+                        "m_name": "MatBallMeshScratchedGold",
+                        "m_transform": "0.000000,-0.000000,0.000100,15.000000,0.000000,2.000000,2.000000",
+                        "m_materialOverrides/0": "data://demo/renderdemo/materials/scratched_gold.mtrl",
+                        "m_mesh": "data://demo/renderdemo/matball/matball.msh"
                     }
                 }
             ]
@@ -76,8 +82,9 @@
                     "Name": "GlobalEnvMapComp",
                     "TypeData": {
                         "TypeID": "EE::Render::GlobalEnvironmentMapComponent",
-                        "m_skyboxTexture": "data://Demo/RenderDemo/matball/skybox.cbmp",
-                        "m_skyboxRadianceTexture": "data://Demo/RenderDemo/matball/skybox.cbmp",
+                        "m_name": "GlobalEnvMapComp",
+                        "m_skyboxTexture": "data://demo/renderdemo/matball/skybox.cbmp",
+                        "m_skyboxRadianceTexture": "data://demo/renderdemo/matball/skybox.cbmp",
                         "m_skyboxIntensity": "2.000000"
                     }
                 }
@@ -90,9 +97,10 @@
                     "Name": "DirectionalLight",
                     "TypeData": {
                         "TypeID": "EE::Render::DirectionalLightComponent",
-                        "m_shadowed": "True",
-                        "m_transform": "135.000000,-0.000000,0.000000,0.000000,0.000000,10.000000,1.000000,1.000000,1.000000",
-                        "m_intensity": "30.000000"
+                        "m_name": "DirectionalLight",
+                        "m_transform": "135.000000,-0.000000,0.000000,0.000000,0.000000,10.000000,1.000000",
+                        "m_intensity": "30.000000",
+                        "m_shadowed": "True"
                     }
                 }
             ]
@@ -104,8 +112,9 @@
                     "Name": "SpotLight",
                     "TypeData": {
                         "TypeID": "EE::Render::SpotLightComponent",
+                        "m_name": "SpotLight",
+                        "m_transform": "135.000000,-0.000000,0.000000,12.000000,-5.000000,5.000000,1.000000",
                         "m_color": "FFFF00FF",
-                        "m_transform": "135.000000,-0.000000,0.000000,12.000000,-5.000000,5.000000,1.000000,1.000000,1.000000",
                         "m_intensity": "7500.000000",
                         "m_innerUmbraAngle": "40.000000",
                         "m_radius": "100.000000"
@@ -120,8 +129,9 @@
                     "Name": "SpotLight",
                     "TypeData": {
                         "TypeID": "EE::Render::SpotLightComponent",
+                        "m_name": "SpotLight",
+                        "m_transform": "135.000000,-0.000000,0.000000,3.000000,-5.000000,5.000000,1.000000",
                         "m_color": "FF00FFFF",
-                        "m_transform": "135.000000,-0.000000,0.000000,3.000000,-5.000000,5.000000,1.000000,1.000000,1.000000",
                         "m_intensity": "7500.000000",
                         "m_innerUmbraAngle": "40.000000",
                         "m_radius": "50.000000"
@@ -136,8 +146,9 @@
                     "Name": "PointLight",
                     "TypeData": {
                         "TypeID": "EE::Render::PointLightComponent",
+                        "m_name": "PointLight",
+                        "m_transform": "0.000000,-0.000000,0.000100,3.000000,5.000000,5.000000,1.000000",
                         "m_color": "1AFF00FF",
-                        "m_transform": "0.000000,-0.000000,0.000100,3.000000,5.000000,5.000000,1.000000,1.000000,1.000000",
                         "m_intensity": "7500.000000",
                         "m_radius": "10.000000"
                     }
@@ -151,8 +162,9 @@
                     "Name": "PointLight",
                     "TypeData": {
                         "TypeID": "EE::Render::PointLightComponent",
+                        "m_name": "PointLight",
+                        "m_transform": "0.000000,-0.000000,0.000100,12.000000,5.000000,5.000000,1.000000",
                         "m_color": "FF0000FF",
-                        "m_transform": "0.000000,-0.000000,0.000100,12.000000,5.000000,5.000000,1.000000,1.000000,1.000000",
                         "m_intensity": "7500.000000",
                         "m_radius": "10.000000"
                     }

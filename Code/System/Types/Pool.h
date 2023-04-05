@@ -90,7 +90,7 @@ namespace EE
 
     private:
 
-        int32_t                                               m_firstFreeBufferIdx = InvalidIndex;
+        int32_t                                             m_firstFreeBufferIdx = InvalidIndex;
         TInlineVector<Buffer, MinimumPoolSize>              m_pool;
     };
 }

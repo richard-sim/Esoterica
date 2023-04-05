@@ -81,8 +81,8 @@ namespace EE::Math
     private:
 
         TVector<Node>       m_nodes;
-        int32_t               m_rootNodeIdx = InvalidIndex;
-        int32_t               m_freeNodeIdx = 0;
+        int32_t             m_rootNodeIdx = InvalidIndex;
+        int32_t             m_freeNodeIdx = 0;
     };
 }
 

@@ -11,7 +11,7 @@ namespace EE::Network
 {
     struct NetworkState
     {
-        int64_t                                   m_logTimeZero = 0;
+        int64_t                                 m_logTimeZero = 0;
         TInlineVector<ServerConnection*, 2>     m_serverConnections;
         TInlineVector<ClientConnection*, 2>     m_clientConnections;
     };

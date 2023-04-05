@@ -80,7 +80,7 @@ namespace EE::Log
             //-------------------------------------------------------------------------
 
             entry.m_category = pCategory;
-            entry.m_sourceInfo = ( pSourceInfo  != nullptr ) ? pSourceInfo : String();
+            entry.m_sourceInfo = ( pSourceInfo != nullptr ) ? pSourceInfo : String();
             entry.m_filename = pFilename;
             entry.m_lineNumber = pLineNumber;
             entry.m_severity = severity;

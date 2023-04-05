@@ -62,7 +62,7 @@ namespace EE::Render
 
         m_resolution.m_x = iniFile.GetIntOrDefault( "Render:ResolutionX", 1280 );
         m_resolution.m_y = iniFile.GetIntOrDefault( "Render:ResolutionX", 720 );
-        m_refreshRate = iniFile.GetFloatOrDefault( "Render:ResolutionX", 60 );
+        m_refreshRate = iniFile.GetFloatOrDefault( "Render:RefreshRate", 60 );
         m_isFullscreen = iniFile.GetBoolOrDefault( "Render:Fullscreen", false );
 
         //-------------------------------------------------------------------------

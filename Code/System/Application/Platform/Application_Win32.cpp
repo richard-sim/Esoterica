@@ -410,7 +410,7 @@ namespace EE
         IniFile layoutIni;
         if ( layoutIni.IsValid() )
         {
-            WINDOWPLACEMENT wndPlacement;
+            WINDOWPLACEMENT wndPlacement = {};
             wndPlacement.length = sizeof( WINDOWPLACEMENT );
             bool const result = GetWindowPlacement( m_windowHandle, &wndPlacement );
 

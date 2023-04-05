@@ -44,6 +44,6 @@ namespace EE
 
         float                     m_values[HistorySize];
         float                     m_average;
-        int32_t                     m_nextFreeIdx;
+        int32_t                   m_nextFreeIdx;
     };
 }

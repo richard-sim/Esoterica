@@ -108,32 +108,33 @@ int main( int argc, char *argv[] )
         //-------------------------------------------------------------------------
 
         //String f( "SDA" );
-        ResourceID f( "data://test.dat" );
-        //Wah const f;
-        /*THashMap<String, String> f;
-        f.insert( TPair<String, String>( "1.", "A" ) );
-        f.insert( TPair<String, String>( "2.", "B" ) );
-        f.insert( TPair<String, String>( "3.", "C" ) );*/
+        //ResourceID f( "data://test.dat" );
+        Wah f;
+        f.id = StringID( "Hello!" );
+        //THashMap<String, String> f;
+        //f.insert( TPair<String, String>( "1.", "A" ) );
+        //f.insert( TPair<String, String>( "2.", "B" ) );
+        //f.insert( TPair<String, String>( "3.", "C" ) );
 
         Serialization::BinaryOutputArchive out;
         out << f;
-        out.WriteToFile( "D:\\test.srl" );
+        out.WriteToFile( "D:\\coding\\mine\\Cpp\\Esoterica\\Build\\Test\\test.srl" );
 
         std::cout << std::endl << std::endl;
 
         //String t;
-        ResourceID t, t2;
+        //ResourceID t, t2;
         //THashMap<String, String> t;
-        //Wah t;
+        Wah t;
         //t.Reset();
 
-        Serialization::BinaryInputArchive in;
-        in.ReadFromData( out.GetBinaryData(), out.GetBinaryDataSize() );
-        in << t;
+        //Serialization::BinaryInputArchive in;
+        //in.ReadFromData( out.GetBinaryData(), out.GetBinaryDataSize() );
+        //in << t;
 
         Serialization::BinaryInputArchive in2;
-        in2.ReadFromFile( "D:\\test.srl" );
-        in2 << t2;
+        in2.ReadFromFile( "D:\\coding\\mine\\Cpp\\Esoterica\\Build\\Test\\test.srl" );
+        in2 << t;
 
         //-------------------------------------------------------------------------
 

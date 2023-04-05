@@ -36,7 +36,7 @@ namespace EE
         inline void UpdateViewDimensions( Float2 const& viewDimensions ) { m_viewVolume.SetViewDimensions( viewDimensions ); }
         inline Math::ViewVolume const& GetViewVolume() const { return m_viewVolume; }
 
-        inline void GetDepthRange() const { m_viewVolume.GetDepthRange(); }
+        inline FloatRange GetDepthRange() const { return m_viewVolume.GetDepthRange(); }
         inline void SetDepthRange( FloatRange depthRange ) { m_viewVolume.SetDepthRange( depthRange ); }
 
         // Set the horizontal field of view
