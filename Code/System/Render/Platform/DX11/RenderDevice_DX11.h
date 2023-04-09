@@ -1,9 +1,11 @@
 #pragma once
-#ifdef _WIN32
+#if defined(_WIN32) && defined(EE_DX11)
 
 #include "RenderContext_DX11.h"
 #include "System/Types/Color.h"
 #include "System/Threading/Threading.h"
+
+#include "System/Memory/Pointers.h"
 
 #include <D3D11.h>
 
@@ -15,12 +17,15 @@ namespace EE { class IniFile; }
 
 namespace EE::Render
 {
+    // temporary
+    namespace Backend { class VulkanInstance; }
+
     class EE_SYSTEM_API RenderDevice
     {
 
     public:
 
-        RenderDevice() = default;
+        RenderDevice();
         ~RenderDevice();
 
         //-------------------------------------------------------------------------
@@ -116,6 +121,8 @@ namespace EE::Render
         IDXGIFactory*               m_pFactory = nullptr;
         RenderWindow                m_primaryWindow;
         RenderContext               m_immediateContext;
+
+        TSharedPtr<Backend::VulkanInstance>    m_pVkInstance;
 
         // Lock to allow loading resources while rendering across different threads
         Threading::RecursiveMutex   m_deviceMutex;

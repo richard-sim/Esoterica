@@ -23,7 +23,7 @@
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
                         "m_name": "MatBallMeshBronze",
-                        "m_transform": "0.000000,-0.000000,0.000100,-0.000000,0.000000,2.000000,2.000000",
+                        "m_transform": "0.000000,-0.000000,0.000100,-4.792348,0.000000,2.000000,2.000000",
                         "m_materialOverrides/0": "data://demo/renderdemo/materials/bronze.mtrl",
                         "m_mesh": "data://demo/renderdemo/matball/matball.msh"
                     }

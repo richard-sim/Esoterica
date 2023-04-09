@@ -5,7 +5,7 @@
 #include "RenderAPI.h"
 
 #ifdef _WIN32
-#include "Platform/RenderDevice_DX11.h"
+#include "Platform/DX11/RenderDevice_DX11.h"
 #else
-#error 
+#error Invalid render backend
 #endif

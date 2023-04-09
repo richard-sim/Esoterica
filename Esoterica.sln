@@ -72,6 +72,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Esoterica.System", "Code\Sy
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{C6737ED1-BFAF-4119-A0B6-92CEBC0FA505}"
 	ProjectSection(SolutionItems) = preProject
+		Code\PropertySheets\Esoterica.DX11.props = Code\PropertySheets\Esoterica.DX11.props
+		Code\PropertySheets\Esoterica.Vulkan.props = Code\PropertySheets\Esoterica.Vulkan.props
 		Code\PropertySheets\Esoterica.Win32.props = Code\PropertySheets\Esoterica.Win32.props
 	EndProjectSection
 EndProject

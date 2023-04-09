@@ -1,9 +1,14 @@
 #include "RenderDevice_DX11.h"
-#include "TextureLoader_Win32.h"
 #include "System/Render/RenderCoreResources.h"
 #include "System/IniFile.h"
 #include "System/Profiling.h"
 #include "System/Log.h"
+
+#ifdef _WIN32
+#include "System/Render/Platform/Windows/TextureLoader_Win32.h"
+#endif
+
+#include "System/Render/Platform/Vulkan/Backend/VulkanInstance.h"
 
 //-------------------------------------------------------------------------
 
@@ -38,6 +43,11 @@ namespace EE::Render
     }
 
     //-------------------------------------------------------------------------
+
+    RenderDevice::RenderDevice()
+    {
+        m_pVkInstance = MakeShared<Backend::VulkanInstance>();
+    }
 
     RenderDevice::~RenderDevice()
     {

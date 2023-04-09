@@ -33,7 +33,7 @@ namespace EE::Render
         TextureAddressMode      m_addressModeV = TextureAddressMode::Wrap;
         TextureAddressMode      m_addressModeW = TextureAddressMode::Wrap;
         Float4                  m_borderColor = Float4(0.0f);
-        uint32_t                  m_maxAnisotropyValue = 1;
+        uint32_t                m_maxAnisotropyValue = 1;
         float                   m_LODBias = 0;
         float                   m_minLOD = -FLT_MAX;
         float                   m_maxLOD = FLT_MAX;

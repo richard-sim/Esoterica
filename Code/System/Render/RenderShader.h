@@ -55,7 +55,7 @@ namespace EE
         protected:
 
             ShaderHandle                        m_shaderHandle;
-            Blob                      m_byteCode;
+            Blob                                m_byteCode;
             TVector<RenderBuffer>               m_cbuffers;
             TVector<ResourceBinding>            m_resourceBindings;
             PipelineStage                       m_pipelineStage;
