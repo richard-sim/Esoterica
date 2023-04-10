@@ -364,6 +364,9 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1789,6 +1792,9 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

@@ -59,8 +59,11 @@
     <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h" />
     <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanQueue.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
     <ClInclude Include="Render\Platform\Vulkan\RenderContext_Vulkan.h" />
     <ClInclude Include="Render\Platform\Vulkan\RenderDevice_Vulkan.h" />
     <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h" />
@@ -537,8 +540,11 @@
     <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp" />
     <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanQueue.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\RenderContext_Vulkan.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\RenderDevice_Vulkan.cpp" />
     <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp" />

@@ -2,6 +2,8 @@
 #ifdef EE_VULKAN
 
 #include "System/Types/Arrays.h"
+#include "System/Memory/Pointers.h"
+#include "VulkanPhysicalDevice.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -33,22 +35,37 @@ namespace EE::Render
 
 			~VulkanInstance();
 
+			// utility
 			//-------------------------------------------------------------------------
 
+			// Get process address of a function pointer.
+			// If the function pointer doesn't exist, return nullptr.
+			void* GetProcAddress( char const* pFuncName ) const;
 
+			// Enumerate all usable physical devices.
+			TVector<VulkanPhysicalDevice> EnumeratePhysicalDevice() const;
+
+			inline bool IsEnableDebug() const { return m_enableDebug; }
 
 			//-------------------------------------------------------------------------
 
-			inline TVector<VkLayerProperties>const& GetLayerProps() { return m_collectInfos.m_instanceLayerProps; }
-			inline TVector<VkExtensionProperties>const& GetExtensionProps() { return m_collectInfos.m_instanceExtensionProps; }
+			inline TVector<VkLayerProperties> const& GetLayerProps() const { return m_collectInfos.m_instanceLayerProps; }
+			inline TVector<VkExtensionProperties> const& GetExtensionProps() const { return m_collectInfos.m_instanceExtensionProps; }
+
 		private:
 
 			bool CheckAndCollectInstanceLayerProps( InitConfig const& config );
 			bool CheckAndCollectInstanceExtensionProps( InitConfig const& config );
-			void CreateInstance( InitConfig const& config );
+			bool CreateInstance( InitConfig const& config );
+			bool CreateDebugMessageer();
 
 		private:
+
+			friend class VulkanSurface;
 			
+			bool									m_enableDebug;
+			VkDebugUtilsMessengerEXT				m_pDebugUtilsMessager = nullptr;
+
 			VkInstance								m_pHandle;
 			CollectedInfo							m_collectInfos;
 		};

@@ -9,6 +9,9 @@
 #endif
 
 #include "System/Render/Platform/Vulkan/Backend/VulkanInstance.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanSurface.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanDevice.h"
 
 //-------------------------------------------------------------------------
 
@@ -47,6 +50,18 @@ namespace EE::Render
     RenderDevice::RenderDevice()
     {
         m_pVkInstance = MakeShared<Backend::VulkanInstance>();
+        m_pVkSurface = MakeShared<Backend::VulkanSurface>( m_pVkInstance );
+
+        auto out = m_pVkInstance->EnumeratePhysicalDevice();
+         
+        for ( auto& e : out )
+        {
+            e.CalculatePickScore( m_pVkSurface );
+        }
+
+        auto physicalDevice = Backend::PickMostSuitablePhysicalDevice( out );
+
+        m_pVkDevice = MakeShared<Backend::VulkanDevice>( m_pVkInstance, physicalDevice );
     }
 
     RenderDevice::~RenderDevice()

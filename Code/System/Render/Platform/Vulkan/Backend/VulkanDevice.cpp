@@ -1,0 +1,194 @@
+#ifdef EE_VULKAN
+#include "VulkanDevice.h"
+#include "VulkanCommonSettings.h"
+#include "VulkanInstance.h"
+#include "System/Log.h"
+
+namespace EE::Render
+{
+	namespace Backend
+	{
+		VulkanDevice::InitConfig VulkanDevice::InitConfig::GetDefault( bool enableDebug )
+		{
+			InitConfig config;
+			config.m_requiredLayers = GetEngineVulkanDeviceRequiredLayers( enableDebug );
+			config.m_requiredExtensions = GetEngineVulkanDeviceRequiredExtensions();
+			return std::move( config );
+		}
+
+		//-------------------------------------------------------------------------
+
+		VulkanDevice::VulkanDevice( TSharedPtr<VulkanInstance> pInstance, VulkanPhysicalDevice pdDevice )
+			: VulkanDevice( InitConfig::GetDefault( pInstance->IsEnableDebug() ), pInstance, pdDevice )
+		{}
+
+		VulkanDevice::VulkanDevice( InitConfig config, TSharedPtr<VulkanInstance> pInstance, VulkanPhysicalDevice pdDevice )
+			: m_pInstance( pInstance ), m_physicalDevice( pdDevice )
+		{
+			EE_ASSERT( CheckAndCollectDeviceLayers( config ) );
+			EE_ASSERT( CheckAndCollectDeviceExtensions( config ) );
+
+			EE_ASSERT( CreateDevice( config ) );
+		}
+
+		VulkanDevice::~VulkanDevice()
+		{
+			EE_ASSERT( m_pHandle != nullptr );
+
+			vkDestroyDevice( m_pHandle, nullptr );
+			m_pHandle = nullptr;
+		}
+
+		//-------------------------------------------------------------------------
+
+		bool VulkanDevice::CheckAndCollectDeviceLayers( InitConfig const& config )
+		{
+			uint32_t layerCount = 0;
+			VK_SUCCEEDED( vkEnumerateDeviceLayerProperties( m_physicalDevice.m_pHandle, &layerCount, nullptr ) );
+
+			EE_ASSERT( layerCount > 0 );
+
+			TVector<VkLayerProperties> layerProps( layerCount );
+			VK_SUCCEEDED( vkEnumerateDeviceLayerProperties( m_physicalDevice.m_pHandle, &layerCount, layerProps.data() ) );
+			m_collectInfos.m_deviceLayerProps = layerProps;
+
+			for ( auto const& required : config.m_requiredLayers )
+			{
+				bool foundLayer = false;
+
+				for ( auto const& layer : layerProps )
+				{
+					if ( strcmp( required, layer.layerName ) == 0 )
+					{
+						foundLayer = true;
+						break;
+					}
+				}
+
+				if ( !foundLayer )
+				{
+					EE_LOG_ERROR( "Render", "Vulkan Backend", "Device layer not found: %s", required );
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		bool VulkanDevice::CheckAndCollectDeviceExtensions( InitConfig const& config )
+		{
+			uint32_t extCount = 0;
+			VK_SUCCEEDED( vkEnumerateDeviceExtensionProperties( m_physicalDevice.m_pHandle, nullptr, &extCount, nullptr ) );
+
+			EE_ASSERT( extCount > 0 );
+
+			TVector<VkExtensionProperties> extProps( extCount );
+			VK_SUCCEEDED( vkEnumerateDeviceExtensionProperties( m_physicalDevice.m_pHandle, nullptr, &extCount, extProps.data() ) );
+			m_collectInfos.m_deviceExtensionProps = extProps;
+
+			for ( auto const& required : config.m_requiredExtensions )
+			{
+				bool foundExt = false;
+
+				for ( auto const& ext : extProps )
+				{
+					if ( strcmp( required, ext.extensionName ) == 0 )
+					{
+						foundExt = true;
+						break;
+					}
+				}
+
+				if ( !foundExt )
+				{
+					EE_LOG_ERROR( "Render", "Vulkan Backend", "Device extension not found: %s", required );
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		bool VulkanDevice::CreateDevice( InitConfig const& config )
+		{
+			// device queue creation
+			//-------------------------------------------------------------------------
+
+			TVector<VkDeviceQueueCreateInfo> deviceQueueCIs = {};
+
+			float priorities[] = { 1.0f };
+
+			for ( auto const& qf : m_physicalDevice.m_queueFamilies )
+			{
+				if ( qf.IsGraphicQueue() )
+				{
+					VkDeviceQueueCreateInfo dqCI = {};
+					dqCI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+					dqCI.flags = VkFlags( 0 );
+					dqCI.pNext = nullptr;
+
+					dqCI.queueCount = 1;
+					dqCI.queueFamilyIndex = qf.m_index;
+					dqCI.pQueuePriorities = priorities;
+
+					deviceQueueCIs.push_back( dqCI );
+					break;
+				}
+			}
+
+			if ( deviceQueueCIs.empty() )
+			{
+				EE_LOG_ERROR( "Render", "Vulkan Backend", "Invalid physical device which not supports graphic queue!" );
+				return false;
+			}
+
+			// physical device features2 validation
+			//-------------------------------------------------------------------------
+
+			auto descriptor_indexing = VkPhysicalDeviceDescriptorIndexingFeaturesEXT{};
+			descriptor_indexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+
+			auto imageless_framebuffer = VkPhysicalDeviceImagelessFramebufferFeaturesKHR{};
+			imageless_framebuffer.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR;
+
+			auto buffer_address = VkPhysicalDeviceBufferDeviceAddressFeaturesEXT{};
+			buffer_address.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
+
+			// TODO: pNext chain
+			VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
+			physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+			physicalDeviceFeatures2.pNext = &descriptor_indexing;
+			descriptor_indexing.pNext = &imageless_framebuffer;
+			imageless_framebuffer.pNext = &buffer_address;
+
+			vkGetPhysicalDeviceFeatures2( m_physicalDevice.m_pHandle, &physicalDeviceFeatures2 );
+
+			EE_ASSERT( imageless_framebuffer.imagelessFramebuffer );
+			EE_ASSERT( descriptor_indexing.descriptorBindingPartiallyBound );
+			EE_ASSERT( buffer_address.bufferDeviceAddress );
+
+			// device creation
+			//-------------------------------------------------------------------------
+
+			VkDeviceCreateInfo deviceCI = {};
+			deviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			deviceCI.flags = VkFlags( 0 );
+			deviceCI.pNext = &physicalDeviceFeatures2;
+
+			deviceCI.pQueueCreateInfos = deviceQueueCIs.data();
+			deviceCI.queueCreateInfoCount = static_cast<uint32_t>( deviceQueueCIs.size() );
+
+			deviceCI.ppEnabledLayerNames = config.m_requiredLayers.data();
+			deviceCI.enabledLayerCount = static_cast<uint32_t>( config.m_requiredLayers.size() );
+			deviceCI.ppEnabledExtensionNames = config.m_requiredExtensions.data();
+			deviceCI.enabledExtensionCount = static_cast<uint32_t>( config.m_requiredExtensions.size() );
+
+			VK_SUCCEEDED( vkCreateDevice( m_physicalDevice.m_pHandle, &deviceCI, nullptr, &m_pHandle ) );
+
+			return true;
+		}
+	}
+}
+
+#endif

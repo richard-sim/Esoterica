@@ -12,7 +12,7 @@ namespace EE::Render
 		static VkBool32 DebugUtilsUserCallback( VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
 												VkDebugUtilsMessageTypeFlagsEXT             messageTypes,
 												const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-												void* pUserData )
+												void*										pUserData )
 		{
 			char const* messageTypeStr = "";
 			switch ( messageTypes )
@@ -71,14 +71,13 @@ namespace EE::Render
 		VulkanInstance::InitConfig VulkanInstance::InitConfig::GetDefault()
 		{
 			InitConfig config;
-			config.m_requiredLayers = GetVulkanInstanceRequiredLayers();
-			config.m_requiredExtensions = GetVulkanInstanceRequiredExtensions();
 			#ifdef EE_DEBUG
 			config.m_enableDebug = true;
 			#else
 			config.m_enableDebug = false;
 			#endif
-
+			config.m_requiredLayers = GetEngineVulkanInstanceRequiredLayers( config.m_enableDebug );
+			config.m_requiredExtensions = GetEngineVulkanInstanceRequiredExtensions();
 			return std::move(config);
 		}
 
@@ -89,17 +88,95 @@ namespace EE::Render
 		{}
 
 		VulkanInstance::VulkanInstance( InitConfig config )
+			: m_enableDebug( config.m_enableDebug )
 		{
 			// TODO: use volk
 			EE_ASSERT( CheckAndCollectInstanceLayerProps(config) );
 			EE_ASSERT( CheckAndCollectInstanceExtensionProps(config) );
 
-			CreateInstance( config );
+			EE_ASSERT( CreateInstance( config ) );
+			EE_ASSERT( CreateDebugMessageer() );
 		}
 
 		VulkanInstance::~VulkanInstance()
 		{
+			if ( m_enableDebug && m_pDebugUtilsMessager )
+			{
+				auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) GetProcAddress( "vkDestroyDebugUtilsMessengerEXT" );
+				EE_ASSERT( func != nullptr );
+
+				func( m_pHandle, m_pDebugUtilsMessager, nullptr );
+				m_pDebugUtilsMessager = nullptr;
+			}
+
+			EE_ASSERT( m_pHandle != nullptr );
+
 			vkDestroyInstance( m_pHandle, nullptr );
+			m_pHandle = nullptr;
+		}
+
+		//-------------------------------------------------------------------------
+
+		void* VulkanInstance::GetProcAddress( char const* pFuncName ) const
+		{
+			void* pAddr = vkGetInstanceProcAddr( m_pHandle, pFuncName );
+			if ( pAddr != nullptr )
+			{
+				return pAddr;
+			}
+			else
+			{
+				EE_LOG_ERROR("Render", "Vulkan Backend", "Failed to load vulkan func: %s", pFuncName);
+				return nullptr;
+			}
+		}
+
+		TVector<VulkanPhysicalDevice> VulkanInstance::EnumeratePhysicalDevice() const
+		{
+			uint32_t pdCount = 0;
+			VK_SUCCEEDED( vkEnumeratePhysicalDevices( m_pHandle, &pdCount, nullptr ) );
+
+			if ( pdCount == 0 )
+			{
+				EE_LOG_ERROR( "Render", "Vulkan Backend", "No suitable physical device found to render!" );
+				return TVector<VulkanPhysicalDevice> {};
+			}
+
+			auto pdDevices = TVector<VkPhysicalDevice>( pdCount );
+			VK_SUCCEEDED( vkEnumeratePhysicalDevices( m_pHandle, &pdCount, pdDevices.data() ) );
+
+			TVector<VulkanPhysicalDevice> out;
+
+			for ( uint32_t i = 0; i < pdCount; ++i )
+			{
+				auto const& pdDevice = pdDevices[i];
+
+				VkPhysicalDeviceFeatures pdFeatures = {};
+				vkGetPhysicalDeviceFeatures( pdDevice, &pdFeatures );
+
+				VkPhysicalDeviceProperties pdProps = {};
+				vkGetPhysicalDeviceProperties( pdDevice, &pdProps );
+
+				VkPhysicalDeviceMemoryProperties pdMemoryProps = {};
+				vkGetPhysicalDeviceMemoryProperties( pdDevice, &pdMemoryProps );
+
+				uint32_t queueCount = 0;
+				vkGetPhysicalDeviceQueueFamilyProperties( pdDevice, &queueCount, nullptr );
+				TVector<VkQueueFamilyProperties> queueProps( queueCount );
+				vkGetPhysicalDeviceQueueFamilyProperties( pdDevice, &queueCount, queueProps.data() );
+
+				auto& phyDevice = out.emplace_back( pdDevice );
+				phyDevice.m_features = pdFeatures;
+				phyDevice.m_props = pdProps;
+				phyDevice.m_memoryProps = pdMemoryProps;
+
+				for ( uint32_t qIndex = 0; qIndex < queueCount; ++qIndex )
+				{
+					phyDevice.m_queueFamilies.emplace_back( qIndex, queueProps[qIndex] );
+				}
+			}
+
+			return out;
 		}
 
 		//-------------------------------------------------------------------------
@@ -172,7 +249,7 @@ namespace EE::Render
 			return true;
 		}
 
-		void VulkanInstance::CreateInstance( InitConfig const& config )
+		bool VulkanInstance::CreateInstance( InitConfig const& config )
 		{
 			VkApplicationInfo appInfo = {};
 			appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -196,12 +273,27 @@ namespace EE::Render
 				instanceCI.pNext = (void*) &debugMessagerCreateInfo;
 			}
 
-			instanceCI.enabledLayerCount = 0;
-			instanceCI.ppEnabledLayerNames = nullptr;
-			instanceCI.enabledExtensionCount = 0;
-			instanceCI.ppEnabledExtensionNames = nullptr;
+			instanceCI.enabledLayerCount = static_cast<uint32_t>( config.m_requiredLayers.size() );
+			instanceCI.ppEnabledLayerNames = config.m_requiredLayers.data();
+			instanceCI.enabledExtensionCount = static_cast<uint32_t>( config.m_requiredExtensions.size() );;
+			instanceCI.ppEnabledExtensionNames = config.m_requiredExtensions.data();
 
 			VK_SUCCEEDED( vkCreateInstance( &instanceCI, nullptr, &m_pHandle ) );
+			return true;
+		}
+
+		bool VulkanInstance::CreateDebugMessageer()
+		{
+			if ( m_enableDebug )
+			{
+				auto debugMessagerCI = PopulateDebugMessageerCreateInfo();
+
+				auto func = (PFN_vkCreateDebugUtilsMessengerEXT)GetProcAddress( "vkCreateDebugUtilsMessengerEXT" );
+				EE_ASSERT( func != nullptr );
+
+				VK_SUCCEEDED( func( m_pHandle, &debugMessagerCI, nullptr, &m_pDebugUtilsMessager ) );
+			}
+			return true;
 		}
 	}
 }

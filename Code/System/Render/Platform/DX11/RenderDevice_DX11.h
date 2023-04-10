@@ -18,7 +18,12 @@ namespace EE { class IniFile; }
 namespace EE::Render
 {
     // temporary
-    namespace Backend { class VulkanInstance; }
+    namespace Backend
+    { 
+        class VulkanInstance;
+        class VulkanSurface;
+        class VulkanDevice;
+    }
 
     class EE_SYSTEM_API RenderDevice
     {
@@ -122,7 +127,10 @@ namespace EE::Render
         RenderWindow                m_primaryWindow;
         RenderContext               m_immediateContext;
 
+        // temporary
         TSharedPtr<Backend::VulkanInstance>    m_pVkInstance;
+        TSharedPtr<Backend::VulkanSurface>     m_pVkSurface;
+        TSharedPtr<Backend::VulkanDevice>     m_pVkDevice;
 
         // Lock to allow loading resources while rendering across different threads
         Threading::RecursiveMutex   m_deviceMutex;
