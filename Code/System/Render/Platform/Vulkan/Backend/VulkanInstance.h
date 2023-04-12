@@ -30,13 +30,20 @@ namespace EE::Render
 				TVector<VkExtensionProperties>		m_instanceExtensionProps;
 			};
 
+		public:
+
 			VulkanInstance();
 			VulkanInstance(InitConfig config);
 
+			VulkanInstance( VulkanInstance const& ) = delete;
+			VulkanInstance& operator=( VulkanInstance const& ) = delete;
+
+			VulkanInstance( VulkanInstance&& ) = default;
+			VulkanInstance& operator=( VulkanInstance&& ) = default;
+
 			~VulkanInstance();
 
-			// utility
-			//-------------------------------------------------------------------------
+		public:
 
 			// Get process address of a function pointer.
 			// If the function pointer doesn't exist, return nullptr.
@@ -62,7 +69,7 @@ namespace EE::Render
 		private:
 
 			friend class VulkanSurface;
-			
+
 			bool									m_enableDebug;
 			VkDebugUtilsMessengerEXT				m_pDebugUtilsMessager = nullptr;
 

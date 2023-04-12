@@ -17,13 +17,16 @@ namespace EE { class IniFile; }
 
 namespace EE::Render
 {
+    #ifdef EE_VULKAN
     // temporary
     namespace Backend
     { 
         class VulkanInstance;
         class VulkanSurface;
         class VulkanDevice;
+        class VulkanSwapchain;
     }
+    #endif
 
     class EE_SYSTEM_API RenderDevice
     {
@@ -127,10 +130,13 @@ namespace EE::Render
         RenderWindow                m_primaryWindow;
         RenderContext               m_immediateContext;
 
+        #ifdef EE_VULKAN
         // temporary
-        TSharedPtr<Backend::VulkanInstance>    m_pVkInstance;
-        TSharedPtr<Backend::VulkanSurface>     m_pVkSurface;
-        TSharedPtr<Backend::VulkanDevice>     m_pVkDevice;
+        TSharedPtr<Backend::VulkanInstance>         m_pVkInstance;
+        TSharedPtr<Backend::VulkanSurface>          m_pVkSurface;
+        TSharedPtr<Backend::VulkanDevice>           m_pVkDevice;
+        TSharedPtr<Backend::VulkanSwapchain>        m_pVkSwapchain;
+        #endif
 
         // Lock to allow loading resources while rendering across different threads
         Threading::RecursiveMutex   m_deviceMutex;

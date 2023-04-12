@@ -20,19 +20,26 @@ namespace EE::Render
 		{
 		public:
 
-			struct LoadFunc
+			struct LoadFuncs
 			{
 				#ifdef _WIN32
 				PFN_vkCreateWin32SurfaceKHR					m_pCreateFunc = nullptr;
 				#endif
 
 				PFN_vkDestroySurfaceKHR						m_pDestroyFunc = nullptr;
-				PFN_vkGetPhysicalDeviceSurfaceSupportKHR	m_pGetPhysicalDeviceSupport = nullptr;
+				PFN_vkGetPhysicalDeviceSurfaceSupportKHR	m_pGetPhysicalDeviceSupportFunc = nullptr;
 			};
 
 		public:
 
 			VulkanSurface( TSharedPtr<VulkanInstance> pInstance );
+
+			VulkanSurface( VulkanSurface const& ) = delete;
+			VulkanSurface& operator=( VulkanSurface const& ) = delete;
+
+			VulkanSurface( VulkanSurface&& ) = default;
+			VulkanSurface& operator=( VulkanSurface&& ) = default;
+
 			~VulkanSurface();
 
 		private:
@@ -42,15 +49,16 @@ namespace EE::Render
 			#ifdef _WIN32
 			bool CreateWin32Surface();
 			#else
-			#error No surface create function!
+			#error Unsupport platform surface create function!
 			#endif
 
 		private:
 
 			friend class VulkanPhysicalDevice;
+			friend class VulkanSwapchain;
 
 			TSharedPtr<VulkanInstance>				m_pInstance = nullptr;
-			LoadFunc								m_loadFunc;
+			LoadFuncs								m_loadFuncs;
 
 			VkSurfaceKHR							m_pHandle = nullptr;
 		};

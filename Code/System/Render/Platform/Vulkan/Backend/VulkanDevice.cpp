@@ -2,12 +2,36 @@
 #include "VulkanDevice.h"
 #include "VulkanCommonSettings.h"
 #include "VulkanInstance.h"
+#include "VulkanSurface.h"
 #include "System/Log.h"
 
 namespace EE::Render
 {
 	namespace Backend
 	{
+		VulkanQueue::VulkanQueue( VulkanDevice const& device, QueueFamily const& queueFamily )
+			: m_queueFamily( queueFamily )
+		{
+			vkGetDeviceQueue( device.m_pHandle, queueFamily.m_index, 0, &m_pHandle );
+
+			if ( queueFamily.IsGraphicQueue() )
+			{
+				m_type = Type::Graphic;
+			}
+			else if ( queueFamily.IsComputeQueue() )
+			{
+				m_type = Type::Compute;
+			}
+			else if ( queueFamily.IsTransferQueue() )
+			{
+				m_type = Type::Transfer;
+			}
+
+			EE_ASSERT( m_pHandle != nullptr );
+		}
+
+		//-------------------------------------------------------------------------
+
 		VulkanDevice::InitConfig VulkanDevice::InitConfig::GetDefault( bool enableDebug )
 		{
 			InitConfig config;
@@ -18,13 +42,23 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanDevice::VulkanDevice( TSharedPtr<VulkanInstance> pInstance, VulkanPhysicalDevice pdDevice )
-			: VulkanDevice( InitConfig::GetDefault( pInstance->IsEnableDebug() ), pInstance, pdDevice )
+		VulkanDevice::VulkanDevice( TSharedPtr<VulkanInstance> pInstance, TSharedPtr<VulkanSurface> pSurface )
+			: VulkanDevice( InitConfig::GetDefault( pInstance->IsEnableDebug() ), pInstance, pSurface )
 		{}
 
-		VulkanDevice::VulkanDevice( InitConfig config, TSharedPtr<VulkanInstance> pInstance, VulkanPhysicalDevice pdDevice )
-			: m_pInstance( pInstance ), m_physicalDevice( pdDevice )
+		VulkanDevice::VulkanDevice( InitConfig config, TSharedPtr<VulkanInstance> pInstance, TSharedPtr<VulkanSurface> pSurface )
+			: m_pInstance( pInstance )
 		{
+			auto pdDevices = pInstance->EnumeratePhysicalDevice();
+
+			for ( auto& pd : pdDevices )
+			{
+				pd.CalculatePickScore( pSurface );
+			}
+
+			auto physicalDevice = PickMostSuitablePhysicalDevice( pdDevices );
+			m_physicalDevice = std::move( physicalDevice );
+
 			EE_ASSERT( CheckAndCollectDeviceLayers( config ) );
 			EE_ASSERT( CheckAndCollectDeviceExtensions( config ) );
 
@@ -37,6 +71,29 @@ namespace EE::Render
 
 			vkDestroyDevice( m_pHandle, nullptr );
 			m_pHandle = nullptr;
+		}
+
+		//-------------------------------------------------------------------------
+
+		VulkanSemaphore VulkanDevice::CreateVSemaphore()
+		{
+			VkSemaphoreCreateInfo semaphoreCI = {};
+			semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+			semaphoreCI.pNext = nullptr;
+			semaphoreCI.flags = VkFlags( 0 );
+
+			VulkanSemaphore semaphore;
+			VK_SUCCEEDED( vkCreateSemaphore( m_pHandle, &semaphoreCI, nullptr, &semaphore.m_pHandle ) );
+
+			return std::move( semaphore );
+		}
+
+		void VulkanDevice::DestroyVSemaphore( VulkanSemaphore semaphore )
+		{
+			EE_ASSERT( semaphore.m_pHandle != nullptr );
+
+			vkDestroySemaphore( m_pHandle, semaphore.m_pHandle, nullptr );
+			semaphore.m_pHandle = nullptr;
 		}
 
 		//-------------------------------------------------------------------------
@@ -111,13 +168,15 @@ namespace EE::Render
 
 		bool VulkanDevice::CreateDevice( InitConfig const& config )
 		{
-			// device queue creation
+			// device queue creation info population
 			//-------------------------------------------------------------------------
 
 			TVector<VkDeviceQueueCreateInfo> deviceQueueCIs = {};
+			TVector<QueueFamily> deviceQueueFamilies = {};
 
 			float priorities[] = { 1.0f };
 
+			// only create one graphic queue for now
 			for ( auto const& qf : m_physicalDevice.m_queueFamilies )
 			{
 				if ( qf.IsGraphicQueue() )
@@ -132,6 +191,7 @@ namespace EE::Render
 					dqCI.pQueuePriorities = priorities;
 
 					deviceQueueCIs.push_back( dqCI );
+					deviceQueueFamilies.push_back( qf );
 					break;
 				}
 			}
@@ -185,6 +245,11 @@ namespace EE::Render
 			deviceCI.enabledExtensionCount = static_cast<uint32_t>( config.m_requiredExtensions.size() );
 
 			VK_SUCCEEDED( vkCreateDevice( m_physicalDevice.m_pHandle, &deviceCI, nullptr, &m_pHandle ) );
+
+			// fetch global device queue
+			//-------------------------------------------------------------------------
+
+			m_globalGraphicQueue = VulkanQueue( *this, deviceQueueFamilies[0] );
 
 			return true;
 		}

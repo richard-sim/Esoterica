@@ -22,9 +22,9 @@ namespace EE::Render
 			for ( auto const& qf : m_queueFamilies )
 			{
 				VkBool32 supported = false;
-				EE_ASSERT( pSurface->m_loadFunc.m_pGetPhysicalDeviceSupport != nullptr );
+				EE_ASSERT( pSurface->m_loadFuncs.m_pGetPhysicalDeviceSupportFunc != nullptr );
 
-				VK_SUCCEEDED( pSurface->m_loadFunc.m_pGetPhysicalDeviceSupport( m_pHandle, qf.m_index, pSurface->m_pHandle, &supported ) );
+				VK_SUCCEEDED( pSurface->m_loadFuncs.m_pGetPhysicalDeviceSupportFunc( m_pHandle, qf.m_index, pSurface->m_pHandle, &supported ) );
 
 				// is this physical device support present?
 				if ( qf.m_props.queueCount > 0 &&
@@ -64,7 +64,7 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanPhysicalDevice PickMostSuitablePhysicalDevice( TVector<VulkanPhysicalDevice> const& pdDevices )
+		VulkanPhysicalDevice PickMostSuitablePhysicalDevice( TVector<VulkanPhysicalDevice>& pdDevices )
 		{
 			bool allPhysicalDeviceInvalid = true;
 
@@ -95,7 +95,10 @@ namespace EE::Render
 
 			EE_LOG_MESSAGE("Render", "Vulkan Backend", "Pick physical device info: \n\tname: %s\n\tdriver version: %u\n\tvendor id: %u", pdDevices[currPickIndex].m_props.deviceName, pdDevices[currPickIndex].m_props.driverVersion, pdDevices[currPickIndex].m_props.vendorID );
 
-			return pdDevices[currPickIndex];
+			VulkanPhysicalDevice pd = std::move( pdDevices[currPickIndex] );
+			pdDevices.erase_unsorted( pdDevices.begin() + currPickIndex );
+
+			return std::move( pd );
 		}
 	}
 }

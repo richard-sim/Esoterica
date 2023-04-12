@@ -13,7 +13,7 @@ namespace EE::Render
 		{
 			LoadVulkanFuncPointer();
 
-			EE_ASSERT( m_loadFunc.m_pCreateFunc != nullptr );
+			EE_ASSERT( m_loadFuncs.m_pCreateFunc != nullptr );
 
 			#ifdef _WIN32
 			EE_ASSERT( CreateWin32Surface() );
@@ -22,9 +22,9 @@ namespace EE::Render
 
 		VulkanSurface::~VulkanSurface()
 		{
-			EE_ASSERT( m_loadFunc.m_pDestroyFunc != nullptr );
+			EE_ASSERT( m_loadFuncs.m_pDestroyFunc != nullptr );
 
-			m_loadFunc.m_pDestroyFunc( m_pInstance->m_pHandle, m_pHandle, nullptr );
+			m_loadFuncs.m_pDestroyFunc( m_pInstance->m_pHandle, m_pHandle, nullptr );
 			m_pHandle = nullptr;
 		}
 
@@ -34,11 +34,12 @@ namespace EE::Render
 		{
 			EE_ASSERT( m_pInstance );
 
-			m_loadFunc.m_pCreateFunc = (PFN_vkCreateWin32SurfaceKHR) m_pInstance->GetProcAddress( "vkCreateWin32SurfaceKHR" );
-			m_loadFunc.m_pDestroyFunc = (PFN_vkDestroySurfaceKHR) m_pInstance->GetProcAddress( "vkDestroySurfaceKHR" );
-			m_loadFunc.m_pGetPhysicalDeviceSupport = (PFN_vkGetPhysicalDeviceSurfaceSupportKHR) m_pInstance->GetProcAddress( "vkGetPhysicalDeviceSurfaceSupportKHR" );
+			m_loadFuncs.m_pCreateFunc = (PFN_vkCreateWin32SurfaceKHR) m_pInstance->GetProcAddress( "vkCreateWin32SurfaceKHR" );
+			m_loadFuncs.m_pDestroyFunc = (PFN_vkDestroySurfaceKHR) m_pInstance->GetProcAddress( "vkDestroySurfaceKHR" );
+			m_loadFuncs.m_pGetPhysicalDeviceSupportFunc = (PFN_vkGetPhysicalDeviceSurfaceSupportKHR) m_pInstance->GetProcAddress( "vkGetPhysicalDeviceSurfaceSupportKHR" );
 		}
 
+		#ifdef _WIN32
 		bool VulkanSurface::CreateWin32Surface()
 		{
 			HWND hwnd = GetActiveWindow();
@@ -62,11 +63,11 @@ namespace EE::Render
 			win32SurfaceCI.hwnd = hwnd;
 			win32SurfaceCI.pNext = nullptr;
 
-			VK_SUCCEEDED( m_loadFunc.m_pCreateFunc( m_pInstance->m_pHandle, &win32SurfaceCI, nullptr, &m_pHandle ) );
+			VK_SUCCEEDED( m_loadFuncs.m_pCreateFunc( m_pInstance->m_pHandle, &win32SurfaceCI, nullptr, &m_pHandle ) );
 
 			return true;
 		}
-
+		#endif
 	}
 }
 

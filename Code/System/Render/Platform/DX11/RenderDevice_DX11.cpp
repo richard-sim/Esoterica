@@ -8,10 +8,13 @@
 #include "System/Render/Platform/Windows/TextureLoader_Win32.h"
 #endif
 
+#ifdef EE_VULKAN
 #include "System/Render/Platform/Vulkan/Backend/VulkanInstance.h"
 #include "System/Render/Platform/Vulkan/Backend/VulkanSurface.h"
 #include "System/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
 #include "System/Render/Platform/Vulkan/Backend/VulkanDevice.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
+#endif
 
 //-------------------------------------------------------------------------
 
@@ -49,19 +52,13 @@ namespace EE::Render
 
     RenderDevice::RenderDevice()
     {
+        #ifdef EE_VULKAN
         m_pVkInstance = MakeShared<Backend::VulkanInstance>();
         m_pVkSurface = MakeShared<Backend::VulkanSurface>( m_pVkInstance );
 
-        auto out = m_pVkInstance->EnumeratePhysicalDevice();
-         
-        for ( auto& e : out )
-        {
-            e.CalculatePickScore( m_pVkSurface );
-        }
-
-        auto physicalDevice = Backend::PickMostSuitablePhysicalDevice( out );
-
-        m_pVkDevice = MakeShared<Backend::VulkanDevice>( m_pVkInstance, physicalDevice );
+        m_pVkDevice = MakeShared<Backend::VulkanDevice>( m_pVkInstance, m_pVkSurface );
+        m_pVkSwapchain = MakeShared<Backend::VulkanSwapchain>( m_pVkSurface, m_pVkDevice );
+        #endif
     }
 
     RenderDevice::~RenderDevice()
