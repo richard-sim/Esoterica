@@ -198,10 +198,12 @@ namespace EE::Render
 			// create semaphores
 			//-------------------------------------------------------------------------
 
+			m_imageAcquireSemaphores.resize( swapchainImageCount );
+			m_renderCompleteSemaphores.resize( swapchainImageCount );
 			for ( uint32_t i = 0; i < swapchainImageCount; ++i )
 			{
-				m_imageAcquireSemaphores.push_back( std::move( pDevice->CreateVSemaphore() ) );
-				m_renderCompleteSemaphores.push_back( std::move( pDevice->CreateVSemaphore() ) );
+				pDevice->CreateVSemaphore( m_imageAcquireSemaphores[i] );
+				pDevice->CreateVSemaphore( m_renderCompleteSemaphores[i] );
 			}
 
 			EE_ASSERT( m_imageAcquireSemaphores.size() == swapchainImages.size() );
@@ -212,8 +214,8 @@ namespace EE::Render
 		{
 			for ( int i = (int)m_imageAcquireSemaphores.size() - 1; i >= 0; i-- )
 			{
-				m_pDevice->DestroyVSemaphore( std::move( m_imageAcquireSemaphores[i] ) );
-				m_pDevice->DestroyVSemaphore( std::move( m_renderCompleteSemaphores[i] ) );
+				m_pDevice->DestroyVSemaphore( m_imageAcquireSemaphores[i] );
+				m_pDevice->DestroyVSemaphore( m_renderCompleteSemaphores[i] );
 			}
 
 			m_imageAcquireSemaphores.clear();

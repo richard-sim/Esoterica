@@ -86,8 +86,20 @@ namespace EE::Render
 			VulkanTexture CreateTexture( TextureDesc desc );
 			void DestroyTexture( VulkanTexture texture );
 
-			VulkanSemaphore CreateVSemaphore();
-			void DestroyVSemaphore( VulkanSemaphore semaphore );
+			void CreateVSemaphore( VulkanSemaphore& semaphore );
+			// TODO: design consideration.
+			// 
+			// 1. void DestroyVSemaphore( VulkanSemaphore& semaphore );
+			// 
+			//	Accept a reference to a vulkan resource object, destroy will set its inner pointer to nullptr.
+			// 
+			// 2. void DestroyVSemaphore( VulkanSemaphore semaphore );
+			// 
+			// Since vulkan resource objects are noncopyable, user have to call std::move on outer resource to destroy resource.
+			// 
+			// It seems like that both ensure vulkan resource object being invalid after the destruction?
+			//
+			void DestroyVSemaphore( VulkanSemaphore& semaphore );
 
 		private:
 

@@ -12,6 +12,8 @@
 
 //-------------------------------------------------------------------------
 
+#include "System/RenderGraph/RenderGraphResource.h"
+
 namespace EE
 {
     namespace
@@ -137,6 +139,33 @@ namespace EE
             EE::Delete( m_pRenderDevice );
             return false;
         }
+
+        m_renderGraph.AddNode( "Clear Color RT" );
+        m_renderGraph.AddNode( "Draw Shadow" );
+        m_renderGraph.AddNode( "Draw Opache" );
+        m_renderGraph.AddNode( "Draw Transparent" );
+        m_renderGraph.AddNode( "Post Processing" );
+        m_renderGraph.AddNode( "Draw Debug" );
+
+        m_renderGraph.LogGraphNodes();
+
+        auto bufferDesc = RG::BufferDesc{};
+        bufferDesc.m_count = 3;
+        auto handle0 = m_renderGraph.CreateResource( bufferDesc );
+        EE_ASSERT( handle0.GetDesc().m_count == 3);
+
+        bufferDesc.m_count = 233;
+        auto handle1 = m_renderGraph.CreateResource( bufferDesc );
+        EE_ASSERT( handle1.GetDesc().m_count == 233);
+
+        auto textureDesc = RG::TextureDesc{};
+        textureDesc.m_factor = 2.14f;
+        textureDesc.m_isEnable = true;
+        auto handle2 = m_renderGraph.CreateResource( textureDesc );
+
+        (void)handle0;
+        (void)handle1;
+        (void)handle2;
 
         // Initialize core systems
         //-------------------------------------------------------------------------

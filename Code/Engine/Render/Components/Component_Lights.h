@@ -29,7 +29,7 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINE_API DirectionalLightComponent: public LightComponent
+    class EE_ENGINE_API DirectionalLightComponent : public LightComponent
     {
         EE_REGISTER_ENTITY_COMPONENT( DirectionalLightComponent );
         friend class RenderDebugView;

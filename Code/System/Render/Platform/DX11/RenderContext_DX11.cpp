@@ -1,3 +1,5 @@
+#if defined(_WIN32) && defined(EE_DX11)
+
 #include "RenderContext_DX11.h"
 #include "System/Types/Color.h"
 
@@ -508,3 +510,5 @@ namespace EE::Render
         pSwapChain->Present( 0, 0 );
     }
 }
+
+#endif

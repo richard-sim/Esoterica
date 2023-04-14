@@ -359,8 +359,6 @@
     <ClCompile Include="Serialization\TypeSerialization.cpp">
       <Filter>Serialization</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Platform\Vulkan\RenderDevice_Vulkan.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\RenderContext_Vulkan.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
@@ -371,6 +369,11 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraph.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphResource.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphContext.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphNode.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1791,8 +1794,6 @@
     <ClInclude Include="Serialization\TypeSerialization.h">
       <Filter>Serialization</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\RenderDevice_Vulkan.h" />
-    <ClInclude Include="Render\Platform\Vulkan\RenderContext_Vulkan.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
@@ -1803,6 +1804,12 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
+    <ClInclude Include="RenderGraph\RenderGraph.h" />
+    <ClInclude Include="RenderGraph\RenderGraphResource.h" />
+    <ClInclude Include="RenderGraph\RenderGraphContext.h" />
+    <ClInclude Include="Types\Variant.h" />
+    <ClInclude Include="RenderGraph\RenderGraphNode.h" />
+    <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

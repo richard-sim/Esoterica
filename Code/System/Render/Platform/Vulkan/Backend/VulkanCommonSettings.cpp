@@ -8,7 +8,7 @@ namespace EE::Render
 {
 	namespace Backend
 	{
-		static char const* const gEngineRequiredInstanceLayers[] = {
+		constexpr static char const* const gEngineRequiredInstanceLayers[] = {
 			"VK_LAYER_KHRONOS_validation",
 		};
 
@@ -16,14 +16,14 @@ namespace EE::Render
 		#include <windows.h>
 		#include <vulkan/vulkan_win32.h>
 		#ifdef EE_DEBUG
-		static char const* const gEngineRequiredInstanceExtensions[] = {
+		constexpr static char const* const gEngineRequiredInstanceExtensions[] = {
 			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 			VK_KHR_SURFACE_EXTENSION_NAME,
 			VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 		};
 		#else
-		static char const* const gEngineRequiredInstanceExtensions[] = {
+		constexpr static char const* const gEngineRequiredInstanceExtensions[] = {
 			VK_KHR_SURFACE_EXTENSION_NAME,
 			VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 		};
@@ -32,11 +32,11 @@ namespace EE::Render
 		#error Unsupported vulkan platform!
 		#endif
 
-		static char const* const gEngineRequiredDeviceLayers[] = {
+		constexpr static char const* const gEngineRequiredDeviceLayers[] = {
 			"VK_LAYER_KHRONOS_validation",
 		};
 
-		static char const* const gEngineRequiredDeviceExtensions[] = {
+		constexpr static char const* const gEngineRequiredDeviceExtensions[] = {
 			// common
 			//-------------------------------------------------------------------------
 			VK_KHR_MAINTENANCE1_EXTENSION_NAME,

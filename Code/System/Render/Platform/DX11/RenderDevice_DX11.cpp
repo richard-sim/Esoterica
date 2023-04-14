@@ -1,3 +1,5 @@
+#if defined(_WIN32) && defined(EE_DX11)
+
 #include "RenderDevice_DX11.h"
 #include "System/Render/RenderCoreResources.h"
 #include "System/IniFile.h"
@@ -1290,3 +1292,5 @@ namespace EE::Render
         return pickingID;
     }
 }
+
+#endif

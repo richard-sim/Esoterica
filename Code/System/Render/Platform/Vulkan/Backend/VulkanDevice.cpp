@@ -75,20 +75,19 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanSemaphore VulkanDevice::CreateVSemaphore()
+		void VulkanDevice::CreateVSemaphore( VulkanSemaphore& semaphore )
 		{
+			EE_ASSERT( semaphore.m_pHandle == nullptr );
+
 			VkSemaphoreCreateInfo semaphoreCI = {};
 			semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			semaphoreCI.pNext = nullptr;
 			semaphoreCI.flags = VkFlags( 0 );
 
-			VulkanSemaphore semaphore;
 			VK_SUCCEEDED( vkCreateSemaphore( m_pHandle, &semaphoreCI, nullptr, &semaphore.m_pHandle ) );
-
-			return std::move( semaphore );
 		}
 
-		void VulkanDevice::DestroyVSemaphore( VulkanSemaphore semaphore )
+		void VulkanDevice::DestroyVSemaphore( VulkanSemaphore& semaphore )
 		{
 			EE_ASSERT( semaphore.m_pHandle != nullptr );
 

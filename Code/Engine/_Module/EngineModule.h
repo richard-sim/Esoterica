@@ -35,6 +35,8 @@
 #include "System/Threading/TaskSystem.h"
 #include "System/Systems.h"
 
+#include "System/RenderGraph/RenderGraph.h"
+
 //-------------------------------------------------------------------------
 
 namespace EE
@@ -84,6 +86,8 @@ namespace EE
         TypeSystem::TypeRegistry                        m_typeRegistry;
         SystemRegistry                                  m_systemRegistry;
         Input::InputSystem                              m_inputSystem;
+
+        RG::RenderGraph                                 m_renderGraph;
 
         // Resource
         Resource::ResourceProvider*                     m_pResourceProvider = nullptr;
