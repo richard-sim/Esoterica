@@ -52,6 +52,8 @@
       <Optimization Condition="$(Configuration) != 'Debug'">MaxSpeed</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <!-- Disable warning level 18 for dxcapi.h to disable warning C5204-->
+      <WarningVersion>18</WarningVersion>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>

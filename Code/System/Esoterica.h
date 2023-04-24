@@ -55,8 +55,29 @@ using nullptr_t = decltype( nullptr );
 
     // Platform agnostic asserts
     //-------------------------------------------------------------------------
-
+    
+    // TODO: macr with comma in C++ with result in error macro expand
+    // (e.g. for some type contains std::is_same_v<A, B> which contains a comma,
+    //  and macro will expand that to cond = "is_same_v<A" and error = " B>")
+    // To correct this, we have several solutions:
+    // 
+    // 1. Use macro to prevent macro expand.
+    // #define COMMA ,
+    // EE_STATIC_ASSERT( std::is_same_v<A COMMA B>, error_msg )
+    // 
+    // this way macro expand will separate comma correctly.
+    //
+    // Or something like:
+    // #define SINGLE_ARG(...) __VA_ARGS__
+    // EE_STATIC_ASSERT( SINGLE_ARG( std::is_same_v<A, B> ), error_msg )
+    // 
+    // 2. User takes care.
+    // User just wrap cond with a parentheses.
+    // 
+    // EE_STATIC_ASSERT( ( std::is_same_v<A, B> ), error_msg )
+    // 
     #define EE_STATIC_ASSERT( cond, error ) static_assert( cond, error )
+
     #define EE_TRACE_ASSERT( msg ) { EE_TRACE_MSG( msg ); EE_HALT(); }
     #define EE_UNIMPLEMENTED_FUNCTION() EE_TRACE_ASSERT("Function not implemented!\n")
     #define EE_UNREACHABLE_CODE() EE_TRACE_ASSERT("Unreachable code encountered!\n")

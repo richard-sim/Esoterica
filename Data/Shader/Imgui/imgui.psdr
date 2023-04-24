@@ -1,0 +1,7 @@
+{
+    "TypeID": "EE::Render::PixelShaderResourceDescriptor",
+    "m_shaderType": "Pixel",
+    "m_shaderBackendLanguage": "DX11",
+    "m_shaderLanguage": "Hlsl",
+    "m_shaderPath": "data://shader/imgui/ps_imgui.hlsl"
+}

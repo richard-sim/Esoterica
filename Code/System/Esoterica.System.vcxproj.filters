@@ -367,13 +367,15 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" />
     <ClCompile Include="RenderGraph\RenderGraph.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphResource.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphContext.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphNode.cpp" />
-    <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" />
+    <ClCompile Include="Render\RenderResourceBarrier.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1809,7 +1811,14 @@
     <ClInclude Include="RenderGraph\RenderGraphContext.h" />
     <ClInclude Include="Types\Variant.h" />
     <ClInclude Include="RenderGraph\RenderGraphNode.h" />
-    <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
+    <ClInclude Include="Types\Atomic.h" />
+    <ClInclude Include="Types\RefCount.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" />
+    <ClInclude Include="Render\RenderResourceBarrier.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

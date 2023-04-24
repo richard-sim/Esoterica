@@ -98,7 +98,7 @@ namespace EE::Render
 			VulkanPhysicalDevice pd = std::move( pdDevices[currPickIndex] );
 			pdDevices.erase_unsorted( pdDevices.begin() + currPickIndex );
 
-			return std::move( pd );
+			return pd;
 		}
 	}
 }

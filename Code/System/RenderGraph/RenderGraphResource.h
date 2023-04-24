@@ -34,9 +34,11 @@ namespace EE
 		enum class RGResourceType : uint8_t
 		{
 			Buffer = 0,
-			Texture,
+			Texture = 1,
+			Unknown = std::numeric_limits<uint8_t>::max(),
 		};
 
+		// TODO: put this inside impl namespace
 		class EE_SYSTEM_API RGResourceSlotID
 		{
 		public:
@@ -46,22 +48,37 @@ namespace EE
 
 			inline bool IsValid() const { return m_id != std::numeric_limits<uint32_t>::max(); }
 
-			inline bool operator==( RGResourceSlotID const& rhs ) const { return m_id == rhs.m_id; }
-			inline bool operator!=( RGResourceSlotID const& rhs ) const { return m_id != rhs.m_id; }
+			inline bool operator==( RGResourceSlotID const& rhs ) const { return m_id == rhs.m_id && m_generation == rhs.m_generation; }
+			inline bool operator!=( RGResourceSlotID const& rhs ) const { return m_id != rhs.m_id && m_generation != rhs.m_generation; }
+
+			inline void Expire()
+			{ 
+				if ( m_generation >= std::numeric_limits<uint32_t>::max() )
+					m_generation = 0;
+				else
+					m_generation += 1;
+			}
 
 		private:
 
+			friend class RGNodeBuilder;
+
 			uint32_t				m_id = std::numeric_limits<uint32_t>::max();
+			uint32_t				m_generation = 0;
 		};
 
 		class RGBufferDesc;
 		class RGTextureDesc;
+
+		struct RGBuffer;
+		struct RGTexture;
 
 		struct BufferDesc
 		{
 		public:
 
 			typedef RGBufferDesc RGDescType;
+			typedef RGBuffer RGResourceTypeTag;
 
 		public:
 
@@ -73,6 +90,7 @@ namespace EE
 		public:
 
 			typedef RGTextureDesc RGDescType;
+			typedef RGTexture RGResourceTypeTag;
 
 		public:
 
@@ -83,9 +101,12 @@ namespace EE
 		template <typename SelfType, typename DescType = typename SelfType::DescType>
 		struct RGResourceDesc
 		{
-			inline DescType const& GetDesc() const
+			using SelfCVType = typename std::add_lvalue_reference_t<std::add_const_t<SelfType>>;
+			using DescCVType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>;
+
+			inline DescCVType GetDesc() const
 			{
-				return reinterpret_cast<SelfType const&>( *this ).GetDesc();
+				return reinterpret_cast<SelfCVType>( *this ).GetDesc();
 			}
 		};
 
@@ -94,13 +115,11 @@ namespace EE
 		public:
 
 			typedef BufferDesc DescType;
-
-			// TODO: static assert this.
-			inline constexpr static RGResourceType ResourceType = RGResourceType::Buffer;
+			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
 
 		public:
 
-			inline DescType const& GetDesc() const { return m_desc; }
+			inline DescCVType GetDesc() const { return m_desc; }
 
 		private:
 
@@ -114,12 +133,11 @@ namespace EE
 		public:
 
 			typedef TextureDesc DescType;
-
-			inline constexpr static RGResourceType ResourceType = RGResourceType::Texture;
+			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
 
 		public:
 
-			inline DescType const& GetDesc() const { return m_desc; }
+			inline DescCVType GetDesc() const { return m_desc; }
 
 		private:
 
@@ -128,22 +146,39 @@ namespace EE
 			DescType				m_desc;
 		};
 
-		template <uint8_t I>
-		struct RGResourceTypeToDescType
-		{};
-
-		// TODO: use macro to auto expand
-		template <>
-		struct RGResourceTypeToDescType<static_cast<uint8_t>( RGResourceType::Buffer )>
+		template <typename Tag>
+		struct RGResourceTypeBase
 		{
-			typedef typename RGBufferDesc::DescType DescType;
+			constexpr inline static RGResourceType GetRGResourceType()
+			{
+				return Tag::GetRGResourceType();
+			}
 		};
 
-		template <>
-		struct RGResourceTypeToDescType<static_cast<uint8_t>( RGResourceType::Texture )>
+		struct RGBuffer : public RGResourceTypeBase<RGBuffer>
 		{
-			typedef typename RGTextureDesc::DescType DescType;
+			typedef RGBufferDesc RGDescType;
+			typedef BufferDesc DescType;
+
+			constexpr inline static RGResourceType GetRGResourceType()
+			{
+				return RGResourceType::Buffer;
+			}
 		};
+
+		struct RGTexture : public RGResourceTypeBase<RGTexture>
+		{
+			typedef RGTextureDesc RGDescType;
+			typedef TextureDesc DescType;
+
+			constexpr inline static RGResourceType GetRGResourceType()
+			{
+				return RGResourceType::Texture;
+			}
+		};
+
+		//EE_STATIC_ASSERT( sizeof( RGBuffer ) == 0, "Size of tag RGBuffer should be zero!");
+		//EE_STATIC_ASSERT( sizeof( RGTexture ) == 0, "Size of tag RGBuffer should be zero!" );
 
 		enum class RGResourceViewType
 		{
@@ -162,24 +197,41 @@ namespace EE
 			RGResourceBarrierState					m_currentAccess;
 		};
 
-		typedef RGResourceDesc<RGBufferDesc> BufferDescBaseType;
-		typedef RGResourceDesc<RGTextureDesc> TextureDescBaseType;
+		//typedef RGResourceDesc<RGBufferDesc> BufferDescBaseType;
+		//typedef RGResourceDesc<RGTextureDesc> TextureDescBaseType;
 
 		class EE_SYSTEM_API RGResource
 		{
 		public:
 
-			RGResource( BufferDescBaseType bufferDesc );
-			RGResource( TextureDescBaseType textureDesc );
+			RGResource( RGBufferDesc const& bufferDesc );
+			RGResource( RGTextureDesc const& textureDesc );
+
+		public:
+
+			template <typename Tag,
+				typename DescType = typename Tag::DescType,
+				typename DescCVType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>
+			>
+			DescCVType GetDesc() const;
 
 		private:
 
-			TVariant<RGLazyCreateResource, RGImportedResource>		m_resource;
 			// TODO: compile-time enum element expand (use macro?)
 			TVariant<
-				BufferDescBaseType,
-				TextureDescBaseType
+				RGBufferDesc,
+				RGTextureDesc
 			>														m_desc;
+			TVariant<RGLazyCreateResource, RGImportedResource>		m_resource;
 		};
+
+		template <typename Tag, typename DescType, typename DescCVType>
+		DescCVType RGResource::GetDesc() const
+		{
+			static_assert( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+
+			constexpr uint8_t const index = static_cast<uint8_t>( Tag::GetRGResourceType() );
+			return eastl::get<index>( m_desc ).GetDesc();
+		}
 	}
 }

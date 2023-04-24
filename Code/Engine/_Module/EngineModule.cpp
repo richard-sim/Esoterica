@@ -12,6 +12,8 @@
 
 //-------------------------------------------------------------------------
 
+//#include "System/Types/RefCount.h"
+#include "System/Render/RenderResourceBarrier.h"
 #include "System/RenderGraph/RenderGraphResource.h"
 
 namespace EE
@@ -140,32 +142,80 @@ namespace EE
             return false;
         }
 
-        m_renderGraph.AddNode( "Clear Color RT" );
-        m_renderGraph.AddNode( "Draw Shadow" );
-        m_renderGraph.AddNode( "Draw Opache" );
-        m_renderGraph.AddNode( "Draw Transparent" );
-        m_renderGraph.AddNode( "Post Processing" );
-        m_renderGraph.AddNode( "Draw Debug" );
-
-        m_renderGraph.LogGraphNodes();
-
         auto bufferDesc = RG::BufferDesc{};
         bufferDesc.m_count = 3;
         auto handle0 = m_renderGraph.CreateResource( bufferDesc );
-        EE_ASSERT( handle0.GetDesc().m_count == 3);
+        EE_ASSERT( handle0.GetDesc().m_count == 3 );
 
         bufferDesc.m_count = 233;
         auto handle1 = m_renderGraph.CreateResource( bufferDesc );
-        EE_ASSERT( handle1.GetDesc().m_count == 233);
+        EE_ASSERT( handle1.GetDesc().m_count == 233 );
 
         auto textureDesc = RG::TextureDesc{};
         textureDesc.m_factor = 2.14f;
         textureDesc.m_isEnable = true;
         auto handle2 = m_renderGraph.CreateResource( textureDesc );
 
-        (void)handle0;
-        (void)handle1;
-        (void)handle2;
+        {
+            auto node = m_renderGraph.AddNode( "Clear Color RT" );
+            auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
+            auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
+
+            EE_ASSERT( handle0_ref.GetDesc().m_count == 3 );
+            EE_ASSERT( handle1_ref.GetDesc().m_count == 233 );
+        }
+
+        {
+            auto node = m_renderGraph.AddNode( "Draw Shadow" );
+            auto handle2_ref = node.CommonWrite( handle2, Render::RenderResourceBarrierState::ColorAttachmentWrite );
+            auto handle1_ref = node.RasterRead( handle1, Render::RenderResourceBarrierState::ColorAttachmentRead );
+
+            EE_ASSERT( handle2_ref.GetDesc().m_isEnable );
+            EE_ASSERT( handle1_ref.GetDesc().m_count == 233 );
+        }
+
+        //m_renderGraph.AddNode( "Draw Opache" );
+        //m_renderGraph.AddNode( "Draw Transparent" );
+        //m_renderGraph.AddNode( "Post Processing" );
+        //m_renderGraph.AddNode( "Draw Debug" );
+
+        m_renderGraph.LogGraphNodes();
+
+        //TestObject test( 25686 );
+
+        //{
+        //    RefCountPtr<TestObject> pTest0( &test );
+        //}
+
+        //{
+        //    RefCountPtr<TestObject> pTest0 = RefCountPtr<TestObject>::New( 2555 );
+
+        //    RefCountPtr<TestObject> pTest1 = pTest0;
+        //}
+
+        //struct Complicate : public RcObject
+        //{
+        //    Complicate( long data )
+        //        : m_data( data ), m_test( RefCountPtr<TestObject>::New( 485 ) )
+        //    {}
+
+        //    long                        m_data;
+        //    RefCountPtr<TestObject>     m_test;
+        //};
+
+        //Complicate comp( 145 );
+
+        //{
+        //    RefCountPtr<Complicate> pTest0( &comp );
+        //}
+
+        //RefCountPtr<TestObject> pTest = comp.m_test;
+
+        //{
+        //    RefCountPtr<Complicate> pTest0 = RefCountPtr<Complicate>::New( 1485 );
+
+        //    RefCountPtr<Complicate> pTest1 = pTest0;
+        //}
 
         // Initialize core systems
         //-------------------------------------------------------------------------

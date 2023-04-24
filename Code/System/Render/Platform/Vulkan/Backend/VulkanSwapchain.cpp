@@ -19,7 +19,7 @@ namespace EE::Render
 			config.m_width = static_cast<uint32_t>( extent.m_x );
 			config.m_height = static_cast<uint32_t>( extent.m_y );
 			config.m_enableVsync = false;
-			return std::move( config );
+			return config;
 		}
 
 		//-------------------------------------------------------------------------

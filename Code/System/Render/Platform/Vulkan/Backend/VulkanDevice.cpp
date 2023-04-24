@@ -37,7 +37,7 @@ namespace EE::Render
 			InitConfig config;
 			config.m_requiredLayers = GetEngineVulkanDeviceRequiredLayers( enableDebug );
 			config.m_requiredExtensions = GetEngineVulkanDeviceRequiredExtensions();
-			return std::move( config );
+			return config;
 		}
 
 		//-------------------------------------------------------------------------

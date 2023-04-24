@@ -127,7 +127,6 @@ int main( int argc, char* argv[] )
 
     Resource::CompilerRegistry compilerRegistry( typeRegistry, settings.m_rawResourcePath );
 
-
     // Execute compilation command
     //-------------------------------------------------------------------------
 

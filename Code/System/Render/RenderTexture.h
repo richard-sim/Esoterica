@@ -5,11 +5,42 @@
 #include "System/Resource/IResource.h"
 #include "System/Serialization/BinarySerialization.h"
 #include "System/Math/Math.h"
+#include "System/Types/BitFlags.h"
 
 //-------------------------------------------------------------------------
 
 namespace EE::Render
 {
+    // Specified the texel usage aspect.
+    enum class ImageAspectFlags
+    {
+        Color = 0, // Used as color attachment.
+        Depth, // Used as depth attachment.
+        Stencil, // Used as stencil attachment.
+        Metadata, // Used as metadata to store information about other data.
+    };
+
+    struct TextureSubresourceRange
+    {
+        TBitFlags<ImageAspectFlags>		m_aspectFlags;
+        uint32_t							m_baseMipLevel;
+        uint32_t							m_levelCount;
+        uint32_t							m_baseArrayLayer;
+        uint32_t							m_layerCount;
+    };
+
+    enum class ImageMemoryLayout
+    {
+        /// Choose the most optimal layout for each usage. Performs layout transitions as appropriate for the access.
+        Optimal,
+        /// Layout accessible by all Vulkan access types on a device - no layout transitions except for presentation
+        General,
+        /// Similar to `General`, but also allows presentation engines to access it - no layout transitions.
+        /// Requires `VK_KHR_shared_presentable_image` to be enabled, and this can only be used for shared presentable
+        /// images (i.e. single-buffered swap chains).
+        GeneralAndPresentation,
+    };
+
     enum class TextureFormat : uint8_t
     {
         Raw,

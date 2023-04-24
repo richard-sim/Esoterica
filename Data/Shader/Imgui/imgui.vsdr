@@ -1,0 +1,7 @@
+{
+    "TypeID": "EE::Render::VertexShaderResourceDescriptor",
+    "m_shaderType": "Vertex",
+    "m_shaderBackendLanguage": "DX11",
+    "m_shaderLanguage": "Hlsl",
+    "m_shaderPath": "data://shader/imgui/vs_imgui.hlsl"
+}

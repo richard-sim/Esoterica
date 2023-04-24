@@ -130,8 +130,8 @@ namespace EE::Network
     private:
 
         AddressString                                   m_address;
-        uint32_t                                          m_connectionHandle = 0;
-        uint32_t                                          m_reconnectionAttemptsRemaining = 5;
+        uint32_t                                        m_connectionHandle = 0;
+        uint32_t                                        m_reconnectionAttemptsRemaining = 5;
         Status                                          m_status = Status::Disconnected;
     };
 

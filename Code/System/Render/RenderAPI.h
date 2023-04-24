@@ -197,6 +197,8 @@ namespace EE::Render
         ViewRT,
         ViewDS,
 
+        CommandBuffer,
+
         numTypes,
     };
 
@@ -262,6 +264,7 @@ namespace EE::Render
     typedef ObjectHandle<ResourceType::BlendState>            BlendStateHandle;
     typedef ObjectHandle<ResourceType::RasterizerState>       RasterizerStateHandle;
     typedef ObjectHandle<ResourceType::SamplerState>          SamplerStateHandle;
+    typedef ObjectHandle<ResourceType::CommandBuffer>         CommandBufferHandle;
     typedef ObjectHandle<ResourceType::ViewUAV>               ViewUAVHandle;
     typedef ObjectHandle<ResourceType::ViewSRV>               ViewSRVHandle;
     typedef ObjectHandle<ResourceType::ViewRT>                ViewRTHandle;

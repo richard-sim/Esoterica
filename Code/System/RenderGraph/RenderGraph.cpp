@@ -5,6 +5,12 @@ namespace EE
 {
 	namespace RG
 	{
+		RGNodeBuilder::RGNodeBuilder( RenderGraph& graph, RGNode& node )
+			: m_graph( graph ), m_node( node )
+		{}
+
+		//-------------------------------------------------------------------------
+
 		RenderGraph::RenderGraph()
 			: RenderGraph( "Unknown Render Graph" )
 		{}
@@ -15,9 +21,12 @@ namespace EE
 
 		//-------------------------------------------------------------------------
 		
-		RGNode& RenderGraph::AddNode( String const& nodeName )
+		RGNodeBuilder RenderGraph::AddNode( String const& nodeName )
 		{
-			return m_graph.emplace_back( nodeName );
+			auto nextID = static_cast<uint32_t>(m_graph.size());
+			auto& newNode = m_graph.emplace_back( nodeName, nextID );
+
+			return RGNodeBuilder( *this, newNode );
 		}
 
 		#if EE_DEVELOPMENT_TOOLS

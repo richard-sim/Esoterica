@@ -5,18 +5,19 @@ namespace EE
 	namespace RG
 	{
 		RGNode::RGNode()
-			: RGNode( "Unknown Pass" )
+			: RGNode( "Unknown Pass", std::numeric_limits<NodeID>::max() )
 		{}
 
-		RGNode::RGNode( String const& nodeName )
-			: m_passName( nodeName )
+		RGNode::RGNode( String const& nodeName, NodeID id )
+			: m_passName( nodeName ), m_id( id )
 		{}
 
 		//-------------------------------------------------------------------------
-	
-		RGNodeResource::RGNodeResource( RGResourceSlotID slotID )
-			: m_slotID( slotID )
-		{
-		}
+
+		RGNodeResource::RGNodeResource( RGResourceSlotID slotID, Render::RenderResourceAccessState access )
+			: m_slotID( slotID ), m_passAccess( access )
+		{}
+
+		//-------------------------------------------------------------------------
 	}
 }

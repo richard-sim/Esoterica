@@ -2,8 +2,15 @@
 #include "EngineTools/Render/ResourceDescriptors/ResourceDescriptor_RenderShader.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/Serialization/BinarySerialization.h"
+#include "System/Memory/Pointers.h"
+#include "System/Types/String.h"
 
+// DX11 compile header
 #include <d3dcompiler.h>
+
+// Vulkan compile header
+#include <atlbase.h>
+#include <dxc/dxcapi.h>
 
 //-------------------------------------------------------------------------
 
@@ -166,14 +173,7 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
-    Render::ShaderCompiler::ShaderCompiler()
-        : Resource::Compiler( "ShaderCompiler", s_version )
-    {
-        m_outputTypes.push_back( VertexShader::GetStaticResourceTypeID() );
-        m_outputTypes.push_back( PixelShader::GetStaticResourceTypeID() );
-    }
-
-    Resource::CompilationResult Render::ShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
+    Resource::CompilationResult Render::ShaderCompiler::CompileShader( Resource::CompileContext const& ctx, int32_t compilerVersion ) const
     {
         ShaderResourceDescriptor resourceDescriptor;
         if ( !Resource::ResourceDescriptor::TryReadFromFile( *m_pTypeRegistry, ctx.m_inputFilePath, resourceDescriptor ) )
@@ -181,39 +181,60 @@ namespace EE::Render
             return Error( "Failed to read resource descriptor from input file: %s", ctx.m_inputFilePath.c_str() );
         }
 
-        Shader* pShader = nullptr;
+        if ( resourceDescriptor.m_shaderBackendLanguage == ShaderBackendLanguage::DX11 )
+        {
+            return CompileDX11Shader( ctx, resourceDescriptor, compilerVersion );
+        }
+        else if ( resourceDescriptor.m_shaderBackendLanguage == ShaderBackendLanguage::Vulkan )
+        {
+            return CompileVulkanShader( ctx, resourceDescriptor, compilerVersion );
+        }
+        else
+        {
+            return Error( "Unknown shader graphic backend" );
+        }
+    }
+
+    Resource::CompilationResult ShaderCompiler::CompileDX11Shader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const
+    {
+        uint32_t shaderCompileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
+        #ifdef EE_DEBUG
+        shaderCompileFlags |= D3DCOMPILE_DEBUG;
+        #endif
+
+        TSharedPtr<Shader> pShader = nullptr;
 
         // Set compile options
         //-------------------------------------------------------------------------
 
         String compileTarget;
-        if ( resourceDescriptor.m_shaderType == ShaderType::Vertex )
+        if ( desc.m_shaderType == ShaderType::Vertex )
         {
             compileTarget = "vs_5_0";
-            pShader = EE::New<VertexShader>();
+            pShader = MakeShared<VertexShader>();
         }
-        else if ( resourceDescriptor.m_shaderType == ShaderType::Pixel )
+        else if ( desc.m_shaderType == ShaderType::Pixel )
         {
             compileTarget = "ps_5_0";
-            pShader = EE::New<PixelShader>();
+            pShader = MakeShared<PixelShader>();
+        }
+        else if ( desc.m_shaderType == ShaderType::Compute )
+        {
+            compileTarget = "cs_5_0";
+            pShader = MakeShared<ComputeShader>();
         }
         else
         {
             return Error( "Unknown shader type" );
         }
 
-        uint32_t shaderCompileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
-        #ifdef EE_DEBUG
-        shaderCompileFlags |= D3DCOMPILE_DEBUG;
-        #endif
-
         // Load shader file
         //-------------------------------------------------------------------------
 
         FileSystem::Path shaderFilePath;
-        if ( !ConvertResourcePathToFilePath( resourceDescriptor.m_shaderPath, shaderFilePath ) )
+        if ( !ConvertResourcePathToFilePath( desc.m_shaderPath, shaderFilePath ) )
         {
-            return Error( "Invalid texture data path: %s", resourceDescriptor.m_shaderPath.c_str() );
+            return Error( "Invalid texture data path: %s", desc.m_shaderPath.c_str() );
         }
 
         Blob fileData;
@@ -231,7 +252,8 @@ namespace EE::Render
 
         if ( FAILED( result ) )
         {
-            char const * pErrorMessage = (const char*) pErrorMessagesBlob->GetBufferPointer();
+            char const* pErrorMessage = (const char*)pErrorMessagesBlob->GetBufferPointer();
+            printf( "Failed to compiler with: %s", pErrorMessage );
             Error( "Failed to compile specified shader file, error: %u", pErrorMessage );
             pErrorMessagesBlob->Release();
             return Resource::CompilationResult::Failure;
@@ -247,7 +269,7 @@ namespace EE::Render
         //-------------------------------------------------------------------------
 
         ID3D11ShaderReflection* pShaderReflection = nullptr;
-        if ( FAILED( D3DReflect( pCompiledShaderBlob->GetBufferPointer(), pCompiledShaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &pShaderReflection ) ) )
+        if ( FAILED( D3DReflect( pCompiledShaderBlob->GetBufferPointer(), pCompiledShaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&pShaderReflection ) ) )
         {
             return Error( "Failed to reflect compiled shader file" );
         }
@@ -265,7 +287,7 @@ namespace EE::Render
         // If vertex shader
         if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
         {
-            auto pVertexShader = reinterpret_cast<VertexShader*>( pShader );
+            auto pVertexShader = reinterpret_cast<VertexShader*>( pShader.get() );
             // Get vertex buffer input element descs
             if ( !GetInputLayoutDesc( pShaderReflection, pVertexShader->m_vertexLayoutDesc ) )
             {
@@ -282,15 +304,15 @@ namespace EE::Render
 
         Serialization::BinaryOutputArchive archive;
 
-        if ( pShader->GetPipelineStage() == PipelineStage::Pixel )
-        {
-            Resource::ResourceHeader hdr( s_version, PixelShader::GetStaticResourceTypeID() );
-            archive << hdr << *static_cast<PixelShader*>( pShader );
-        }
         if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
         {
-            Resource::ResourceHeader hdr( s_version, PixelShader::GetStaticResourceTypeID() );
-            archive << hdr << *static_cast<VertexShader*>( pShader );
+            Resource::ResourceHeader hdr( compilerVersion, VertexShader::GetStaticResourceTypeID() );
+            archive << hdr << *static_cast<VertexShader*>( pShader.get() );
+        }
+        if ( pShader->GetPipelineStage() == PipelineStage::Pixel )
+        {
+            Resource::ResourceHeader hdr( compilerVersion, PixelShader::GetStaticResourceTypeID() );
+            archive << hdr << *static_cast<PixelShader*>( pShader.get() );
         }
 
         if ( archive.WriteToFile( ctx.m_outputFilePath ) )
@@ -301,5 +323,135 @@ namespace EE::Render
         {
             return CompilationFailed( ctx );
         }
+    }
+
+    Resource::CompilationResult ShaderCompiler::CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const
+    {
+        uint32_t shaderCompileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
+        #ifdef EE_DEBUG
+        shaderCompileFlags |= D3DCOMPILE_DEBUG;
+        #endif
+
+        TSharedPtr<Shader> pShader = nullptr;
+
+        // Set compile options
+        //-------------------------------------------------------------------------
+
+        String compileTarget;
+        if ( desc.m_shaderType == ShaderType::Vertex )
+        {
+            compileTarget = "vs_5_0";
+            pShader = MakeShared<VertexShader>();
+        }
+        else if ( desc.m_shaderType == ShaderType::Pixel )
+        {
+            compileTarget = "ps_5_0";
+            pShader = MakeShared<PixelShader>();
+        }
+        else if ( desc.m_shaderType == ShaderType::Compute )
+        {
+            compileTarget = "cs_5_0";
+            pShader = MakeShared<ComputeShader>();
+        }
+        else
+        {
+            return Error( "Unknown shader type" );
+        }
+
+        // Load shader file
+        //-------------------------------------------------------------------------
+
+        FileSystem::Path shaderFilePath;
+        if ( !ConvertResourcePathToFilePath( desc.m_shaderPath, shaderFilePath ) )
+        {
+            return Error( "Invalid texture data path: %s", desc.m_shaderPath.c_str() );
+        }
+
+        // Compile shader file
+        //-------------------------------------------------------------------------
+
+        HRESULT hres;
+
+        // Initialize DXC library
+        CComPtr<IDxcLibrary> library;
+        hres = DxcCreateInstance( CLSID_DxcLibrary, IID_PPV_ARGS( &library ) );
+        if ( FAILED( hres ) )
+        {
+            return Error( "Failed to initialize Dxc library" );
+        }
+
+        // Initialize DXC compiler
+        CComPtr<IDxcCompiler3> compiler;
+        hres = DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
+        if ( FAILED( hres ) )
+        {
+            return Error( "Failed to initialize Dxc compiler" );
+        }
+
+        // Initialize DXC utility
+        CComPtr<IDxcUtils> utils;
+        hres = DxcCreateInstance( CLSID_DxcUtils, IID_PPV_ARGS( &utils ) );
+        if ( FAILED( hres ) )
+        {
+            return Error( "Failed to initialize Dxc utility" );
+        }
+
+        // Configure the compiler arguments for compiling the HLSL shader to SPIR-V
+        //std::vector<LPCWSTR> arguments = {
+        //    // (Optional) name of the shader file to be displayed e.g. in an error message
+        //    filename.c_str(),
+        //    // Shader main entry point
+        //    L"-E", L"main",
+        //    // Shader target profile
+        //    L"-T", targetProfile,
+        //    // Compile to SPIRV
+        //    L"-spirv"
+        //};
+
+        //compiler->Compile(
+
+        //);
+
+        EE_UNIMPLEMENTED_FUNCTION();
+        return Resource::CompilationResult();
+    }
+
+    //-------------------------------------------------------------------------
+
+    VertexShaderCompiler::VertexShaderCompiler()
+        : ShaderCompiler( "VertexShaderCompiler", s_version )
+    {
+        m_outputTypes.push_back( VertexShader::GetStaticResourceTypeID() );
+    }
+
+    Resource::CompilationResult VertexShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
+    {
+        return CompileShader( ctx, s_version );
+    }
+
+    //-------------------------------------------------------------------------
+
+    PixelShaderCompiler::PixelShaderCompiler()
+        : ShaderCompiler( "PixelShaderCompiler", s_version )
+    {
+        m_outputTypes.push_back( PixelShader::GetStaticResourceTypeID() );
+    }
+
+    Resource::CompilationResult PixelShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
+    {
+        return CompileShader( ctx, s_version );
+    }
+
+    //-------------------------------------------------------------------------
+
+    ComputeShaderCompiler::ComputeShaderCompiler()
+        : ShaderCompiler( "ComputeShaderCompiler", s_version )
+    {
+        m_outputTypes.push_back( ComputeShader::GetStaticResourceTypeID() );
+    }
+
+    Resource::CompilationResult ComputeShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
+    {
+        return CompileShader( ctx, s_version );
     }
 }
