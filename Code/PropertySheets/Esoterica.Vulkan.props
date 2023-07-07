@@ -12,7 +12,7 @@
     <Link>
       <AdditionalLibraryDirectories>$(EE_VK_PATH)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <!-- dxcompiler.lib should not be included in all applications **/ -->
-      <AdditionalDependencies>vulkan-1.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;dxcompiler.lib;spirv-cross-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 </Project>

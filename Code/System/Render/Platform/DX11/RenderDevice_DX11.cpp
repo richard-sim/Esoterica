@@ -16,6 +16,9 @@
 #include "System/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
 #include "System/Render/Platform/Vulkan/Backend/VulkanDevice.h"
 #include "System/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanResource.h"
+
+#include <vulkan/vulkan.hpp>
 #endif
 
 //-------------------------------------------------------------------------
@@ -520,6 +523,29 @@ namespace EE::Render
             DestroyBuffer( cbuffer );
         }
         shader.m_cbuffers.clear();
+    }
+
+    void RenderDevice::CreateVkShader( Shader& shader )
+    {
+        // TODO: temporary, move this to vulkan render device
+        EE_ASSERT( IsInitialized() && !shader.IsValid() );
+
+        auto pShaderHandle = m_pVkDevice->CreateShader( shader.m_byteCode );
+        shader.m_shaderHandle.m_pData = pShaderHandle;
+
+        // remove shader code to reduce some RAM usage.
+        auto emptyBlob = Blob{};
+        std::swap( shader.m_byteCode, emptyBlob );
+
+        EE_ASSERT( shader.m_byteCode.capacity() == 0 );
+    }
+
+    void RenderDevice::DestroyVkShader( Shader& shader )
+    {
+        EE_ASSERT( IsInitialized() && shader.IsValid() );
+
+        auto& pShader = reinterpret_cast<Backend::VulkanShader&>( shader.m_shaderHandle.m_pData );
+        m_pVkDevice->DestroyShader( pShader );
     }
 
     //-------------------------------------------------------------------------

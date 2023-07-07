@@ -42,21 +42,21 @@ namespace EE::Render
 
         struct PunctualLight
         {
-            Vector m_positionInvRadiusSqr;
-            Vector m_dir;
-            Vector m_color;
-            Vector m_spotAngles;
+            Vector              m_positionInvRadiusSqr;
+            Vector              m_dir;
+            Vector              m_color;
+            Vector              m_spotAngles;
         };
 
         struct LightData
         {
-            Vector          m_SunDirIndirectIntensity = Vector::Zero;// TODO: refactor to Float3 and float
-            Vector          m_SunColorRoughnessOneLevel = Vector::Zero;// TODO: refactor to Float3 and float
-            Matrix          m_sunShadowMapMatrix = Matrix( ZeroInit );
-            float           m_manualExposure = -1.0f;
-            uint32_t          m_lightingFlags = 0;
-            uint32_t          m_numPunctualLights = 0;
-            PunctualLight   m_punctualLights[s_maxPunctualLights];
+            Vector              m_SunDirIndirectIntensity = Vector::Zero;// TODO: refactor to Float3 and float
+            Vector              m_SunColorRoughnessOneLevel = Vector::Zero;// TODO: refactor to Float3 and float
+            Matrix              m_sunShadowMapMatrix = Matrix( ZeroInit );
+            float               m_manualExposure = -1.0f;
+            uint32_t            m_lightingFlags = 0;
+            uint32_t            m_numPunctualLights = 0;
+            PunctualLight       m_punctualLights[s_maxPunctualLights];
         };
 
         struct alignas(16) PickingData
@@ -71,34 +71,34 @@ namespace EE::Render
                 m_ID[3] = (uint32_t) ( ( v1 >> 32 ) & 0x00000000FFFFFFFF );
             }
 
-            uint32_t m_ID[4];
-            Float4 m_padding;
+            uint32_t        m_ID[4];
+            Float4          m_padding;
         };
 
         struct MaterialData
         {
-            uint32_t   m_surfaceFlags = 0;
-            float    m_metalness = 0.0f;
-            float    m_roughness = 0.0f;
-            float    m_normalScaler = 1.0f;
-            Vector   m_albedo;
+            uint32_t    m_surfaceFlags = 0;
+            float       m_metalness = 0.0f;
+            float       m_roughness = 0.0f;
+            float       m_normalScaler = 1.0f;
+            Vector      m_albedo;
         };
 
         struct ObjectTransforms
         {
-            Matrix  m_worldTransform = Matrix( ZeroInit );
-            Matrix  m_normalTransform = Matrix( ZeroInit );
-            Matrix  m_viewprojTransform = Matrix( ZeroInit );
+            Matrix      m_worldTransform = Matrix( ZeroInit );
+            Matrix      m_normalTransform = Matrix( ZeroInit );
+            Matrix      m_viewprojTransform = Matrix( ZeroInit );
         };
 
         struct RenderData //TODO: optimize - there should not be per frame updates
         {
-            ObjectTransforms                        m_transforms;
-            LightData                               m_lightData;
-            CubemapTexture const*                   m_pSkyboxRadianceTexture;
-            CubemapTexture const*                   m_pSkyboxTexture;
-            TVector<StaticMeshComponent const*>&    m_staticMeshComponents;
-            TVector<SkeletalMeshComponent const*>&  m_skeletalMeshComponents;
+            ObjectTransforms                            m_transforms;
+            LightData                                   m_lightData;
+            CubemapTexture const*                       m_pSkyboxRadianceTexture;
+            CubemapTexture const*                       m_pSkyboxTexture;
+            TVector<StaticMeshComponent const*>&        m_staticMeshComponents;
+            TVector<SkeletalMeshComponent const*>&      m_skeletalMeshComponents;
         };
 
     public:
@@ -144,18 +144,20 @@ namespace EE::Render
         SamplerState                                            m_shadowSampler;
         ShaderInputBindingHandle                                m_inputBindingStatic;
         ShaderInputBindingHandle                                m_inputBindingSkeletal;
-        PipelineState                                           m_pipelineStateStatic;
-        PipelineState                                           m_pipelineStateSkeletal;
-        PipelineState                                           m_pipelineStateStaticShadow;
-        PipelineState                                           m_pipelineStateSkeletalShadow;
-        PipelineState                                           m_pipelineSkybox;
+
+        // TODO: we change the origin PipelineState to RasterPipelineState
+        RasterPipelineState                                     m_pipelineStateStatic;
+        RasterPipelineState                                     m_pipelineStateSkeletal;
+        RasterPipelineState                                     m_pipelineStateStaticShadow;
+        RasterPipelineState                                     m_pipelineStateSkeletalShadow;
+        RasterPipelineState                                     m_pipelineSkybox;
         ComputeShader                                           m_precomputeDFGComputeShader;
         Texture                                                 m_precomputedBRDF;
         Texture                                                 m_shadowMap;
-        PipelineState                                           m_pipelinePrecomputeBRDF;
+        ComputePipelineState                                    m_pipelinePrecomputeBRDF;
 
         PixelShader                                             m_pixelShaderPicking;
-        PipelineState                                           m_pipelineStateStaticPicking;
-        PipelineState                                           m_pipelineStateSkeletalPicking;
+        RasterPipelineState                                     m_pipelineStateStaticPicking;
+        RasterPipelineState                                     m_pipelineStateSkeletalPicking;
     };
 }

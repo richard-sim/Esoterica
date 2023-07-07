@@ -56,6 +56,7 @@ namespace EE::Render
         EE_EXPOSE ShaderBackendLanguage             m_shaderBackendLanguage = ShaderBackendLanguage::DX11;
         EE_EXPOSE ShaderLanguage                    m_shaderLanguage = ShaderLanguage::Hlsl;
         EE_EXPOSE ResourcePath                      m_shaderPath;
+        EE_EXPOSE String                            m_shaderEntryName = "main";
     };
 
     //-------------------------------------------------------------------------

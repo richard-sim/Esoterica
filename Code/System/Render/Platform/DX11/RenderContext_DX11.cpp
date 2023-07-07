@@ -23,7 +23,7 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
-    void RenderContext::SetPipelineState( PipelineState const& pipelineState ) const
+    void RenderContext::SetRasterPipelineState( RasterPipelineState const& pipelineState ) const
     {
         // VS
         //-------------------------------------------------------------------------
@@ -81,24 +81,6 @@ namespace EE::Render
             m_pDeviceContext->HSSetShader( nullptr, nullptr, 0 );
         }
 
-        // CS
-        //-------------------------------------------------------------------------
-
-        if ( pipelineState.m_pComputeShader != nullptr && pipelineState.m_pComputeShader->IsValid() )
-        {
-            m_pDeviceContext->CSSetShader( (ID3D11ComputeShader*) pipelineState.m_pComputeShader->GetShaderHandle().m_pData, nullptr, 0 );
-
-            auto const numCbuffers = pipelineState.m_pComputeShader->GetNumConstBuffers();
-            for ( auto i = 0u; i < numCbuffers; i++ )
-            {
-                m_pDeviceContext->CSSetConstantBuffers( (uint32_t) i, 1, (ID3D11Buffer**) &pipelineState.m_pComputeShader->GetConstBuffer( i ).GetResourceHandle().m_pData );
-            }
-        }
-        else
-        {
-            m_pDeviceContext->CSSetShader( nullptr, nullptr, 0 );
-        }
-
         // PS
         //-------------------------------------------------------------------------
 
@@ -133,6 +115,24 @@ namespace EE::Render
         {
             m_pDeviceContext->RSSetState( (ID3D11RasterizerState*) pipelineState.m_pRasterizerState->GetResourceHandle().m_pData );
             SetRasterizerScissorRectangles( nullptr );
+        }
+    }
+
+    void RenderContext::SetComputePipelineState( ComputePipelineState const& pipelineState ) const
+    {
+        if ( pipelineState.m_pComputeShader != nullptr && pipelineState.m_pComputeShader->IsValid() )
+        {
+            m_pDeviceContext->CSSetShader( (ID3D11ComputeShader*)pipelineState.m_pComputeShader->GetShaderHandle().m_pData, nullptr, 0 );
+
+            auto const numCbuffers = pipelineState.m_pComputeShader->GetNumConstBuffers();
+            for ( auto i = 0u; i < numCbuffers; i++ )
+            {
+                m_pDeviceContext->CSSetConstantBuffers( (uint32_t)i, 1, (ID3D11Buffer**)&pipelineState.m_pComputeShader->GetConstBuffer( i ).GetResourceHandle().m_pData );
+            }
+        }
+        else
+        {
+            m_pDeviceContext->CSSetShader( nullptr, nullptr, 0 );
         }
     }
 

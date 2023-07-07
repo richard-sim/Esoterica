@@ -17,6 +17,7 @@
   <ItemGroup>
     <ClInclude Include="Algorithm\Hash.h" />
     <ClInclude Include="Algorithm\Quantization.h" />
+    <ClInclude Include="Algorithm\Sort.h" />
     <ClInclude Include="Algorithm\TopologicalSort.h" />
     <ClInclude Include="Algorithm\Encoding.h" />
     <ClInclude Include="Application\ApplicationGlobalState.h" />
@@ -64,11 +65,10 @@
     <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipeline.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h" />
@@ -77,6 +77,8 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
     <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h" />
     <ClInclude Include="Render\RenderAPI.h" />
+    <ClInclude Include="Render\RenderPipeline.h" />
+    <ClInclude Include="Render\RenderPipelineRegistry.h" />
     <ClInclude Include="Render\RenderResourceBarrier.h" />
     <ClInclude Include="Render\RenderBuffer.h" />
     <ClInclude Include="Render\RenderCoreResources.h" />
@@ -505,12 +507,14 @@
     <ClInclude Include="Types\LoadingStatus.h" />
     <ClInclude Include="Types\RefCount.h" />
     <ClInclude Include="Types\ScopedValue.h" />
+    <ClInclude Include="Types\Set.h" />
     <ClInclude Include="Types\String.h" />
     <ClInclude Include="Types\Containers_ForwardDecl.h" />
     <ClInclude Include="Types\StringID.h" />
     <ClInclude Include="Types\Tag.h" />
     <ClInclude Include="Types\UUID.h" />
     <ClInclude Include="Types\Variant.h" />
+    <ClInclude Include="Types\WString.h" />
     <ClInclude Include="_Module\API.h" />
   </ItemGroup>
   <ItemGroup>
@@ -567,6 +571,8 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp" />
     <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp" />
+    <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
+    <ClCompile Include="Render\RenderPipelineState.cpp" />
     <ClCompile Include="Render\RenderResourceBarrier.cpp" />
     <ClCompile Include="Render\RenderCoreResources.cpp" />
     <ClCompile Include="Render\RenderShader.cpp" />
@@ -719,6 +725,7 @@
     <ClCompile>
       <PreprocessToFile>false</PreprocessToFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

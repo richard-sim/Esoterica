@@ -79,6 +79,10 @@ namespace EE
         ImGuiX::IDevelopmentToolsUI*                    m_pToolsUI = nullptr;
         #endif
 
+        // Temporary: Test
+        //-------------------------------------------------------------------------
+        Render::PipelineRegistry*                       m_pRenderPipelineResgistry = nullptr;
+
         // Application data
         //-------------------------------------------------------------------------
 

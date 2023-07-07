@@ -376,6 +376,8 @@
     <ClCompile Include="Render\RenderResourceBarrier.cpp">
       <Filter>Render</Filter>
     </ClCompile>
+    <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
+    <ClCompile Include="Render\RenderPipelineState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1804,7 +1806,6 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
     <ClInclude Include="RenderGraph\RenderGraph.h" />
     <ClInclude Include="RenderGraph\RenderGraphResource.h" />
@@ -1818,7 +1819,12 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipeline.h" />
+    <ClInclude Include="Types\WString.h" />
+    <ClInclude Include="Types\Set.h" />
+    <ClInclude Include="Render\RenderPipeline.h" />
+    <ClInclude Include="Render\RenderPipelineRegistry.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h" />
+    <ClInclude Include="Algorithm\Sort.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

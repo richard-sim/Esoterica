@@ -364,6 +364,7 @@
     <ClCompile Include="ThirdParty\sqlite\SqliteHelpers.cpp">
       <Filter>ThirdParty\sqlite</Filter>
     </ClCompile>
+    <ClCompile Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\ToolsContext.h">
@@ -789,6 +790,7 @@
     <ClInclude Include="ThirdParty\subprocess\subprocess.h">
       <Filter>ThirdParty\subprocess</Filter>
     </ClInclude>
+    <ClInclude Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">

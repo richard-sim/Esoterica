@@ -30,9 +30,9 @@ namespace EE
 
         public:
 
-            int32_t                     m_version;
-            ResourceTypeID          m_resourceType;
-            TVector<ResourceID>     m_installDependencies;
+            int32_t                         m_version;
+            ResourceTypeID                  m_resourceType;
+            TVector<ResourceID>             m_installDependencies;
         };
     }
 }

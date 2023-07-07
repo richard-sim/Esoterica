@@ -23,6 +23,13 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
+        VertexShader::VertexShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers, VertexLayoutDescriptor const& vertexLayoutDesc )
+            : Shader( PipelineStage::Vertex, pByteCode, byteCodeSize, constBuffers )
+            , m_vertexLayoutDesc( vertexLayoutDesc )
+        {}
+
+        //-------------------------------------------------------------------------
+
         PixelShader::PixelShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers )
             : Shader( PipelineStage::Pixel, pByteCode, byteCodeSize, constBuffers )
         {}
@@ -34,11 +41,6 @@ namespace EE
         {}
 
         //-------------------------------------------------------------------------
-
-        VertexShader::VertexShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers, VertexLayoutDescriptor const& vertexLayoutDesc )
-            : Shader( PipelineStage::Vertex, pByteCode, byteCodeSize, constBuffers )
-            , m_vertexLayoutDesc( vertexLayoutDesc )
-        {}
 
         ComputeShader::ComputeShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers )
             : Shader( PipelineStage::Compute, pByteCode, byteCodeSize, constBuffers )

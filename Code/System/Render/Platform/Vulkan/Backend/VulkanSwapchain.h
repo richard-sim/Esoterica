@@ -3,8 +3,8 @@
 
 #include "System/Memory/Pointers.h"
 #include "System/Types/Arrays.h"
+#include "VulkanResource.h"
 #include "VulkanTexture.h"
-#include "VulkanSemaphore.h"
 
 #include <vulkan/vulkan_core.h>
 

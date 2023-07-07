@@ -140,6 +140,7 @@
     <ClCompile Include="Physics\Workspaces\Workspace_Ragdoll.cpp" />
     <ClCompile Include="Core\PropertyGrid\PropertyGrid.cpp" />
     <ClCompile Include="Core\PropertyGrid\PropertyGridCoreEditors.cpp" />
+    <ClCompile Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.cpp" />
     <ClCompile Include="Render\ResourceCompilers\ResourceCompiler_RenderMaterial.cpp" />
     <ClCompile Include="Render\ResourceCompilers\ResourceCompiler_RenderMesh.cpp" />
     <ClCompile Include="Render\ResourceCompilers\ResourceCompiler_RenderShader.cpp" />
@@ -274,6 +275,7 @@
     <ClInclude Include="Physics\Workspaces\Workspace_Ragdoll.h" />
     <ClInclude Include="Core\PropertyGrid\PropertyGrid.h" />
     <ClInclude Include="Core\PropertyGrid\PropertyGridCoreEditors.h" />
+    <ClInclude Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.h" />
     <ClInclude Include="Render\ResourceCompilers\ResourceCompiler_RenderMaterial.h" />
     <ClInclude Include="Render\ResourceCompilers\ResourceCompiler_RenderMesh.h" />
     <ClInclude Include="Render\ResourceCompilers\ResourceCompiler_RenderShader.h" />

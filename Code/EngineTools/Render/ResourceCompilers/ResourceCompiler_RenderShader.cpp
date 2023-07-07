@@ -4,13 +4,14 @@
 #include "System/Serialization/BinarySerialization.h"
 #include "System/Memory/Pointers.h"
 #include "System/Types/String.h"
+#include "System/Algorithm/Sort.h"
+
+#include "EngineTools/Render/ResourceCompilers/Platform/DxcShaderCompiler.h"
 
 // DX11 compile header
 #include <d3dcompiler.h>
-
-// Vulkan compile header
-#include <atlbase.h>
-#include <dxc/dxcapi.h>
+// Spirv Reflection
+#include <spirv_cross/spirv_cross.hpp>
 
 //-------------------------------------------------------------------------
 
@@ -51,7 +52,7 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
-    static bool GetResourceBindingDescs( ID3D11ShaderReflection* pShaderReflection, TVector<Shader::ResourceBinding>& resourceBindings )
+    static bool GetResourceBindingDescs( ID3D11ShaderReflection* pShaderReflection, TVector<TVector<Shader::ResourceBinding>>& resourceBindings )
     {
         EE_ASSERT( pShaderReflection != nullptr );
 
@@ -63,6 +64,9 @@ namespace EE::Render
             return false;
         }
 
+        // default use only one set
+        resourceBindings.resize( 1 );
+
         for ( UINT i = 0; i < shaderDesc.BoundResources; i++ )
         {
             D3D11_SHADER_INPUT_BIND_DESC desc;
@@ -70,7 +74,7 @@ namespace EE::Render
             if ( SUCCEEDED( result ) )
             {
                 Shader::ResourceBinding binding = { Hash::GetHash32( desc.Name ), desc.BindPoint };
-                resourceBindings.push_back( binding );
+                resourceBindings[0].push_back( binding );
             }
             else
             {
@@ -173,6 +177,163 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
+    //static uint32_t SpirvTypeToShaderDataType( const spirv_cross::SPIRType& type )
+    //{
+    //    if ( type.basetype == spirv_cross::SPIRType::Float )
+    //    {
+    //        if ( type.columns == 1 )
+    //        {
+    //            if ( type.vecsize == 1 )
+    //                return sizeof( float );
+    //            else if ( type.vecsize == 2 )
+    //                return sizeof( float ) * 2;
+    //            else if ( type.vecsize == 3 )
+    //                return sizeof( float ) * 3;
+    //            else if ( type.vecsize == 4 )
+    //                return sizeof( float ) * 4;
+    //        }
+    //        else if ( type.columns == 3 && type.vecsize == 3 )
+    //            return sizeof( float ) * 3 * 3;
+    //        else if ( type.columns == 4 && type.vecsize == 4 )
+    //            return sizeof( float ) * 4 * 4;
+    //    }
+    //    else if ( type.basetype == spirv_cross::SPIRType::Int )
+    //    {
+    //        if ( type.vecsize == 1 )
+    //            return sizeof( int );
+    //        else if ( type.vecsize == 2 )
+    //            return sizeof( int ) * 2;
+    //        else if ( type.vecsize == 3 )
+    //            return sizeof( int ) * 3;
+    //        else if ( type.vecsize == 4 )
+    //            return sizeof( int ) * 4;
+    //    }
+    //    else if ( type.basetype == spirv_cross::SPIRType::UInt )
+    //        if ( type.vecsize == 1 )
+    //            return sizeof( int ) * 4;
+    //        else if ( type.basetype == spirv_cross::SPIRType::Boolean )
+    //            return sizeof( bool );
+
+    //    EE_UNREACHABLE_CODE();
+    //    return 0;
+    //}
+
+    static bool GetCBufferDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<RenderBuffer>& cbuffers )
+    {
+        auto shaderResources = spirvCompiler.get_shader_resources();
+
+        for ( auto& ubo : shaderResources.uniform_buffers )
+        {
+            auto const& type = spirvCompiler.get_type( ubo.type_id );
+            char const* name = spirvCompiler.get_name( ubo.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( ubo.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( ubo.id, spv::DecorationBinding );
+
+            RenderBuffer buffer;
+            buffer.m_ID = Hash::GetHash32( name );
+            buffer.m_byteSize = static_cast<uint32_t>( spirvCompiler.get_declared_struct_size( type ) );
+            buffer.m_byteStride = 16; // Vector4 aligned
+            buffer.m_usage = RenderBuffer::Usage::CPU_and_GPU;
+            buffer.m_type = RenderBuffer::Type::Constant;
+            buffer.m_slot = binding;
+            cbuffers.push_back( buffer );
+        }
+
+        return true;
+    }
+
+    static bool GetResourceBindingDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<TVector<Shader::ResourceBinding>>& resourceBindings )
+    {
+        auto shaderResources = spirvCompiler.get_shader_resources();
+        
+        TVector<TPair<uint32_t, Shader::ResourceBinding>> bindings;
+
+        for ( auto& ubo : shaderResources.uniform_buffers )
+        {
+            char const* name = spirvCompiler.get_name( ubo.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( ubo.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( ubo.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        for ( auto& sbo : shaderResources.storage_buffers )
+        {
+            char const* name = spirvCompiler.get_name( sbo.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( sbo.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( sbo.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        for ( auto& img : shaderResources.sampled_images )
+        {
+            char const* name = spirvCompiler.get_name( img.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( img.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( img.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        for ( auto& img : shaderResources.separate_images )
+        {
+            char const* name = spirvCompiler.get_name( img.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( img.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( img.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        for ( auto& img : shaderResources.storage_images )
+        {
+            char const* name = spirvCompiler.get_name( img.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( img.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( img.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        for ( auto& sampler : shaderResources.separate_samplers )
+        {
+            char const* name = spirvCompiler.get_name( sampler.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( sampler.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( sampler.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        for ( auto& acc : shaderResources.acceleration_structures )
+        {
+            char const* name = spirvCompiler.get_name( acc.id ).c_str();
+            auto const set = spirvCompiler.get_decoration( acc.id, spv::DecorationDescriptorSet );
+            auto const binding = spirvCompiler.get_decoration( acc.id, spv::DecorationBinding );
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        }
+
+        VectorSort( bindings, [] ( auto const& lhs, auto const& rhs )
+        {
+            return lhs < rhs;
+        } );
+
+        int currSetId = -1;
+        for ( auto const& binding : bindings )
+        {
+            if ( static_cast<int>( binding.first ) != currSetId )
+            {
+                int intervalCount = binding.first - currSetId;
+                resourceBindings.resize( resourceBindings.size() + intervalCount );
+                currSetId = binding.first;
+            }
+
+            resourceBindings[binding.first].emplace_back( binding.second );
+        }
+
+        return true;
+    }
+
+    //-------------------------------------------------------------------------
+
     Resource::CompilationResult Render::ShaderCompiler::CompileShader( Resource::CompileContext const& ctx, int32_t compilerVersion ) const
     {
         ShaderResourceDescriptor resourceDescriptor;
@@ -253,7 +414,7 @@ namespace EE::Render
         if ( FAILED( result ) )
         {
             char const* pErrorMessage = (const char*)pErrorMessagesBlob->GetBufferPointer();
-            printf( "Failed to compiler with: %s", pErrorMessage );
+            //printf( "Failed to compiler with: %s", pErrorMessage );
             Error( "Failed to compile specified shader file, error: %u", pErrorMessage );
             pErrorMessagesBlob->Release();
             return Resource::CompilationResult::Failure;
@@ -337,20 +498,20 @@ namespace EE::Render
         // Set compile options
         //-------------------------------------------------------------------------
 
-        String compileTarget;
+        DxcShaderTargetProfile profile;
         if ( desc.m_shaderType == ShaderType::Vertex )
         {
-            compileTarget = "vs_5_0";
+            profile = DxcShaderTargetProfile::Vertex;
             pShader = MakeShared<VertexShader>();
         }
         else if ( desc.m_shaderType == ShaderType::Pixel )
         {
-            compileTarget = "ps_5_0";
+            profile = DxcShaderTargetProfile::Pixel;
             pShader = MakeShared<PixelShader>();
         }
         else if ( desc.m_shaderType == ShaderType::Compute )
         {
-            compileTarget = "cs_5_0";
+            profile = DxcShaderTargetProfile::Compute;
             pShader = MakeShared<ComputeShader>();
         }
         else
@@ -370,50 +531,71 @@ namespace EE::Render
         // Compile shader file
         //-------------------------------------------------------------------------
 
-        HRESULT hres;
+        pShader->m_shaderEntryName = desc.m_shaderEntryName;
 
-        // Initialize DXC library
-        CComPtr<IDxcLibrary> library;
-        hres = DxcCreateInstance( CLSID_DxcLibrary, IID_PPV_ARGS( &library ) );
-        if ( FAILED( hres ) )
+        DxcShaderCompiler& compiler = DxcShaderCompiler::Get();
+        if ( !compiler.Compile( shaderFilePath, pShader->m_byteCode, profile, desc.m_shaderEntryName.c_str() ) )
         {
-            return Error( "Failed to initialize Dxc library" );
+            String errorMessage = compiler.GetLastErrorMessage();
+            Error( "Failed to compile specified shader file with dxc compiler, error: %s", errorMessage.c_str() );
+            return Resource::CompilationResult::Failure;
         }
 
-        // Initialize DXC compiler
-        CComPtr<IDxcCompiler3> compiler;
-        hres = DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
-        if ( FAILED( hres ) )
+        // Shader reflection
+        //-------------------------------------------------------------------------
+
+        spirv_cross::Compiler spirvCompiler( reinterpret_cast<uint32_t const*>( pShader->m_byteCode.data() ), pShader->m_byteCode.size() / sizeof(uint32_t) );
+        
+        if ( !GetCBufferDescsSpirv( spirvCompiler, pShader->m_cbuffers ) )
         {
-            return Error( "Failed to initialize Dxc compiler" );
+            return Error( "Failed to get cbuffer descs" );
         }
 
-        // Initialize DXC utility
-        CComPtr<IDxcUtils> utils;
-        hres = DxcCreateInstance( CLSID_DxcUtils, IID_PPV_ARGS( &utils ) );
-        if ( FAILED( hres ) )
+        if ( !GetResourceBindingDescsSpirv( spirvCompiler, pShader->m_resourceBindings ) )
         {
-            return Error( "Failed to initialize Dxc utility" );
+            return Error( "Failed to get resource binding descs" );
         }
 
-        // Configure the compiler arguments for compiling the HLSL shader to SPIR-V
-        //std::vector<LPCWSTR> arguments = {
-        //    // (Optional) name of the shader file to be displayed e.g. in an error message
-        //    filename.c_str(),
-        //    // Shader main entry point
-        //    L"-E", L"main",
-        //    // Shader target profile
-        //    L"-T", targetProfile,
-        //    // Compile to SPIRV
-        //    L"-spirv"
-        //};
+        // If vertex shader
+        //if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
+        //{
+        //    auto pVertexShader = reinterpret_cast<VertexShader*>( pShader.get() );
+        //    // Get vertex buffer input element descs
+        //    if ( !GetInputLayoutDesc( pShaderReflection, pVertexShader->m_vertexLayoutDesc ) )
+        //    {
+        //        return Error( "Failed to get input element descs for vertex buffer" );
+        //    }
+        //}
 
-        //compiler->Compile(
+        // Output shader resource
+        //-------------------------------------------------------------------------
 
-        //);
+        Serialization::BinaryOutputArchive archive;
 
-        EE_UNIMPLEMENTED_FUNCTION();
-        return Resource::CompilationResult();
+        if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
+        {
+            Resource::ResourceHeader hdr( compilerVersion, VertexShader::GetStaticResourceTypeID() );
+            archive << hdr << *static_cast<VertexShader*>( pShader.get() );
+        }
+        if ( pShader->GetPipelineStage() == PipelineStage::Pixel )
+        {
+            Resource::ResourceHeader hdr( compilerVersion, PixelShader::GetStaticResourceTypeID() );
+            archive << hdr << *static_cast<PixelShader*>( pShader.get() );
+        }
+        if ( pShader->GetPipelineStage() == PipelineStage::Compute )
+        {
+            Resource::ResourceHeader hdr( compilerVersion, ComputeShader::GetStaticResourceTypeID() );
+            archive << hdr << *static_cast<ComputeShader*>( pShader.get() );
+        }
+
+        if ( archive.WriteToFile( ctx.m_outputFilePath ) )
+        {
+            return CompilationSucceeded( ctx );
+        }
+        else
+        {
+            return CompilationFailed( ctx );
+        }
     }
 
     //-------------------------------------------------------------------------

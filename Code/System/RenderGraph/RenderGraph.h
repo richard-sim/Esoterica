@@ -3,8 +3,10 @@
 #include "System/_Module/API.h"
 
 #include "RenderGraphNode.h"
+#include "System/Threading/Threading.h"
 #include "System/Types/Arrays.h"
 #include "System/Types/String.h"
+#include "System/Render/RenderPipelineState.h"
 #include "System/Render/RenderResourceBarrier.h"
 
 namespace EE
@@ -16,6 +18,9 @@ namespace EE
 		template <typename Tag>
 		class RGHandle
 		{
+			friend class RenderGraph;
+			friend class RGNodeBuilder;
+
 			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!");
 
 		public:
@@ -31,8 +36,6 @@ namespace EE
 
 		private:
 
-			friend class RGNodeBuilder;
-
 			inline void Expire()
 			{
 				m_slotID.Expire();
@@ -40,14 +43,15 @@ namespace EE
 
 		private:
 
-			friend class RenderGraph;
-
 			DescType						m_desc;
 			RGResourceSlotID				m_slotID;
 		};
 
 		class EE_SYSTEM_API RenderGraph
 		{
+
+			friend class RGNodeBuilder;
+
 		public:
 
 			RenderGraph();
@@ -77,8 +81,6 @@ namespace EE
 
 		private:
 
-			friend class RGNodeBuilder;
-
 			String									m_name;
 
 			// TODO: use a real graph
@@ -86,18 +88,22 @@ namespace EE
 			TVector<RGResource>						m_graphResources;
 		};
 
+		// Helper class to build a render graph node.
+		// User can register pipeline and define the resource usage in a certain pass.
+		// TODO: [Safety Consideration] It is thread safe?
 		class EE_SYSTEM_API RGNodeBuilder
 		{
 		public:
 
-			RGNodeBuilder( RenderGraph& graph, RGNode& node );
+			RGNodeBuilder( RenderGraph const& graph, RGNode& node );
 
 		public:
 
 			// node render pipeline registration
 			//-------------------------------------------------------------------------
 			
-
+			void RegisterRasterPipeline( RasterPipelineDesc pipelineDesc );
+			void RegisterComputePipeline( ComputePipelineDesc pipelineDesc );
 
 			// Node resource read and write operations
 			//-------------------------------------------------------------------------
@@ -124,7 +130,7 @@ namespace EE
 		private:
 
 			// Safety: All reference holds during the life time of RGNodeBuilder.
-			RenderGraph&							m_graph;
+			RenderGraph const&						m_graph;
 			RGNode&									m_node;
 		};
 
@@ -135,6 +141,8 @@ namespace EE
 		{
 			static_assert( std::is_base_of<RGResourceTypeBase<RTTag>, RTTag>::value, "Invalid render graph resource tag!" );
 			typedef typename RTTag::RGDescType RGDescType;
+
+			EE_ASSERT( Threading::IsMainThread() );
 
 			RGDescType rgDesc = {};
 			rgDesc.m_desc = desc;
@@ -164,35 +172,43 @@ namespace EE
 		template <typename Tag>
 		RGNodeResourceRef<Tag, RGResourceViewType::SRV> RGNodeBuilder::CommonRead( RGHandle<Tag> const& pResource, Render::RenderResourceBarrierState access )
 		{
+			// TODO: We should make a runtime check.
 			EE_ASSERT( IsCommonReadOnlyAccess( access ) );
+			EE_ASSERT( Threading::IsMainThread() );
 			return ReadImpl<Tag, RGResourceViewType::SRV>( pResource, access );
 		}
 
 		template <typename Tag>
 		RGNodeResourceRef<Tag, RGResourceViewType::UAV> RGNodeBuilder::CommonWrite( RGHandle<Tag>& pResource, Render::RenderResourceBarrierState access )
 		{
+			// TODO: We should make a runtime check.
 			EE_ASSERT( IsCommonWriteAccess( access ) );
+			EE_ASSERT( Threading::IsMainThread() );
 			return WriteImpl<Tag, RGResourceViewType::UAV>( pResource, access );
 		}
 
 		template <typename Tag>
 		RGNodeResourceRef<Tag, RGResourceViewType::SRV> RGNodeBuilder::RasterRead( RGHandle<Tag> const& pResource, Render::RenderResourceBarrierState access )
 		{
+			// TODO: We should make a runtime check.
 			EE_ASSERT( IsRasterReadOnlyAccess( access ) );
+			EE_ASSERT( Threading::IsMainThread() );
 			return ReadImpl<Tag, RGResourceViewType::SRV>( pResource, access );
 		}
 
 		template <typename Tag>
 		RGNodeResourceRef<Tag, RGResourceViewType::RT> RGNodeBuilder::RasterWrite( RGHandle<Tag>& pResource, Render::RenderResourceBarrierState access )
 		{
+			// TODO: We should make a runtime check.
 			EE_ASSERT( IsRasterWriteAccess( access ) );
+			EE_ASSERT( Threading::IsMainThread() );
 			return WriteImpl<Tag, RGResourceViewType::RT>( pResource, access );
 		}
 
 		//-------------------------------------------------------------------------
 
 		template <typename Tag, RGResourceViewType RVT>
-		inline RGNodeResourceRef<Tag, RVT> RGNodeBuilder::ReadImpl( RGHandle<Tag> const& pResource, Render::RenderResourceBarrierState access )
+		RGNodeResourceRef<Tag, RVT> RGNodeBuilder::ReadImpl( RGHandle<Tag> const& pResource, Render::RenderResourceBarrierState access )
 		{
 			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 
@@ -212,7 +228,7 @@ namespace EE
 		}
 
 		template <typename Tag, RGResourceViewType RVT>
-		inline RGNodeResourceRef<Tag, RVT> RGNodeBuilder::WriteImpl( RGHandle<Tag>& pResource, Render::RenderResourceBarrierState access )
+		RGNodeResourceRef<Tag, RVT> RGNodeBuilder::WriteImpl( RGHandle<Tag>& pResource, Render::RenderResourceBarrierState access )
 		{
 			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 

@@ -1,0 +1,7 @@
+{
+    "TypeID": "EE::Render::VertexShaderResourceDescriptor",
+    "m_shaderType": "Vertex",
+    "m_shaderBackendLanguage": "Vulkan",
+    "m_shaderLanguage": "Hlsl",
+    "m_shaderPath": "data://shader/shader_src/defer/defer_raster.hlsl"
+}

@@ -42,9 +42,9 @@ namespace EE::Render
 
     private:
 
-        EE_EXPOSE TResourcePtr<CubemapTexture> m_skyboxTexture;
-        EE_EXPOSE TResourcePtr<CubemapTexture> m_skyboxRadianceTexture;
-        EE_EXPOSE float m_skyboxIntensity = 1.0;
-        EE_EXPOSE float m_exposure = -1.0;
+        EE_EXPOSE TResourcePtr<CubemapTexture>  m_skyboxTexture;
+        EE_EXPOSE TResourcePtr<CubemapTexture>  m_skyboxRadianceTexture;
+        EE_EXPOSE float                         m_skyboxIntensity = 1.0;
+        EE_EXPOSE float                         m_exposure = -1.0;
     };
 }

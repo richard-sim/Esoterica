@@ -35,7 +35,9 @@ namespace EE
 
             inline bool IsValid() const { return m_pDeviceContext != nullptr; }
 
-            void SetPipelineState( PipelineState const& pipelineState ) const;
+            // TODO: we change the origin PipelineState to RasterPipelineState
+            void SetRasterPipelineState( RasterPipelineState const& pipelineState ) const;
+            void SetComputePipelineState( ComputePipelineState const& pipelineState ) const;
 
             // Shaders
             void SetShaderInputBinding( ShaderInputBindingHandle const& inputBinding ) const;

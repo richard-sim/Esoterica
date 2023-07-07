@@ -87,6 +87,9 @@ namespace EE
             return m_fatalErrorHandler( "Failed to initialize engine module!" );
         }
 
+        // Temp
+        m_pRenderPipelineResgistry = m_engineModule.GetRenderPipelineRegistry();
+
         ModuleContext moduleContext;
         moduleContext.m_pTaskSystem = m_pTaskSystem;
         moduleContext.m_pTypeRegistry = m_pTypeRegistry;
@@ -248,6 +251,9 @@ namespace EE
             m_moduleInitStageReached = false;
         }
 
+        // Temp
+        m_pRenderPipelineResgistry = nullptr;
+
         //-------------------------------------------------------------------------
         // Shutdown Core
         //-------------------------------------------------------------------------
@@ -355,6 +361,13 @@ namespace EE
                 {
                     EE_PROFILE_SCOPE_ENTITY( "World Loading" );
                     m_pEntityWorldManager->UpdateLoading();
+                }
+
+                // Temp
+                //-------------------------------------------------------------------------
+
+                {
+                    m_pRenderPipelineResgistry->LoadAndUpdatePipelines();
                 }
 
                 //-------------------------------------------------------------------------

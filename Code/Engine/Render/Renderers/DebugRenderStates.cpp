@@ -155,7 +155,7 @@ namespace EE::Render
 
     void DebugPointRenderState::SetState( RenderContext const& renderContext, Viewport const& viewport )
     {
-        renderContext.SetPipelineState( m_PSO );
+        renderContext.SetRasterPipelineState( m_PSO );
         renderContext.SetVertexBuffer( m_vertexBuffer );
         renderContext.SetShaderInputBinding( m_inputBinding );
 
@@ -329,7 +329,7 @@ namespace EE::Render
 
     void DebugLineRenderState::SetState( RenderContext const& renderContext, Viewport const& viewport )
     {
-        renderContext.SetPipelineState( m_PSO );
+        renderContext.SetRasterPipelineState( m_PSO );
         renderContext.SetVertexBuffer( m_vertexBuffer );
         renderContext.SetShaderInputBinding( m_inputBinding );
 
@@ -466,7 +466,7 @@ namespace EE::Render
 
     void DebugPrimitiveRenderState::SetState( RenderContext const& renderContext, Viewport const& viewport )
     {
-        renderContext.SetPipelineState( m_PSO );
+        renderContext.SetRasterPipelineState( m_PSO );
 
         renderContext.SetVertexBuffer( m_vertexBuffer );
         renderContext.SetShaderInputBinding( m_inputBinding );
@@ -668,7 +668,7 @@ namespace EE::Render
 
     void DebugTextRenderState::SetState( RenderContext const& renderContext, Viewport const& viewport )
     {
-        renderContext.SetPipelineState( m_PSO );
+        renderContext.SetRasterPipelineState( m_PSO );
 
         renderContext.SetShaderInputBinding( m_inputBinding );
         renderContext.SetSampler( PipelineStage::Pixel, 0, m_samplerState );

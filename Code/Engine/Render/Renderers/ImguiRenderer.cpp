@@ -362,7 +362,7 @@ namespace EE::Render
         //-------------------------------------------------------------------------
 
         renderContext.SetViewport( Float2( pDrawData->DisplaySize.x, pDrawData->DisplaySize.y ), Float2( 0, 0 ) );
-        renderContext.SetPipelineState( m_PSO );
+        renderContext.SetRasterPipelineState( m_PSO );
         renderContext.SetShaderInputBinding( m_inputBinding );
         renderContext.SetPrimitiveTopology( Topology::TriangleList );
         renderContext.SetVertexBuffer( m_vertexBuffer );

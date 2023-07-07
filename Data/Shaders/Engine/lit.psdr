@@ -1,0 +1,7 @@
+{
+    "TypeID": "EE::Render::PixelShaderResourceDescriptor",
+    "m_shaderType": "Pixel",
+    "m_shaderBackendLanguage": "Vulkan",
+    "m_shaderLanguage": "Hlsl",
+    "m_shaderPath": "data://shaders/engine/ps_lit.hlsl"
+}

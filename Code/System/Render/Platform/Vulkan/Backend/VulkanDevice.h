@@ -3,8 +3,8 @@
 
 #include "System/Memory/Pointers.h"
 #include "VulkanPhysicalDevice.h"
+#include "VulkanResource.h"
 #include "VulkanTexture.h"
-#include "VulkanSemaphore.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -86,7 +86,7 @@ namespace EE::Render
 			VulkanTexture CreateTexture( TextureDesc desc );
 			void DestroyTexture( VulkanTexture texture );
 
-			void CreateVSemaphore( VulkanSemaphore& semaphore );
+			VulkanSemaphore CreateVSemaphore();
 			// TODO: design consideration.
 			// 
 			// 1. void DestroyVSemaphore( VulkanSemaphore& semaphore );
@@ -100,6 +100,9 @@ namespace EE::Render
 			// It seems like that both ensure vulkan resource object being invalid after the destruction?
 			//
 			void DestroyVSemaphore( VulkanSemaphore& semaphore );
+
+			VulkanShader CreateShader( Blob const& byteCode );
+			void DestroyShader( VulkanShader& pShader );
 
 		private:
 

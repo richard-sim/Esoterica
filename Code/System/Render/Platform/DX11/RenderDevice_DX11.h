@@ -72,6 +72,9 @@ namespace EE::Render
         void CreateShader( Shader& shader );
         void DestroyShader( Shader& shader );
 
+        void CreateVkShader( Shader& shader );
+        void DestroyVkShader( Shader& shader );
+
         // Buffers
         void CreateBuffer( RenderBuffer& buffer, void const* pInitializationData = nullptr );
         void ResizeBuffer( RenderBuffer& buffer, uint32_t newSize );
@@ -132,10 +135,10 @@ namespace EE::Render
 
         #ifdef EE_VULKAN
         // temporary
-        TSharedPtr<Backend::VulkanInstance>         m_pVkInstance;
-        TSharedPtr<Backend::VulkanSurface>          m_pVkSurface;
-        TSharedPtr<Backend::VulkanDevice>           m_pVkDevice;
-        TSharedPtr<Backend::VulkanSwapchain>        m_pVkSwapchain;
+        TSharedPtr<Backend::VulkanInstance>         m_pVkInstance = nullptr;
+        TSharedPtr<Backend::VulkanSurface>          m_pVkSurface = nullptr;
+        TSharedPtr<Backend::VulkanDevice>           m_pVkDevice = nullptr;
+        TSharedPtr<Backend::VulkanSwapchain>        m_pVkSwapchain = nullptr;
         #endif
 
         // Lock to allow loading resources while rendering across different threads

@@ -12,9 +12,9 @@
 
 //-------------------------------------------------------------------------
 
-//#include "System/Types/RefCount.h"
 #include "System/Render/RenderResourceBarrier.h"
 #include "System/RenderGraph/RenderGraphResource.h"
+#include "System/Render/RenderAPI.h"
 
 namespace EE
 {
@@ -161,6 +161,8 @@ namespace EE
             auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
             auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
 
+            //node.RegisterPipeline();
+
             EE_ASSERT( handle0_ref.GetDesc().m_count == 3 );
             EE_ASSERT( handle1_ref.GetDesc().m_count == 233 );
         }
@@ -181,41 +183,32 @@ namespace EE
 
         m_renderGraph.LogGraphNodes();
 
-        //TestObject test( 25686 );
+        if ( Trait::IsPointerIncludeSmartPointer<TSharedPtr<int>>::value )
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is a smart pointer!" );
+        }
+        else
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is not a smart pointer!" );
+        }
 
-        //{
-        //    RefCountPtr<TestObject> pTest0( &test );
-        //}
+        if ( Trait::IsPointerIncludeSmartPointer<int*>::value )
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is a smart pointer!" );
+        }
+        else
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is not a smart pointer!" );
+        }
 
-        //{
-        //    RefCountPtr<TestObject> pTest0 = RefCountPtr<TestObject>::New( 2555 );
-
-        //    RefCountPtr<TestObject> pTest1 = pTest0;
-        //}
-
-        //struct Complicate : public RcObject
-        //{
-        //    Complicate( long data )
-        //        : m_data( data ), m_test( RefCountPtr<TestObject>::New( 485 ) )
-        //    {}
-
-        //    long                        m_data;
-        //    RefCountPtr<TestObject>     m_test;
-        //};
-
-        //Complicate comp( 145 );
-
-        //{
-        //    RefCountPtr<Complicate> pTest0( &comp );
-        //}
-
-        //RefCountPtr<TestObject> pTest = comp.m_test;
-
-        //{
-        //    RefCountPtr<Complicate> pTest0 = RefCountPtr<Complicate>::New( 1485 );
-
-        //    RefCountPtr<Complicate> pTest1 = pTest0;
-        //}
+        if ( Trait::IsPointerIncludeSmartPointer<TUniquePtr<RG::BufferDesc>>::value )
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is a smart pointer!" );
+        }
+        else
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is not a smart pointer!" );
+        }
 
         // Initialize core systems
         //-------------------------------------------------------------------------
@@ -416,6 +409,14 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
+        m_renderPipelineRegistry.Initialize( m_systemRegistry );
+
+        Render::RasterPipelineDesc pipelineDesc = {};
+        pipelineDesc.AddShader( Render::PipelineShaderDesc( Render::PipelineStage::Vertex, ResourcePath( "data://shaders/imgui/imgui.vsdr" ) ) );
+        pipelineDesc.AddShader( Render::PipelineShaderDesc( Render::PipelineStage::Pixel, ResourcePath( "data://shaders/imgui/imgui.psdr" ) ) );
+
+        m_renderPipelineRegistry.RegisterRasterPipeline( pipelineDesc );
+
         m_moduleInitialized = true;
 
         return true;
@@ -424,6 +425,8 @@ namespace EE
     void EngineModule::ShutdownModule()
     {
         EE_ASSERT( m_pRenderDevice != nullptr );
+
+        m_renderPipelineRegistry.Shutdown();
 
         // Unregister resource loaders
         //-------------------------------------------------------------------------

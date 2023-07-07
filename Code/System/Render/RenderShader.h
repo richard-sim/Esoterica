@@ -17,8 +17,9 @@ namespace EE
             friend class RenderDevice;
             friend class ShaderCompiler;
             friend class ShaderLoader;
+            friend class PipelineRegistry;
 
-            EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode );
+            EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode, m_shaderEntryName );
             EE_REGISTER_RESOURCE( 'shdr', "Render Shader" );
 
         public:
@@ -29,6 +30,8 @@ namespace EE
 
                 ResourceBinding() : m_slot( 0 ) {}
                 ResourceBinding( uint32_t ID, uint32_t slot ) : m_ID( ID ), m_slot( slot ) {}
+
+                inline bool operator<( ResourceBinding const& rhs ) const { return m_slot < rhs.m_slot; }
 
                 uint32_t                 m_ID;
                 uint32_t                 m_slot;
@@ -55,17 +58,53 @@ namespace EE
         protected:
 
             ShaderHandle                        m_shaderHandle;
+            String                              m_shaderEntryName;
             Blob                                m_byteCode;
             TVector<RenderBuffer>               m_cbuffers;
-            TVector<ResourceBinding>            m_resourceBindings;
+            TVector<TVector<ResourceBinding>>   m_resourceBindings;
             PipelineStage                       m_pipelineStage;
+        };
+
+        //-------------------------------------------------------------------------
+
+        class EE_SYSTEM_API VertexShader : public Shader
+        {
+            EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ), m_vertexLayoutDesc );
+            EE_REGISTER_RESOURCE( 'vsdr', "Vertex Shader" );
+
+            friend class RenderDevice;
+            friend class ShaderCompiler;
+            friend class ShaderLoader;
+            friend class PipelineRegistry;
+
+        public:
+
+            VertexShader() : Shader( PipelineStage::Vertex )
+            {}
+            VertexShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers, VertexLayoutDescriptor const& vertexLayoutDesc );
+
+            virtual bool IsValid() const override
+            {
+                return m_shaderHandle.IsValid();
+            }
+            inline VertexLayoutDescriptor const& GetVertexLayoutDesc() const
+            {
+                return m_vertexLayoutDesc;
+            }
+
+        private:
+
+            VertexLayoutDescriptor m_vertexLayoutDesc;
         };
 
         //-------------------------------------------------------------------------
 
         class EE_SYSTEM_API PixelShader : public Shader
         {
+            EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ) );
             EE_REGISTER_RESOURCE( 'psdr', "Pixel Shader" );
+
+            friend class PipelineRegistry;
 
         public:
 
@@ -79,7 +118,10 @@ namespace EE
 
         class EE_SYSTEM_API GeometryShader : public Shader
         {
+            EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ) );
             EE_REGISTER_RESOURCE( 'gsdr', "Geometry Shader");
+
+            friend class PipelineRegistry;
 
         public:
 
@@ -91,35 +133,15 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
-        class EE_SYSTEM_API VertexShader : public Shader
-        {
-            EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ), m_vertexLayoutDesc );
-            EE_REGISTER_RESOURCE( 'vsdr', "Vertex Shader" );
-
-            friend class RenderDevice;
-            friend class ShaderCompiler;
-            friend class ShaderLoader;
-
-        public:
-
-            VertexShader() : Shader( PipelineStage::Vertex ) {}
-            VertexShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers, VertexLayoutDescriptor const& vertexLayoutDesc );
-
-            virtual bool IsValid() const override { return m_shaderHandle.IsValid(); }
-            inline VertexLayoutDescriptor const& GetVertexLayoutDesc() const { return m_vertexLayoutDesc; }
-
-        private:
-
-            VertexLayoutDescriptor m_vertexLayoutDesc;
-        };
-
         class EE_SYSTEM_API ComputeShader : public Shader
         {
+            EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ) );
             EE_REGISTER_RESOURCE( 'csdr', "Compute Shader" );
 
             friend class RenderDevice;
             friend class ShaderCompiler;
             friend class ShaderLoader;
+            friend class PipelineRegistry;
 
         public:
 

@@ -37,6 +37,9 @@ namespace EE::Render
 
 		class VulkanTexture
 		{
+
+			friend class VulkanSwapchain;
+
 		public:
 
 			VulkanTexture() = default;
@@ -48,8 +51,6 @@ namespace EE::Render
 			VulkanTexture& operator=( VulkanTexture&& ) = default;
 
 		private:
-
-			friend class VulkanSwapchain;
 
 			VkImage							m_pHandle = nullptr;
 			TextureDesc						m_desc;

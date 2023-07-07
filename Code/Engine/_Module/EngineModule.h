@@ -36,6 +36,7 @@
 #include "System/Systems.h"
 
 #include "System/RenderGraph/RenderGraph.h"
+#include "System/Render/RenderPipelineRegistry.h"
 
 //-------------------------------------------------------------------------
 
@@ -77,6 +78,10 @@ namespace EE
         inline ImGuiX::ImguiSystem* GetImguiSystem() { return &m_imguiSystem; }
         #endif
 
+        // TEMPORARY: Test
+        //-------------------------------------------------------------------------
+        inline Render::PipelineRegistry* GetRenderPipelineRegistry() { return &m_renderPipelineRegistry; }
+
     private:
 
         bool                                            m_moduleInitialized = false;
@@ -88,6 +93,7 @@ namespace EE
         Input::InputSystem                              m_inputSystem;
 
         RG::RenderGraph                                 m_renderGraph;
+        Render::PipelineRegistry                        m_renderPipelineRegistry;
 
         // Resource
         Resource::ResourceProvider*                     m_pResourceProvider = nullptr;

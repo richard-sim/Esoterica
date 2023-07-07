@@ -75,24 +75,48 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		void VulkanDevice::CreateVSemaphore( VulkanSemaphore& semaphore )
+		VulkanSemaphore VulkanDevice::CreateVSemaphore()
 		{
-			EE_ASSERT( semaphore.m_pHandle == nullptr );
-
+			VulkanSemaphore pSemaphore = {};
 			VkSemaphoreCreateInfo semaphoreCI = {};
 			semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			semaphoreCI.pNext = nullptr;
 			semaphoreCI.flags = VkFlags( 0 );
 
-			VK_SUCCEEDED( vkCreateSemaphore( m_pHandle, &semaphoreCI, nullptr, &semaphore.m_pHandle ) );
+			VK_SUCCEEDED( vkCreateSemaphore( m_pHandle, &semaphoreCI, nullptr, &pSemaphore ) );
+
+			return pSemaphore;
 		}
 
 		void VulkanDevice::DestroyVSemaphore( VulkanSemaphore& semaphore )
 		{
-			EE_ASSERT( semaphore.m_pHandle != nullptr );
+			EE_ASSERT( semaphore != nullptr );
 
-			vkDestroySemaphore( m_pHandle, semaphore.m_pHandle, nullptr );
-			semaphore.m_pHandle = nullptr;
+			vkDestroySemaphore( m_pHandle, semaphore, nullptr );
+			semaphore = nullptr;
+		}
+
+		VulkanShader VulkanDevice::CreateShader( Blob const& byteCode )
+		{
+			EE_ASSERT( !byteCode.empty() );
+
+			VulkanShader pShader = {};
+			VkShaderModuleCreateInfo shaderModuleCI = {};
+			shaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			shaderModuleCI.pCode = reinterpret_cast<uint32_t const*>( byteCode.data() );
+			shaderModuleCI.codeSize = byteCode.size(); // Note: here is the size in bytes!!
+
+			VK_SUCCEEDED( vkCreateShaderModule( m_pHandle, &shaderModuleCI, nullptr, &pShader ) );
+
+			return pShader;
+		}
+
+		void VulkanDevice::DestroyShader( VulkanShader& pShader )
+		{
+			EE_ASSERT( pShader != nullptr );
+
+			vkDestroyShaderModule( m_pHandle, pShader, nullptr );
+			pShader = nullptr;
 		}
 
 		//-------------------------------------------------------------------------

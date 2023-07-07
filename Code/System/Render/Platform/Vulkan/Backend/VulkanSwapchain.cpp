@@ -202,8 +202,8 @@ namespace EE::Render
 			m_renderCompleteSemaphores.resize( swapchainImageCount );
 			for ( uint32_t i = 0; i < swapchainImageCount; ++i )
 			{
-				pDevice->CreateVSemaphore( m_imageAcquireSemaphores[i] );
-				pDevice->CreateVSemaphore( m_renderCompleteSemaphores[i] );
+				m_imageAcquireSemaphores[i] = pDevice->CreateVSemaphore();
+				m_renderCompleteSemaphores[i] = pDevice->CreateVSemaphore();
 			}
 
 			EE_ASSERT( m_imageAcquireSemaphores.size() == swapchainImages.size() );

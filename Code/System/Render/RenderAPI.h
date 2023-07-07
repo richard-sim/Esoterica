@@ -198,6 +198,9 @@ namespace EE::Render
         ViewDS,
 
         CommandBuffer,
+        Renderpass,
+
+        Semaphore,
 
         numTypes,
     };
@@ -269,4 +272,11 @@ namespace EE::Render
     typedef ObjectHandle<ResourceType::ViewSRV>               ViewSRVHandle;
     typedef ObjectHandle<ResourceType::ViewRT>                ViewRTHandle;
     typedef ObjectHandle<ResourceType::ViewDS>                ViewDSHandle;
+    typedef ObjectHandle<ResourceType::Renderpass>            RenderpassHandle;
+
+    // Synchronization Primitives (Not available in older graphics api, such as DX11, OpenGL)
+    //-------------------------------------------------------------------------
+
+    typedef ObjectHandle<ResourceType::Semaphore>             SemaphoreHandle;
+
 }
