@@ -8,18 +8,20 @@
 
 //-------------------------------------------------------------------------
 
-namespace EE::Physics { class Scene; }
+namespace EE::Physics { class PhysicsWorld; }
 
 //-------------------------------------------------------------------------
 
 namespace EE::Animation
 {
+    class Skeleton;
     class RootMotionDebugger;
     class TaskSystem;
     class Pose;
     class GraphNode;
     class GraphDataSet;
     class GraphInstance;
+    struct BoneMaskTaskList;
 
     //-------------------------------------------------------------------------
 
@@ -127,20 +129,31 @@ namespace EE::Animation
         {
             m_isCurrentlyInLayer = true;
             m_layerWeight = 1.0f;
-            m_pLayerMask = nullptr;
+            m_rootMotionLayerWeight = 1.0f;
+            m_layerMaskTaskList.Reset();
+        }
+
+        EE_FORCE_INLINE void ResetLayer()
+        {
+            EE_ASSERT( m_isCurrentlyInLayer );
+            m_layerWeight = 1.0f;
+            m_rootMotionLayerWeight = 1.0f;
+            m_layerMaskTaskList.Reset();
         }
 
         EE_FORCE_INLINE void EndLayer()
         {
             m_isCurrentlyInLayer = false;
             m_layerWeight = 0.0f;
-            m_pLayerMask = nullptr;
+            m_rootMotionLayerWeight = 0.0f;
+            m_layerMaskTaskList.Reset();
         }
 
     public:
 
-        BoneMask*                               m_pLayerMask = nullptr;
+        BoneMaskTaskList                        m_layerMaskTaskList;
         float                                   m_layerWeight = 0.0f;
+        float                                   m_rootMotionLayerWeight = 0.0f;
         bool                                    m_isCurrentlyInLayer = false;
     };
 
@@ -168,7 +181,12 @@ namespace EE::Animation
         void Shutdown();
 
         inline bool IsValid() const { return m_pSkeleton != nullptr && m_pTaskSystem != nullptr; }
-        void Update( Seconds const deltaTime, Transform const& currentWorldTransform, Physics::Scene* pPhysicsScene );
+        void Update( Seconds const deltaTime, Transform const& currentWorldTransform, Physics::PhysicsWorld* pPhysicsWorld );
+
+        inline bool IsInLayer() const { return m_layerContext.m_isCurrentlyInLayer; }
+
+        // Get an valid but empty range given the current state of the sampled event buffer
+        EE_FORCE_INLINE SampledEventRange GetEmptySampledEventRange() const { return SampledEventRange( m_sampledEventsBuffer.GetNumSampledEvents() ); }
 
         // Debugging
         //-------------------------------------------------------------------------
@@ -202,7 +220,6 @@ namespace EE::Animation
         uint64_t                                m_graphUserID = 0; // The entity ID that owns this graph.
         Skeleton const*                         m_pSkeleton = nullptr;
         SampledEventsBuffer                     m_sampledEventsBuffer;
-        BoneMaskPool                            m_boneMaskPool;
 
         // Set at initialization time
         TaskSystem*                             m_pTaskSystem = nullptr;
@@ -213,7 +230,7 @@ namespace EE::Animation
         Transform                               m_worldTransformInverse = Transform::Identity;
         uint32_t                                m_updateID = 0;
         BranchState                             m_branchState = BranchState::Active;
-        Physics::Scene*                         m_pPhysicsScene = nullptr;
+        Physics::PhysicsWorld*                  m_pPhysicsWorld = nullptr;
         GraphLayerContext                       m_layerContext;
         Seconds                                 m_deltaTime = 0.0f;
 

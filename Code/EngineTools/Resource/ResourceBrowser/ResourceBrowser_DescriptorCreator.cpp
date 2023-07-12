@@ -2,10 +2,10 @@
 #include "EngineTools/Core/ToolsContext.h"
 #include "EngineTools/ThirdParty/pfd/portable-file-dialogs.h"
 #include "EngineTools/Resource/ResourceDescriptor.h"
-#include "EngineTools/Core/Helpers/CommonDialogs.h"
+#include "EngineTools/Core/CommonDialogs.h"
 #include "System/TypeSystem/TypeRegistry.h"
-#include "System/Math/MathStringHelpers.h"
-#include "System/Log.h"
+#include "System/Math/MathUtils.h"
+
 
 //-------------------------------------------------------------------------
 
@@ -40,15 +40,6 @@ namespace EE
 
     bool ResourceDescriptorCreator::Draw()
     {
-        auto pTypeInfo = m_pDescriptor->GetTypeInfo();
-        if ( !pTypeInfo->HasExposedProperties() )
-        {
-            SaveDescriptor();
-            return false;
-        }
-
-        //-------------------------------------------------------------------------
-
         if ( !ImGui::IsPopupOpen( s_title ) )
         {
             ImGui::OpenPopup( s_title );

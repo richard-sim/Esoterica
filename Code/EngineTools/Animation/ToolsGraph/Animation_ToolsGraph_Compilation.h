@@ -29,7 +29,7 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    class GraphCompilationContext
+    class EE_ENGINETOOLS_API GraphCompilationContext
     {
         friend class GraphDefinitionCompiler;
 
@@ -76,7 +76,7 @@ namespace EE::Animation
             EE_ASSERT( m_nodeSettings.size() < 0xFFFF );
             pOutSettings = EE::New<T::Settings>();
             m_nodeSettings.emplace_back( pOutSettings );
-            m_compiledNodePaths.emplace_back( pNode->GetPathFromRoot() );
+            m_compiledNodePaths.emplace_back( pNode->GetStringPathFromRoot() );
             pOutSettings->m_nodeIdx = int16_t( m_nodeSettings.size() ) - 1;
 
             // Add to map
@@ -167,18 +167,16 @@ namespace EE::Animation
             return m_conduitSourceStateCompiledNodeIdx;
         }
 
-        // Start compilation of a transition conduit
+        // Start compilation of transition conditions
         inline void BeginTransitionConditionsCompilation( Seconds transitionDuration, int16_t transitionDurationOverrideIdx )
         {
-            EE_ASSERT( m_conduitSourceStateCompiledNodeIdx != InvalidIndex );
             m_transitionDuration = transitionDuration;
             m_transitionDurationOverrideIdx = transitionDurationOverrideIdx;
         }
 
-        // End compilation of a transition conduit
+        // End compilation of transition conditions
         inline void EndTransitionConditionsCompilation()
         {
-            EE_ASSERT( m_conduitSourceStateCompiledNodeIdx != InvalidIndex );
             m_transitionDuration = 0;
             m_transitionDurationOverrideIdx = InvalidIndex;
         }
@@ -231,11 +229,8 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    class GraphDefinitionCompiler
+    class EE_ENGINETOOLS_API GraphDefinitionCompiler
     {
-    public:
-
-        constexpr static const int32_t s_version = 2;
 
     public:
 

@@ -1,9 +1,10 @@
 #include "Animation_RuntimeGraph_Instance.h"
 #include "Animation_RuntimeGraph_Node.h"
 #include "Nodes/Animation_RuntimeGraphNode_ExternalGraph.h"
-#include "System/Log.h"
+
 #include "System/Profiling.h"
 #include "Engine/Animation/TaskSystem/Animation_TaskSystem.h"
+#include "Engine/Animation/TaskSystem/Animation_TaskSerializer.h"
 
 //-------------------------------------------------------------------------
 
@@ -168,6 +169,16 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
+    void GraphInstance::GetResourceLookupTables( TInlineVector<ResourceLUT const*, 10>& LUTs ) const
+    {
+        LUTs.emplace_back( &m_pGraphVariation->GetDataSet().m_resourceLUT );
+
+        for ( auto const& externalGraph : m_externalGraphs )
+        {
+            externalGraph.m_pInstance->GetResourceLookupTables( LUTs );
+        }
+    }
+
     Pose const* GraphInstance::GetPose()
     {
         EE_ASSERT( m_pTaskSystem != nullptr );
@@ -177,6 +188,29 @@ namespace EE::Animation
     bool GraphInstance::DoesTaskSystemNeedUpdate() const
     {
         return m_pTaskSystem->RequiresUpdate();
+    }
+
+    void GraphInstance::EnableTaskSystemSerialization( TypeSystem::TypeRegistry const& typeRegistry )
+    {
+        m_pTaskSystem->EnableSerialization( typeRegistry );
+    }
+
+    void GraphInstance::DisableTaskSystemSerialization()
+    {
+        m_pTaskSystem->DisableSerialization();
+    }
+
+    void GraphInstance::SerializeTaskList( Blob& outBlob ) const
+    {
+        EE_ASSERT( !DoesTaskSystemNeedUpdate() );
+        EE_ASSERT( m_pTaskSystem->IsSerializationEnabled() );
+
+        // All the resources in use by this graph instance
+        TInlineVector<ResourceLUT const*, 10> LUTs;
+        GetResourceLookupTables( LUTs );
+
+        // Serialize tasks
+        m_pTaskSystem->SerializeTasks( LUTs, outBlob );
     }
 
     //-------------------------------------------------------------------------
@@ -294,49 +328,23 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::Scene* pPhysicsScene, bool resetGraphState )
+    void GraphInstance::ResetGraphState( SyncTrackTime initTime )
     {
-        EE_PROFILE_SCOPE_ANIMATION( "Graph Instance: Evaluate Graph" );
-        #if EE_DEVELOPMENT_TOOLS
-        m_activeNodes.clear();
-        m_rootMotionDebugger.StartCharacterUpdate( startWorldTransform );
-        RecordGraphUpdateData( deltaTime, startWorldTransform );
-        #endif
-
-        //-------------------------------------------------------------------------
-
-        if ( m_pTaskSystem != nullptr )
+        if ( m_pRootNode->IsInitialized() )
         {
-            m_pTaskSystem->Reset();
+            m_pRootNode->Shutdown( m_graphContext );
         }
 
-        m_graphContext.Update( deltaTime, startWorldTransform, pPhysicsScene );
-
-        //-------------------------------------------------------------------------
-
-        if ( resetGraphState || !m_pRootNode->IsInitialized() )
-        {
-            if ( m_pRootNode->IsInitialized() )
-            {
-                m_pRootNode->Shutdown( m_graphContext );
-            }
-
-            m_pRootNode->Initialize( m_graphContext, SyncTrackTime() );
-        }
-
-        //-------------------------------------------------------------------------
-
-        return m_pRootNode->Update( m_graphContext );
+        m_pRootNode->Initialize( m_graphContext, initTime );
     }
 
-    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::Scene* pPhysicsScene, SyncTrackTimeRange const& updateRange, bool resetGraphState )
+    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, bool resetGraphState )
     {
         EE_PROFILE_SCOPE_ANIMATION( "Graph Instance: Evaluate Graph" );
-
         #if EE_DEVELOPMENT_TOOLS
         m_activeNodes.clear();
         m_rootMotionDebugger.StartCharacterUpdate( startWorldTransform );
-        RecordGraphUpdateData( deltaTime, startWorldTransform );
+        RecordPreGraphEvaluateState( deltaTime, startWorldTransform );
         #endif
 
         //-------------------------------------------------------------------------
@@ -346,23 +354,61 @@ namespace EE::Animation
             m_pTaskSystem->Reset();
         }
 
-        m_graphContext.Update( deltaTime, startWorldTransform, pPhysicsScene );
+        m_graphContext.Update( deltaTime, startWorldTransform, pPhysicsWorld );
 
         //-------------------------------------------------------------------------
 
         if ( resetGraphState || !m_pRootNode->IsInitialized() )
         {
-            if ( m_pRootNode->IsInitialized() )
-            {
-                m_pRootNode->Shutdown( m_graphContext );
-            }
-
-            m_pRootNode->Initialize( m_graphContext, SyncTrackTime() );
+            ResetGraphState();
         }
 
         //-------------------------------------------------------------------------
 
-        return m_pRootNode->Update( m_graphContext, updateRange );
+        auto result = m_pRootNode->Update( m_graphContext );
+        
+        #if EE_DEVELOPMENT_TOOLS
+        RecordPostGraphEvaluateState();
+        #endif
+
+        return result;
+    }
+
+    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, SyncTrackTimeRange const& updateRange, bool resetGraphState )
+    {
+        EE_PROFILE_SCOPE_ANIMATION( "Graph Instance: Evaluate Graph" );
+
+        #if EE_DEVELOPMENT_TOOLS
+        m_activeNodes.clear();
+        m_rootMotionDebugger.StartCharacterUpdate( startWorldTransform );
+        RecordPreGraphEvaluateState( deltaTime, startWorldTransform );
+        #endif
+
+        //-------------------------------------------------------------------------
+
+        if ( m_pTaskSystem != nullptr )
+        {
+            m_pTaskSystem->Reset();
+        }
+
+        m_graphContext.Update( deltaTime, startWorldTransform, pPhysicsWorld );
+
+        //-------------------------------------------------------------------------
+
+        if ( resetGraphState || !m_pRootNode->IsInitialized() )
+        {
+            ResetGraphState();
+        }
+
+        //-------------------------------------------------------------------------
+
+        auto result = m_pRootNode->Update( m_graphContext, updateRange );
+
+        #if EE_DEVELOPMENT_TOOLS
+        RecordPostGraphEvaluateState( updateRange );
+        #endif
+
+        return result;
     }
 
     void GraphInstance::ExecutePrePhysicsPoseTasks( Transform const& endWorldTransform )
@@ -399,6 +445,10 @@ namespace EE::Animation
     {
         EE_PROFILE_SCOPE_ANIMATION( "Graph Instance: Post-Physics Tasks" );
         m_pTaskSystem->UpdatePostPhysics();
+
+        #if EE_DEVELOPMENT_TOOLS
+        RecordTasks();
+        #endif
     }
 
     //-------------------------------------------------------------------------
@@ -513,52 +563,73 @@ namespace EE::Animation
         m_pTaskSystem->DrawDebug( drawContext );
     }
 
+    void GraphInstance::OutputLog()
+    {
+        for ( m_lastOutputtedLogItemIdx; m_lastOutputtedLogItemIdx < m_log.size(); m_lastOutputtedLogItemIdx++ )
+        {
+            auto const& item = m_log[m_lastOutputtedLogItemIdx];
+            InlineString const source( InlineString::CtorSprintf(), "%s (%d)", m_pGraphVariation->GetDefinition()->GetNodePath( item.m_nodeIdx ).c_str(), item.m_nodeIdx );
+            Log::AddEntry( item.m_severity, "Animation", source.c_str(), "", 0, item.m_message.c_str() );
+        }
+    }
+
     //-------------------------------------------------------------------------
 
-    void GraphInstance::StartRecording( RecordedGraphState& outState, GraphUpdateRecorder* pUpdateRecorder )
+    void GraphInstance::StartRecording( GraphRecorder* pRecorder )
     {
+        EE_ASSERT( pRecorder != nullptr );
+        EE_ASSERT( m_pRecorder == nullptr );
+
         // Record initial state
         //-------------------------------------------------------------------------
 
-        outState.m_graphID = GetDefinitionResourceID();
-        outState.m_variationID = GetVariationID();
-        outState.m_initializedNodeIndices.clear();
+        RecordGraphState( pRecorder->m_initialState );
+
+        // (Optional) Set the update recorder to track update data
+        //-------------------------------------------------------------------------
+
+        m_pRecorder = pRecorder;
+
+        if ( m_pRecorder != nullptr )
+        {
+            m_pRecorder->m_graphID = GetDefinitionResourceID();
+            m_pRecorder->m_variationID = GetVariationID();
+            m_pRecorder->m_recordedResourceHash = GetGraphVariation()->GetSourceResourceHash();
+        }
+    }
+
+    void GraphInstance::RecordGraphState( RecordedGraphState& recordedState )
+    {
+        recordedState.m_graphID = GetDefinitionResourceID();
+        recordedState.m_variationID = GetVariationID();
+        recordedState.m_recordedResourceHash = GetGraphVariation()->GetSourceResourceHash();
+        recordedState.m_initializedNodeIndices.clear();
 
         for ( int16_t i = 0; i < m_nodes.size(); i++ )
         {
             if ( m_nodes[i]->IsInitialized() )
             {
-                outState.m_initializedNodeIndices.emplace_back( i );
-                m_nodes[i]->RecordGraphState( outState );
+                recordedState.m_initializedNodeIndices.emplace_back( i );
+                m_nodes[i]->RecordGraphState( recordedState );
             }
-        }
-
-        // (Optional) Set the update recorder to track update data
-        //-------------------------------------------------------------------------
-
-        m_pUpdateRecorder = pUpdateRecorder;
-
-        if ( m_pUpdateRecorder != nullptr )
-        {
-            m_pUpdateRecorder->m_graphID = GetDefinitionResourceID();
-            m_pUpdateRecorder->m_variationID = GetVariationID();
         }
     }
 
     void GraphInstance::StopRecording()
     {
-        m_pUpdateRecorder = nullptr;
+        EE_ASSERT( m_pRecorder != nullptr );
+        m_pRecorder = nullptr;
     }
 
-    void GraphInstance::RecordGraphUpdateData( Seconds const deltaTime, Transform const& startWorldTransform )
+    void GraphInstance::RecordPreGraphEvaluateState( Seconds const deltaTime, Transform const& startWorldTransform )
     {
-        if ( m_pUpdateRecorder == nullptr )
+        if ( m_pRecorder == nullptr )
         {
             return;
         }
 
         // Record time delta and world transform
-        auto& frameData = m_pUpdateRecorder->m_recordedData.emplace_back();
+        auto& frameData = m_pRecorder->m_recordedData.emplace_back();
         frameData.m_deltaTime = deltaTime;
         frameData.m_characterWorldTransform = startWorldTransform;
 
@@ -579,12 +650,6 @@ namespace EE::Animation
                 case GraphValueType::ID:
                 {
                     paramData.m_ID = pParameter->GetValue<StringID>( m_graphContext );
-                }
-                break;
-
-                case GraphValueType::Int:
-                {
-                    paramData.m_int = pParameter->GetValue<int32_t>( m_graphContext );
                 }
                 break;
 
@@ -611,10 +676,38 @@ namespace EE::Animation
                 break;
             }
         }
+
+        // Calculate sync start time
+        frameData.m_updateRange.m_startTime = m_pRootNode->GetSyncTrack().GetTime( m_pRootNode->GetCurrentTime() );
+    }
+
+    void GraphInstance::RecordPostGraphEvaluateState()
+    {
+        if ( m_pRecorder == nullptr )
+        {
+            return;
+        }
+
+        // Calculate sync end time
+        auto& frameData = m_pRecorder->m_recordedData.back();
+        frameData.m_updateRange.m_endTime = m_pRootNode->GetSyncTrack().GetTime( m_pRootNode->GetCurrentTime() );
+    }
+
+    void GraphInstance::RecordPostGraphEvaluateState( SyncTrackTimeRange const& range )
+    {
+        if ( m_pRecorder == nullptr )
+        {
+            return;
+        }
+
+        // Directly overwrite the sync update
+        auto& frameData = m_pRecorder->m_recordedData.back();
+        frameData.m_updateRange = range;
     }
 
     void GraphInstance::SetToRecordedState( RecordedGraphState const& recordedState )
     {
+        EE_ASSERT( !IsRecording() );
         EE_ASSERT( recordedState.m_graphID == GetDefinitionResourceID() );
         EE_ASSERT( recordedState.m_variationID == GetVariationID() );
 
@@ -638,9 +731,13 @@ namespace EE::Animation
 
         // Revert node array back to previous value
         const_cast<TVector<GraphNode*>*&>( recordedState.m_pNodes ) = pPreviousNodeArray;
+
+        #if EE_DEVELOPMENT_TOOLS
+        m_rootMotionDebugger.ResetRecordedPositions();
+        #endif
     }
 
-    void GraphInstance::SetRecordedUpdateData( RecordedGraphFrameData const& recordedUpdateData )
+    void GraphInstance::SetRecordedFrameUpdateData( RecordedGraphFrameData const& recordedUpdateData )
     {
         // Record control parameter values
         for ( auto i = 0; i < GetNumControlParameters(); i++ )
@@ -659,12 +756,6 @@ namespace EE::Animation
                 case GraphValueType::ID:
                 {
                     pParameter->SetValue<StringID>( paramData.m_ID );
-                }
-                break;
-
-                case GraphValueType::Int:
-                {
-                    pParameter->SetValue<int32_t>( paramData.m_int );
                 }
                 break;
 
@@ -691,6 +782,22 @@ namespace EE::Animation
                 break;
             }
         }
+    }
+
+    void GraphInstance::RecordTasks()
+    {
+        if ( m_pRecorder == nullptr || !m_pTaskSystem->IsSerializationEnabled() )
+        {
+            return;
+        }
+
+        // All the resources in use by this graph instance
+        TInlineVector<ResourceLUT const*, 10> LUTs;
+        GetResourceLookupTables( LUTs );
+
+        // Record task
+        auto& frameData = m_pRecorder->m_recordedData.back();
+        m_pTaskSystem->SerializeTasks( LUTs, frameData.m_serializedTaskData );
     }
     #endif
 }

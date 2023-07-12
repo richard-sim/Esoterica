@@ -2,7 +2,7 @@
 
 #include "EngineTools/Physics/ResourceDescriptors/ResourceDescriptor_PhysicsRagdoll.h"
 #include "EngineTools/Core/Workspace.h"
-#include "EngineTools/Core/Helpers/SkeletonHelpers.h"
+#include "EngineTools/Resource/ResourcePicker.h"
 #include "Engine/Animation/AnimationClip.h"
 #include "Engine/Physics/PhysicsRagdoll.h"
 
@@ -14,15 +14,31 @@ namespace EE::Render { class SkeletalMeshComponent; }
 
 namespace EE::Physics
 {
-    class PhysicsSystem;
-
-    //-------------------------------------------------------------------------
-
     class RagdollWorkspace : public TWorkspace<RagdollDefinition>
     {
         friend class ScopedRagdollSettingsModification;
 
         //-------------------------------------------------------------------------
+
+        struct BoneInfo
+        {
+            inline void DestroyChildren()
+            {
+                for ( auto& pChild : m_children )
+                {
+                    pChild->DestroyChildren();
+                    EE::Delete( pChild );
+                }
+
+                m_children.clear();
+            }
+
+        public:
+
+            int32_t                         m_boneIdx;
+            TInlineVector<BoneInfo*, 5>     m_children;
+            bool                            m_isExpanded = true;
+        };
 
         enum class Mode
         {
@@ -52,25 +68,26 @@ namespace EE::Physics
 
     private:
 
+        virtual char const* GetWorkspaceUniqueTypeName() const override { return "Ragdoll"; }
         virtual void Initialize( UpdateContext const& context ) override;
         virtual void Shutdown( UpdateContext const& context ) override;
         virtual void OnHotReloadStarted( bool descriptorNeedsReload, TInlineVector<Resource::ResourcePtr*, 10> const& resourcesToBeReloaded ) override;
         virtual void OnHotReloadComplete() override;
-        virtual void InitializeDockingLayout( ImGuiID dockspaceID ) const override;
-        virtual void Update( UpdateContext const& context, ImGuiWindowClass* pWindowClass, bool isFocused ) override;
+        virtual bool Save() override;
+        virtual void InitializeDockingLayout( ImGuiID dockspaceID, ImVec2 const& dockspaceSize ) const override;
+        virtual void Update( UpdateContext const& context, bool isFocused ) override;
         virtual void PreUpdateWorld( EntityWorldUpdateContext const& updateContext ) override;
         virtual void PostUndoRedo( UndoStack::Operation operation, IUndoableAction const* pAction ) override;
 
         virtual bool HasTitlebarIcon() const override { return true; }
         virtual char const* GetTitlebarIcon() const override { EE_ASSERT( HasTitlebarIcon() ); return EE_ICON_HUMAN_GREETING; }
 
-        virtual void DrawViewportToolbarItems( UpdateContext const& context, Render::Viewport const* pViewport ) override;
-        virtual void DrawWorkspaceToolbarItems( UpdateContext const& context ) override;
-        virtual bool HasViewportToolbar() const override { return true; }
+        virtual void DrawViewportToolbar( UpdateContext const& context, Render::Viewport const* pViewport ) override;
+        virtual void DrawMenu( UpdateContext const& context ) override;
         virtual bool HasViewportToolbarTimeControls() const override { return true; }
         virtual void DrawViewportOverlayElements( UpdateContext const& context, Render::Viewport const* pViewport ) override;
 
-        void DrawDialogs();
+        virtual void DrawDialogs( UpdateContext const& context ) override;
 
         // Resource Management
         //-------------------------------------------------------------------------
@@ -86,26 +103,21 @@ namespace EE::Physics
             return GetDescriptor<RagdollResourceDescriptor>();
         }
 
-        EE_FORCE_INLINE RagdollDefinition* GetRagdollDefinition()
+        EE_FORCE_INLINE RagdollResourceDescriptor const* GetRagdollDescriptor() const
         {
-            EE_ASSERT( m_pDescriptor != nullptr );
-            return &GetDescriptor<RagdollResourceDescriptor>()->m_definition;
+            return GetDescriptor<RagdollResourceDescriptor>();
         }
 
-        EE_FORCE_INLINE RagdollDefinition const* GetRagdollDefinition() const
-        {
-            EE_ASSERT( m_pDescriptor != nullptr );
-            return &GetDescriptor<RagdollResourceDescriptor>()->m_definition;
-        }
+        bool IsValidDefinition() const { return GetRagdollDescriptor()->IsValid(); }
 
         // This will check the ragdoll definition and ensure that it is valid!
-        void ValidateDefinition();
+        void PerformAdvancedDefinitionValidation();
 
         // Body Editing
         //-------------------------------------------------------------------------
 
-        void DrawBodyEditorWindow( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
-        void DrawBodyEditorDetailsWindow( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawBodyEditorWindow( UpdateContext const& context, bool isFocused );
+        void DrawBodyEditorDetailsWindow( UpdateContext const& context, bool isFocused );
         void CreateSkeletonTree();
         void DestroySkeletonTree();
         ImRect RenderSkeletonTree( BoneInfo* pBone );
@@ -125,7 +137,7 @@ namespace EE::Physics
 
         void UpdateProfileWorkingCopy();
 
-        void DrawProfileEditorWindow( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawProfileEditorWindow( UpdateContext const& context, bool isFocused );
         void DrawProfileManager();
         void DrawBodyAndJointSettingsTable( UpdateContext const& context, RagdollDefinition::Profile* pProfile );
         void DrawMaterialSettingsTable( UpdateContext const& context, RagdollDefinition::Profile* pProfile );
@@ -139,7 +151,7 @@ namespace EE::Physics
         // Preview
         //-------------------------------------------------------------------------
 
-        void DrawPreviewControlsWindow( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawPreviewControlsWindow( UpdateContext const& context, bool isFocused );
         inline bool IsPreviewing() const { return m_pRagdoll != nullptr; }
         void StartPreview( UpdateContext const& context );
         void StopPreview();
@@ -150,12 +162,8 @@ namespace EE::Physics
 
     private:
 
-        String                                          m_bodyEditorWindowName;
-        String                                          m_bodyEditorDetailsWindowName;
-        String                                          m_profileEditorWindowName;
-        String                                          m_previewControlsWindowName;
-
         TResourcePtr<Animation::Skeleton>               m_skeleton;
+        RagdollDefinition                               m_ragdollDefinition;
         bool                                            m_needToCreateEditorState = false;
         Operation                                       m_activeOperation = Operation::None;
 
@@ -204,9 +212,5 @@ namespace EE::Physics
         float                                           m_collisionActorInitialVelocity = 20.0f;
         bool                                            m_collisionActorGravity = true;
         TVector<CollisionActor>                         m_spawnedCollisionActors;
-
-        // PVD connection
-        PhysicsSystem*                                  m_pPhysicsSystem = nullptr;
-        bool                                            m_autoConnectToPVD = false;
     };
 }

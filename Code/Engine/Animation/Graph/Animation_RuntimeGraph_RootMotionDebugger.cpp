@@ -17,8 +17,7 @@ namespace EE::Animation
         // If we started recording, reset the transform buffers
         if ( m_debugMode < RootMotionDebugMode::DrawRecordedRootMotion && mode >= RootMotionDebugMode::DrawRecordedRootMotion )
         {
-            m_freeBufferIdx = 0;
-            m_recordedRootTransforms.clear();
+            ResetRecordedPositions();
         }
 
         m_debugMode = mode;
@@ -69,11 +68,21 @@ namespace EE::Animation
         }
     }
 
+    void RootMotionDebugger::RollbackToActionIndexMarker( int32_t const marker )
+    {
+        EE_ASSERT( marker >= 0 && marker <= m_recordedActions.size() );
+
+        for ( int16_t t = (int16_t) m_recordedActions.size() - 1; t >= marker; t-- )
+        {
+            m_recordedActions.erase( m_recordedActions.begin() + t );
+        }
+    }
+
     void RootMotionDebugger::DrawDebug( Drawing::DrawContext& drawingContext )
     {
         if ( m_debugMode == RootMotionDebugMode::DrawRoot )
         {
-            DrawRootBone( drawingContext, m_endWorldTransform );
+            Skeleton::DrawRootBone( drawingContext, m_endWorldTransform );
         }
         else if ( m_debugMode == RootMotionDebugMode::DrawRecordedRootMotion || m_debugMode == RootMotionDebugMode::DrawRecordedRootMotionAdvanced )
         {
@@ -133,6 +142,12 @@ namespace EE::Animation
                 }
             }
         }
+    }
+
+    void RootMotionDebugger::ResetRecordedPositions()
+    {
+        m_freeBufferIdx = 0;
+        m_recordedRootTransforms.clear();
     }
 }
 #endif

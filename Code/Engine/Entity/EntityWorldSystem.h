@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Engine/_Module/API.h"
+#include "EntityWorldType.h"
 #include "Engine/UpdateStage.h"
 #include "Engine/Entity/EntityIDs.h"
-#include "System/TypeSystem/RegisteredType.h"
+#include "System/TypeSystem/ReflectedType.h"
 #include "System/Types/Arrays.h"
-#include "System/Algorithm/Hash.h"
+#include "System/Encoding/Hash.h"
+
 
 //-------------------------------------------------------------------------
 // World Entity System
@@ -22,9 +24,9 @@ namespace EE
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINE_API IEntityWorldSystem : public IRegisteredType
+    class EE_ENGINE_API EntityWorldSystem : public IReflectedType
     {
-        EE_REGISTER_TYPE( IEntityWorldSystem );
+        EE_REFLECT_TYPE( EntityWorldSystem );
 
         friend class EntityWorld;
         friend EntityModel::EntityMap;
@@ -32,6 +34,12 @@ namespace EE
     public:
 
         virtual uint32_t GetSystemID() const = 0;
+
+        // Is this world system in a game world
+        bool IsInAGameWorld() const;
+
+        // Is this world system in a tools-only world
+        bool IsInAToolsWorld() const;
 
     protected:
 
@@ -52,13 +60,17 @@ namespace EE
 
         // Called immediately before an component is deactivated
         virtual void UnregisterComponent( Entity const* pEntity, EntityComponent* pComponent ) = 0;
+
+    private:
+
+        EntityWorld*     m_pWorld = nullptr;
     };
 }
 
 //-------------------------------------------------------------------------
 
-#define EE_REGISTER_ENTITY_WORLD_SYSTEM( Type, ... )\
-    EE_REGISTER_TYPE( Type );\
+#define EE_ENTITY_WORLD_SYSTEM( Type, ... )\
+    EE_REFLECT_TYPE( Type );\
     constexpr static uint32_t const s_entitySystemID = Hash::FNV1a::GetHash32( #Type );\
     virtual uint32_t GetSystemID() const override final { return Type::s_entitySystemID; }\
     static UpdatePriorityList const PriorityList;\

@@ -2,26 +2,26 @@
 
 #include "EngineTools/Animation/ToolsGraph/Animation_ToolsGraph_Definition.h"
 #include "EngineTools/Animation/ToolsGraph/Animation_ToolsGraph_Compilation.h"
+#include "EngineTools/Resource/ResourcePicker.h"
 #include "EngineTools/Core/Workspace.h"
 #include "EngineTools/Core/VisualGraph/VisualGraph_View.h"
-#include "EngineTools/Core/Helpers/CategoryTree.h"
+#include "EngineTools/Core/CategoryTree.h"
 #include "Engine/Animation/Graph/Animation_RuntimeGraph_Definition.h"
 #include "Engine/Animation/TaskSystem/Animation_TaskSystem.h"
 #include "System/Time/Timers.h"
+#include "System/Imgui/ImguiFilteredCombo.h"
 
 //-------------------------------------------------------------------------
 
 namespace EE::Render { class SkeletalMeshComponent; }
-namespace EE::Physics { class PhysicsSystem; }
 
 //-------------------------------------------------------------------------
 
 namespace EE::Animation
 {
-    class AnimationGraphComponent;
-    class ControlParameterPreviewState;
+    class GraphComponent;
     class VariationHierarchy;
-    class GraphRecorder;
+    struct GraphRecorder;
 
     namespace GraphNodes { class VirtualParameterToolsNode; class ControlParameterToolsNode; }
 
@@ -30,11 +30,25 @@ namespace EE::Animation
     class AnimationGraphWorkspace final : public TWorkspace<GraphDefinition>
     {
         friend class GraphUndoableAction;
+        friend class BoneMaskIDEditor;
+        friend class IDComboWidget;
+        friend class IDEditor;
+    private:
 
-    public:
-
-        struct GraphData
+        struct LoadedGraphData
         {
+            inline FlowGraph* GetRootGraph()
+            {
+                return m_graphDefinition.GetRootGraph();
+            }
+
+            inline ResourceID const& GetSelectedVariationSkeleton() const
+            {
+                return m_graphDefinition.GetVariation( m_selectedVariationID )->m_skeleton.GetResourceID();
+            }
+
+        public:
+
             ToolsGraphDefinition                    m_graphDefinition;
             StringID                                m_selectedVariationID = Variation::s_defaultVariationID;
             VisualGraph::BaseNode*                  m_pParentNode = nullptr;
@@ -46,7 +60,27 @@ namespace EE::Animation
             THashMap<int16_t, UUID>                 m_nodeIndexToIDMap;
         };
 
-    private:
+        //-------------------------------------------------------------------------
+
+        class IDComboWidget : public ImGuiX::ComboWithFilterWidget<StringID>
+        {
+
+        public:
+
+            IDComboWidget( AnimationGraphWorkspace* pGraphWorkspace );
+
+        private:
+
+            virtual void PopulateOptionsList() override;
+
+        private:
+
+            AnimationGraphWorkspace* m_pGraphWorkspace = nullptr;
+        };
+
+        //-------------------------------------------------------------------------
+        // Debug
+        //-------------------------------------------------------------------------
 
         enum class DebugMode
         {
@@ -67,7 +101,7 @@ namespace EE::Animation
 
         enum class ParameterType
         {
-            Default,
+            Control,
             Virtual
         };
 
@@ -76,33 +110,104 @@ namespace EE::Animation
             bool IsValid() const;
 
             DebugTargetType                     m_type = DebugTargetType::None;
-            AnimationGraphComponent*            m_pComponentToDebug = nullptr;
+            GraphComponent*                     m_pComponentToDebug = nullptr;
             PointerID                           m_childGraphID;
             StringID                            m_externalSlotID;
         };
 
+        //-------------------------------------------------------------------------
+        // Control Parameter Preview
+        //-------------------------------------------------------------------------
+
+        class ControlParameterPreviewState
+        {
+        public:
+
+            ControlParameterPreviewState( AnimationGraphWorkspace* pGraphWorkspace, GraphNodes::ControlParameterToolsNode* pParameter );
+            virtual ~ControlParameterPreviewState() = default;
+
+            inline GraphNodes::ControlParameterToolsNode* GetParameter() const { return m_pParameter; }
+
+            virtual void DrawPreviewEditor( UpdateContext const& context, Transform const& characterWorldTransform, bool isLiveDebug ) = 0;
+
+        protected:
+
+            EE_FORCE_INLINE GraphInstance* GetGraphInstance() const { return m_pGraphWorkspace->m_pDebugGraphInstance; }
+            int16_t GetRuntimeGraphNodeIndex( UUID const& nodeID ) const;
+
+        protected:
+
+            AnimationGraphWorkspace*                    m_pGraphWorkspace = nullptr;
+            GraphNodes::ControlParameterToolsNode*      m_pParameter = nullptr;
+        };
+
+        class BoolParameterState;
+        class IntParameterState;
+        class FloatParameterState;
+        class VectorParameterState;
+        class IDParameterState;
+        class TargetParameterState;
+
+        //-------------------------------------------------------------------------
+        // Navigation
+        //-------------------------------------------------------------------------
+
+        // Defines a navigation target for the navigation dialog
         struct NavigationTarget
         {
-            NavigationTarget( GraphNodes::FlowToolsNode const* pNode, String&& path )
-                : m_pNode( pNode )
-                , m_path( eastl::move( path ) )
-            {}
+            enum class Type
+            {
+                Unknown = -1,
+                Parameter = 0,
+                Pose,
+                Value,
+                ID
+            };
 
-            GraphNodes::FlowToolsNode const*    m_pNode;
+            static void CreateNavigationTargets( VisualGraph::BaseNode const* pNode, TVector<NavigationTarget>& outTargets );
+
+        public:
+
+            inline bool operator==( NavigationTarget const& rhs ) const
+            {
+                return m_compKey == rhs.m_compKey;
+            }
+
+        private:
+
+            NavigationTarget() = default;
+
+        public:
+
+            VisualGraph::BaseNode const*        m_pNode = nullptr;
+            String                              m_label;
             String                              m_path;
+            String                              m_sortKey;
+            StringID                            m_compKey;
+            Type                                m_type = Type::Unknown;
         };
+
+        //-------------------------------------------------------------------------
+        // Graph Operations
+        //-------------------------------------------------------------------------
 
         enum class GraphOperationType
         {
             None,
+            NotifyUser,
             Navigate,
+            RenameIDs,
             CreateParameter,
             RenameParameter,
             DeleteParameter,
+            DeleteUnusedParameters,
             CreateVariation,
             RenameVariation,
             DeleteVariation
         };
+
+        // Event fired whenever we perform a graph edit
+        static TEvent<ResourceID const&> s_graphModifiedEvent;
 
     public:
 
@@ -113,30 +218,38 @@ namespace EE::Animation
 
     private:
 
+        virtual char const* GetWorkspaceUniqueTypeName() const override { return "Animation Graph"; }
         virtual void Initialize( UpdateContext const& context ) override;
         virtual void Shutdown( UpdateContext const& context ) override;
-        virtual void InitializeDockingLayout( ImGuiID dockspaceID ) const override;
+        virtual void InitializeDockingLayout( ImGuiID dockspaceID, ImVec2 const& dockspaceSize ) const override;
         virtual void PreUpdateWorld( EntityWorldUpdateContext const& updateContext ) override;
 
         virtual bool HasTitlebarIcon() const override { return true; }
         virtual char const* GetTitlebarIcon() const override { EE_ASSERT( HasTitlebarIcon() ); return EE_ICON_STATE_MACHINE; }
+        virtual void DrawMenu( UpdateContext const& context ) override;
         virtual bool HasViewportToolbarTimeControls() const override { return true; }
+        virtual void DrawViewportToolbar( UpdateContext const& context, Render::Viewport const* pViewport ) override;
         virtual void DrawViewportOverlayElements( UpdateContext const& context, Render::Viewport const* pViewport ) override;
-        virtual void DrawWorkspaceToolbarItems( UpdateContext const& context ) override;
-        virtual void Update( UpdateContext const& context, ImGuiWindowClass* pWindowClass, bool isFocused ) override;
+        virtual void Update( UpdateContext const& context, bool isFocused ) override;
         virtual void PreUndoRedo( UndoStack::Operation operation ) override;
         virtual void PostUndoRedo( UndoStack::Operation operation, IUndoableAction const* pAction ) override;
-        virtual bool IsDirty() const override;
         virtual bool AlwaysAllowSaving() const override { return true; }
         virtual bool Save() override;
 
-        virtual void DrawDialogs( UpdateContext const& context );
+        // Dialogs
+        //-------------------------------------------------------------------------
+
+        virtual void DrawDialogs( UpdateContext const& context ) override;
+        void ShowNotifyDialog( String const& title, String const& message );
+        void ShowNotifyDialog( String const& title, char const* pMessageFormat, ... );
 
         // Graph Operations
         //-------------------------------------------------------------------------
 
-        inline GraphData* GetMainGraphData() { return m_graphStack[0]; }
-        inline GraphData const* GetMainGraphData() const { return m_graphStack[0]; }
+        inline LoadedGraphData* GetEditedGraphData() { return m_loadedGraphStack[0]; }
+        inline LoadedGraphData const* GetEditedGraphData() const { return m_loadedGraphStack[0]; }
+        inline FlowGraph* GetEditedRootGraph() { return m_loadedGraphStack[0]->m_graphDefinition.GetRootGraph(); }
+        inline FlowGraph const* GetEditedRootGraph() const { return m_loadedGraphStack[0]->m_graphDefinition.GetRootGraph(); }
 
         void OnBeginGraphModification( VisualGraph::BaseGraph* pRootGraph );
         void OnEndGraphModification( VisualGraph::BaseGraph* pRootGraph );
@@ -144,18 +257,38 @@ namespace EE::Animation
         void GraphDoubleClicked( VisualGraph::BaseGraph* pGraph );
         void PostPasteNodes( TInlineVector<VisualGraph::BaseNode*, 20> const& pastedNodes );
 
+        // Call this whenever any graph state is modified
+        void OnGraphStateModified();
+
+        // Commands
+        //-------------------------------------------------------------------------
+
+        void ProcessAdvancedCommandRequest( TSharedPtr<VisualGraph::AdvancedCommand> const& pCommand );
+
+        // Start a graph rename operation
+        void StartRenameIDs();
+
+        // Draw the rename dialog
+        void DrawRenameIDsDialog();
+
+        // Copy all the found parameter names to the clipboard
+        void CopyAllParameterNamesToClipboard();
+
+        // Copy all the found graph IDs to the clipboard
+        void CopyAllGraphIDsToClipboard();
+
         // Variations
         //-------------------------------------------------------------------------
 
-        inline bool IsDefaultVariationSelected() const { return GetMainGraphData()->m_selectedVariationID == Variation::s_defaultVariationID; }
+        inline bool IsDefaultVariationSelected() const { return GetEditedGraphData()->m_selectedVariationID == Variation::s_defaultVariationID; }
 
-        inline StringID GetSelectedVariationID() const { return GetMainGraphData()->m_selectedVariationID; }
+        inline StringID GetSelectedVariationID() const { return GetEditedGraphData()->m_selectedVariationID; }
 
         // Sets the current selected variation. Assumes a valid variation ID!
         void SetSelectedVariation( StringID variationID );
 
         // Tries to case-insensitively match a supplied variation name to the various variations we have
-        void TrySetSelectedVariation( String const& variationName );
+        bool TrySetSelectedVariation( String const& variationName );
 
         // Selection
         //-------------------------------------------------------------------------
@@ -170,20 +303,19 @@ namespace EE::Animation
         void UpdateUserContext();
         void ShutdownUserContext();
 
-
         // Graph View
         //-------------------------------------------------------------------------
 
-        void DrawGraphView( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawGraphView( UpdateContext const& context, bool isFocused );
         void DrawGraphViewNavigationBar();
         void UpdateSecondaryViewState();
 
         inline bool IsInReadOnlyState() const;
 
-        inline bool IsViewingMainGraph() const { return m_graphStack.empty(); }
+        inline bool IsViewingMainGraph() const { return m_loadedGraphStack.empty(); }
         
-        inline ToolsGraphDefinition* GetCurrentlyViewedGraphDefinition() { return m_graphStack.empty() ? &GetMainGraphData()->m_graphDefinition : &m_graphStack.back()->m_graphDefinition; }
-        inline ToolsGraphDefinition const* GetCurrentlyViewedGraphDefinition() const { return m_graphStack.empty() ? &GetMainGraphData()->m_graphDefinition : &m_graphStack.back()->m_graphDefinition; }
+        inline ToolsGraphDefinition* GetCurrentlyViewedGraphDefinition() { return m_loadedGraphStack.empty() ? &GetEditedGraphData()->m_graphDefinition : &m_loadedGraphStack.back()->m_graphDefinition; }
+        inline ToolsGraphDefinition const* GetCurrentlyViewedGraphDefinition() const { return m_loadedGraphStack.empty() ? &GetEditedGraphData()->m_graphDefinition : &m_loadedGraphStack.back()->m_graphDefinition; }
 
         // Get the stack index for the specified node!
         int32_t GetStackIndexForNode( VisualGraph::BaseNode* pNode ) const;
@@ -211,7 +343,6 @@ namespace EE::Animation
 
         void NavigateTo( VisualGraph::BaseNode* pNode, bool focusViewOnNode = true );
         void NavigateTo( VisualGraph::BaseGraph* pGraph );
-        void OpenChildGraph( VisualGraph::BaseNode* pNode, ResourceID const& graphID, bool openInNewWorkspace );
         void StartNavigationOperation();
         void DrawNavigationDialogWindow( UpdateContext const& context );
         void GenerateNavigationTargetList();
@@ -220,7 +351,7 @@ namespace EE::Animation
         // Property Grid
         //-------------------------------------------------------------------------
 
-        void DrawPropertyGrid( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawPropertyGrid( UpdateContext const& context, bool isFocused );
 
         void InitializePropertyGrid();
         void ShutdownPropertyGrid();
@@ -228,12 +359,12 @@ namespace EE::Animation
         // Compilation Log
         //-------------------------------------------------------------------------
 
-        void DrawGraphLog( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawGraphLog( UpdateContext const& context, bool isFocused );
 
         // Control Parameter Editor
         //-------------------------------------------------------------------------
 
-        void DrawControlParameterEditor( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawControlParameterEditor( UpdateContext const& context, bool isFocused );
 
         void InitializeControlParameterEditor();
         void ShutdownControlParameterEditor();
@@ -248,6 +379,7 @@ namespace EE::Animation
 
         void DrawCreateOrRenameParameterDialogWindow();
         void DrawDeleteParameterDialogWindow();
+        void DrawDeleteUnusedParameterDialogWindow();
 
         void ControlParameterCategoryDragAndDropHandler( Category<GraphNodes::FlowToolsNode*>& category );
 
@@ -268,11 +400,11 @@ namespace EE::Animation
         // Variation Editor
         //-------------------------------------------------------------------------
 
-        void DrawVariationEditor( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawVariationEditor( UpdateContext const& context, bool isFocused );
 
-        void StartCreate( StringID variationID );
-        void StartRename( StringID variationID );
-        void StartDelete( StringID variationID );
+        void StartCreateVariation( StringID variationID );
+        void StartRenameVariation( StringID variationID );
+        void StartDeleteVariation( StringID variationID );
 
         void CreateVariation( StringID newVariationID, StringID parentVariationID );
         void RenameVariation( StringID oldVariationID, StringID newVariationID );
@@ -282,6 +414,9 @@ namespace EE::Animation
         void DrawVariationTreeNode( VariationHierarchy const& variationHierarchy, StringID variationID );
         void DrawOverridesTable();
 
+        void RefreshVariationEditor();
+        void RefreshVariationSlotPickers();
+
         bool DrawVariationNameEditor();
         void DrawCreateVariationDialogWindow();
         void DrawRenameVariationDialogWindow();
@@ -290,7 +425,7 @@ namespace EE::Animation
         // Debugging
         //-------------------------------------------------------------------------
 
-        void DrawDebuggerWindow( UpdateContext const& context, ImGuiWindowClass* pWindowClass );
+        void DrawDebuggerWindow( UpdateContext const& context, bool isFocused );
 
         inline bool IsDebugging() const { return m_debugMode != DebugMode::None; }
         inline bool IsPreviewing() const { return m_debugMode == DebugMode::Preview; }
@@ -301,7 +436,7 @@ namespace EE::Animation
         // Hot Reload
         virtual void OnHotReloadStarted( bool descriptorNeedsReload, TInlineVector<Resource::ResourcePtr*, 10> const& resourcesToBeReloaded ) override;
 
-        // Starts a debugging session. If a target component is provided we assume we are attaching to a live game 
+        // Starts a debugging session. If a target component is provided we assume we are attaching to a live game
         void StartDebugging( UpdateContext const& context, DebugTarget target );
 
         // Ends the current debug session
@@ -342,31 +477,25 @@ namespace EE::Animation
 
     private:
 
-        String                                                          m_controlParametersWindowName;
-        String                                                          m_graphViewWindowName;
-        String                                                          m_propertyGridWindowName;
-        String                                                          m_variationEditorWindowName;
-        String                                                          m_graphLogWindowName;
-        String                                                          m_debuggerWindowName;
         PropertyGrid                                                    m_propertyGrid;
-        GraphOperationType                                              m_activeOperation = GraphOperationType::None;
 
-        EventBindingID                                                  m_requestOpenChildGraphBindingID;
+        EventBindingID                                                  m_globalGraphEditEventBindingID;
         EventBindingID                                                  m_rootGraphBeginModificationBindingID;
         EventBindingID                                                  m_rootGraphEndModificationBindingID;
         EventBindingID                                                  m_preEditEventBindingID;
         EventBindingID                                                  m_postEditEventBindingID;
-        EventBindingID                                                  m_postPasteNodesEventBindingID;
-        EventBindingID                                                  m_graphDoubleClickedEventBindingID;
 
         // Graph Type Data
         TVector<TypeSystem::TypeInfo const*>                            m_registeredNodeTypes;
         CategoryTree<TypeSystem::TypeInfo const*>                       m_categorizedNodeTypes;
 
-        // Graph Data
+        // Loaded Graph
         FileSystem::Path                                                m_graphFilePath;
-        TVector<GraphData*>                                             m_graphStack;
+        TVector<LoadedGraphData*>                                       m_loadedGraphStack;
         TVector<VisualGraph::SelectedNode>                              m_selectedNodes;
+
+        // Undo/Redo
+        TVector<UUID>                                                   m_viewedGraphPathPreUndoRedo;
         TVector<VisualGraph::SelectedNode>                              m_selectedNodesPreUndoRedo;
 
         // User Context
@@ -374,22 +503,36 @@ namespace EE::Animation
         EventBindingID                                                  m_navigateToNodeEventBindingID;
         EventBindingID                                                  m_navigateToGraphEventBindingID;
         EventBindingID                                                  m_resourceOpenRequestEventBindingID;
+        EventBindingID                                                  m_graphDoubleClickedEventBindingID;
+        EventBindingID                                                  m_postPasteNodesEventBindingID;
+        EventBindingID                                                  m_advancedCommandEventBindingID;
+
+        // Operations/Dialogs
+        GraphOperationType                                              m_activeOperation = GraphOperationType::None;
+        String                                                          m_notifyDialogTitle;
+        String                                                          m_notifyDialogText;
 
         // Graph view
-        float                                                           m_primaryGraphViewHeight = 300;
+        float                                                           m_primaryGraphViewProportionalHeight = 0.6f;
         VisualGraph::GraphView                                          m_primaryGraphView;
         VisualGraph::GraphView                                          m_secondaryGraphView;
         VisualGraph::GraphView*                                         m_pFocusedGraphView = nullptr;
-        UUID                                                            m_primaryViewGraphID;
         VisualGraph::BaseNode*                                          m_pBreadcrumbPopupContext = nullptr;
 
         // Navigation
         TVector<NavigationTarget>                                       m_navigationTargetNodes;
         TVector<NavigationTarget>                                       m_navigationActiveTargetNodes;
         ImGuiX::FilterWidget                                            m_navigationFilter;
+        bool                                                            m_navigationDialogSearchesPaths = false;
+
+        // Rename Dialog State
+        IDComboWidget                                                   m_oldIDWidget;
+        char                                                            m_oldIDBuffer[256] = { 0 };
+        IDComboWidget                                                   m_newIDWidget;
+        char                                                            m_newIDBuffer[256] = { 0 };
 
         // Compilation Log
-        TVector<NodeCompilationLogEntry>                                m_visualLog;
+        TVector<NodeCompilationLogEntry>                                m_compilationLog;
 
         // Control Parameter Editor
         TInlineVector<GraphNodes::ControlParameterToolsNode*, 20>       m_controlParameters;
@@ -408,13 +551,15 @@ namespace EE::Animation
         StringID                                                        m_activeOperationVariationID;
         char                                                            m_nameBuffer[255] = { 0 };
         ImGuiX::FilterWidget                                            m_variationFilter;
-        Resource::ResourcePicker                                        m_resourcePicker;
+        Resource::ResourcePicker                                        m_variationSkeletonPicker;
+        TVector<Resource::ResourcePicker>                               m_variationResourcePickers;
+        bool                                                            m_refreshPickers = false;
 
         // Preview/Debug
         DebugMode                                                       m_debugMode = DebugMode::None;
         EntityID                                                        m_debuggedEntityID; // This is needed to ensure that we dont try to debug a destroyed entity
         ComponentID                                                     m_debuggedComponentID;
-        AnimationGraphComponent*                                        m_pDebugGraphComponent = nullptr;
+        GraphComponent*                                                 m_pDebugGraphComponent = nullptr;
         Render::SkeletalMeshComponent*                                  m_pDebugMeshComponent = nullptr;
         GraphInstance*                                                  m_pDebugGraphInstance = nullptr;
         StringID                                                        m_debugExternalGraphSlotID = StringID();
@@ -425,19 +570,19 @@ namespace EE::Animation
         float                                                           m_previewCapsuleHalfHeight = 0.65f;
         float                                                           m_previewCapsuleRadius = 0.35f;
         TResourcePtr<GraphVariation>                                    m_previewGraphVariationPtr;
-        Physics::PhysicsSystem*                                         m_pPhysicsSystem = nullptr;
         Entity*                                                         m_pPreviewEntity = nullptr;
         Transform                                                       m_previewStartTransform = Transform::Identity;
         Transform                                                       m_characterTransform = Transform::Identity;
         Transform                                                       m_cameraOffsetTransform = Transform::Identity;
         Transform                                                       m_previousCameraTransform = Transform::Identity;
+        SyncTrackTime                                                   m_previewStartSyncTime;
         bool                                                            m_startPaused = false;
         bool                                                            m_isFirstPreviewFrame = false;
-        bool                                                            m_isCameraTrackingEnabled = false;
+        bool                                                            m_isCameraTrackingEnabled = true;
+        bool                                                            m_initializeGraphToSpecifiedSyncTime = false;
 
         // Recording
-        RecordedGraphState                                              m_recordedGraphState;
-        GraphUpdateRecorder                                             m_updateRecorder;
+        GraphRecorder                                                   m_graphRecorder;
         int32_t                                                         m_currentReviewFrameIdx = InvalidIndex;
         bool                                                            m_isRecording = false;
         bool                                                            m_reviewStarted = false;
@@ -448,7 +593,7 @@ namespace EE::Animation
 
     class GraphUndoableAction final : public IUndoableAction
     {
-        EE_REGISTER_TYPE( IUndoableAction );
+        EE_REFLECT_TYPE( IUndoableAction );
 
     public:
 

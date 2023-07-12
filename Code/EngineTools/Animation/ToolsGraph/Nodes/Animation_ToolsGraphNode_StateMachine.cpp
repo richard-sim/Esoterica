@@ -11,10 +11,15 @@
 
 namespace EE::Animation::GraphNodes
 {
+    StateMachineToolsNode::StateMachineToolsNode()
+        : FlowToolsNode()
+    {
+        CreateOutputPin( "Pose", GraphValueType::Pose );
+    }
+
     void StateMachineToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
     {
         FlowToolsNode::Initialize( pParent );
-        CreateOutputPin( "Pose", GraphValueType::Pose );
 
         // Create graph
         auto pStateMachineGraph = EE::New<StateMachineGraph>();
@@ -151,6 +156,7 @@ namespace EE::Animation::GraphNodes
                     //-------------------------------------------------------------------------
 
                     transitionSettings.m_transitionNodeIdx = CompileTransition( context, pTransitionNode, IDToCompiledNodeIdxMap[endStateID] );
+                    transitionSettings.m_canBeForced = pTransitionNode->m_canBeForced;
                     if ( transitionSettings.m_transitionNodeIdx == InvalidIndex )
                     {
                         return false;
@@ -214,13 +220,11 @@ namespace EE::Animation::GraphNodes
             {
                 auto const foundSourceStateIter = IDToCompiledNodeIdxMap.find( pStartStateNode->GetID() );
                 EE_ASSERT( foundSourceStateIter != IDToCompiledNodeIdxMap.end() );
-                context.BeginConduitCompilation( foundSourceStateIter->second );
 
                 if ( !TryCompileTransition( pGlobalTransition, pGlobalTransition->GetEndStateID() ) )
                 {
                     return InvalidIndex;
                 }
-                context.EndConduitCompilation();
             }
         }
 
@@ -241,9 +245,32 @@ namespace EE::Animation::GraphNodes
 
         //-------------------------------------------------------------------------
 
-        for ( auto const& ID : pStateNode->m_entryEvents ) { pSettings->m_entryEvents.emplace_back( ID ); }
-        for ( auto const& ID : pStateNode->m_executeEvents ) { pSettings->m_executeEvents.emplace_back( ID ); }
-        for ( auto const& ID : pStateNode->m_exitEvents ) { pSettings->m_exitEvents.emplace_back( ID ); }
+        auto ReflectStateEvents = [&] ( TVector<StringID> const& IDs, TInlineVector<StringID, 3>& outEvents )
+        {
+            for ( auto const& ID : IDs )
+            {
+                if ( ID.IsValid() )
+                {
+                    if ( !VectorContains( outEvents, ID ) )
+                    {
+                        outEvents.emplace_back( ID );
+                    }
+                }
+                else
+                {
+                    context.LogWarning( this, "Invalid state event detected and ignored!" );
+                }
+            }
+        };
+
+        ReflectStateEvents( pStateNode->m_events, pSettings->m_entryEvents );
+        ReflectStateEvents( pStateNode->m_entryEvents, pSettings->m_entryEvents );
+
+        ReflectStateEvents( pStateNode->m_events, pSettings->m_executeEvents );
+        ReflectStateEvents( pStateNode->m_executeEvents, pSettings->m_executeEvents );
+
+        ReflectStateEvents( pStateNode->m_events, pSettings->m_exitEvents );
+        ReflectStateEvents( pStateNode->m_exitEvents, pSettings->m_exitEvents );
 
         //-------------------------------------------------------------------------
 
@@ -257,7 +284,7 @@ namespace EE::Animation::GraphNodes
             // Compile Blend Tree
             //-------------------------------------------------------------------------
 
-            auto resultNodes = pStateNode->GetChildGraph()->FindAllNodesOfType<ResultToolsNode>();
+            auto resultNodes = pStateNode->GetChildGraph()->FindAllNodesOfType<ResultToolsNode>( VisualGraph::SearchMode::Localized, VisualGraph::SearchTypeMatch::Derived );
             EE_ASSERT( resultNodes.size() == 1 );
             ResultToolsNode const* pBlendTreeRoot = resultNodes[0];
             EE_ASSERT( pBlendTreeRoot != nullptr );
@@ -290,7 +317,17 @@ namespace EE::Animation::GraphNodes
                 }
             }
 
-            auto pLayerMaskNode = pLayerData->GetConnectedInputNode<FlowToolsNode>( 1 );
+            auto pLayerRootMotionWeightNode = pLayerData->GetConnectedInputNode<FlowToolsNode>( 1 );
+            if ( pLayerRootMotionWeightNode != nullptr )
+            {
+                pSettings->m_layerRootMotionWeightNodeIdx = pLayerRootMotionWeightNode->Compile( context );
+                if ( pSettings->m_layerRootMotionWeightNodeIdx == InvalidIndex )
+                {
+                    return InvalidIndex;
+                }
+            }
+
+            auto pLayerMaskNode = pLayerData->GetConnectedInputNode<FlowToolsNode>( 2 );
             if ( pLayerMaskNode != nullptr )
             {
                 pSettings->m_layerBoneMaskNodeIdx = pLayerMaskNode->Compile( context );
@@ -303,8 +340,23 @@ namespace EE::Animation::GraphNodes
             // Transfer additional state events
             //-------------------------------------------------------------------------
 
-            for ( auto const& evt : pStateNode->m_timeRemainingEvents ) { pSettings->m_timedRemainingEvents.emplace_back( StateNode::TimedEvent( evt.m_ID, evt.m_timeValue ) ); }
-            for ( auto const& evt : pStateNode->m_timeElapsedEvents ) { pSettings->m_timedElapsedEvents.emplace_back( StateNode::TimedEvent( evt.m_ID, evt.m_timeValue ) ); }
+            auto ReflectTimedStateEvents = [&] ( TVector<StateToolsNode::TimedStateEvent> const& timedEvents, TInlineVector<StateNode::TimedEvent, 1>& outEvents )
+            {
+                for ( auto const& evt : timedEvents )
+                {
+                    if ( evt.m_ID.IsValid() )
+                    {
+                        outEvents.emplace_back( StateNode::TimedEvent( evt.m_ID, evt.m_timeValue ) );
+                    }
+                    else
+                    {
+                        context.LogWarning( this, "Invalid state event detected and ignored!" );
+                    }
+                }
+            };
+
+            ReflectTimedStateEvents( pStateNode->m_timeRemainingEvents, pSettings->m_timedRemainingEvents );
+            ReflectTimedStateEvents( pStateNode->m_timeElapsedEvents, pSettings->m_timedElapsedEvents );
         }
 
         //-------------------------------------------------------------------------
@@ -344,19 +396,35 @@ namespace EE::Animation::GraphNodes
             }
         }
 
+        auto pStartBoneMaskNode = pTransitionNode->GetConnectedInputNode<FlowToolsNode>( 3 );
+        if ( pStartBoneMaskNode != nullptr )
+        {
+            pSettings->m_startBoneMaskNodeIdx = pStartBoneMaskNode->Compile( context );
+            if ( pSettings->m_startBoneMaskNodeIdx == InvalidIndex )
+            {
+                return InvalidIndex;
+            }
+
+            if ( pTransitionNode->m_boneMaskBlendInTimePercentage <= 0.0f )
+            {
+                context.LogError( "Bone mask blend time needs to be greater than zero!" );
+                return InvalidIndex;
+            }
+        }
+
         //-------------------------------------------------------------------------
 
         pSettings->m_targetStateNodeIdx = targetStateNodeIdx;
         pSettings->m_blendWeightEasingType = pTransitionNode->m_blendWeightEasingType;
         pSettings->m_rootMotionBlend = pTransitionNode->m_rootMotionBlend;
-        pSettings->m_duration = pTransitionNode->m_duration;
+        pSettings->m_duration = Math::Max( pTransitionNode->m_duration.ToFloat(), 0.0f );
         pSettings->m_syncEventOffset = pTransitionNode->m_syncEventOffset;
+        pSettings->m_boneMaskBlendInTimePercentage = pTransitionNode->m_boneMaskBlendInTimePercentage.GetClamped( false );
 
         //-------------------------------------------------------------------------
-        
+
         pSettings->m_transitionOptions.ClearAllFlags();
         pSettings->m_transitionOptions.SetFlag( TransitionNode::TransitionOptions::ClampDuration, pTransitionNode->m_clampDurationToSource );
-        pSettings->m_transitionOptions.SetFlag( TransitionNode::TransitionOptions::ForcedTransitionAllowed, pTransitionNode->m_canBeForced );
 
         switch ( pTransitionNode->m_timeMatchMode )
         {

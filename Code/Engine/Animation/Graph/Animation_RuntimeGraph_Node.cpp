@@ -7,18 +7,17 @@ namespace EE::Animation
     #if EE_DEVELOPMENT_TOOLS
     Color GetColorForValueType( GraphValueType type )
     {
-        const Color colors[10] =
+        static const Color colors[] =
         {
             Colors::GhostWhite,
             Colors::PaleGreen,
-            Colors::Violet,
-            Colors::LightSkyBlue,
-            Colors::CornflowerBlue,
-            Colors::DeepSkyBlue,
+            Colors::MediumOrchid,
+            Colors::DodgerBlue,
+            Colors::SandyBrown,
             Colors::Aqua,
             Colors::YellowGreen,
             Colors::GreenYellow,
-            Colors::HotPink,
+            Colors::White,
         };
 
         return colors[(uint8_t) type];
@@ -26,68 +25,20 @@ namespace EE::Animation
 
     char const* GetNameForValueType( GraphValueType type )
     {
-        switch ( type )
+        constexpr static char const* const names[] =
         {
-            case GraphValueType::Bool:
-            {
-                return "Bool";
-            }
-            break;
+            "Unknown",
+            "Bool",
+            "ID",
+            "Float",
+            "Vector",
+            "Target",
+            "Bone Mask",
+            "Pose",
+            "Special",
+        };
 
-            case GraphValueType::ID:
-            {
-                return "ID";
-            }
-            break;
-
-            case GraphValueType::Int:
-            {
-                return "Int";
-            }
-            break;
-
-            case GraphValueType::Float:
-            {
-                return "Float";
-            }
-            break;
-
-            case GraphValueType::Vector:
-            {
-                return "Vector";
-            }
-            break;
-
-            case GraphValueType::Target:
-            {
-                return "Target";
-            }
-            break;
-
-            case GraphValueType::BoneMask:
-            {
-                return "Bone Mask";
-            }
-            break;
-
-            case GraphValueType::Pose:
-            {
-                return "Pose";
-            }
-            break;
-
-            case GraphValueType::Special:
-            {
-                return "Special";
-            }
-            break;
-
-            default:
-            {
-                return "Unknown";
-            }
-            break;
-        }
+        return names[(uint8_t) type];
     }
     #endif
 
@@ -189,9 +140,11 @@ namespace EE::Animation
 
         // Reset node state
         m_loopCount = 0;
-        m_duration = 0.0f;
         m_previousTime = 0.0f;
         m_currentTime = m_previousTime;
+
+        // Set the duration to 0.0f even though this is an invalid value as it is expected that nodes will set this correctly at initialization time
+        m_duration = 0.0f; 
     }
 
     #if EE_DEVELOPMENT_TOOLS

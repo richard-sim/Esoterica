@@ -66,7 +66,8 @@ namespace EE
         for ( auto pTypeInfo : worldSystemTypeInfos )
         {
             // Create and initialize world system
-            auto pWorldSystem = Cast<IEntityWorldSystem>( pTypeInfo->CreateType() );
+            auto pWorldSystem = Cast<EntityWorldSystem>( pTypeInfo->CreateType() );
+            pWorldSystem->m_pWorld = this;
             pWorldSystem->InitializeSystem( systemsRegistry );
             m_worldSystems.push_back( pWorldSystem );
 
@@ -79,7 +80,7 @@ namespace EE
                 }
 
                 // Sort update list
-                auto comparator = [i] ( IEntityWorldSystem* const& pSystemA, IEntityWorldSystem* const& pSystemB )
+                auto comparator = [i] ( EntityWorldSystem* const& pSystemA, EntityWorldSystem* const& pSystemB )
                 {
                     uint8_t const A = pSystemA->GetRequiredUpdatePriorities().GetPriorityForStage( (UpdateStage) i );
                     uint8_t const B = pSystemB->GetRequiredUpdatePriorities().GetPriorityForStage( (UpdateStage) i );
@@ -180,9 +181,9 @@ namespace EE
     // Misc
     //-------------------------------------------------------------------------
 
-    IEntityWorldSystem* EntityWorld::GetWorldSystem( uint32_t worldSystemID ) const
+    EntityWorldSystem* EntityWorld::GetWorldSystem( uint32_t worldSystemID ) const
     {
-        for ( IEntityWorldSystem* pWorldSystem : m_worldSystems )
+        for ( EntityWorldSystem* pWorldSystem : m_worldSystems )
         {
             if ( pWorldSystem->GetSystemID() == worldSystemID )
             {
@@ -425,6 +426,15 @@ namespace EE
         return *foundMapIter;
     }
 
+    EntityModel::EntityMap const* EntityWorld::GetMapForEntity( Entity const* pEntity ) const
+    {
+        EE_ASSERT( pEntity != nullptr && pEntity->IsAddedToMap() );
+        auto const& mapID = pEntity->GetMapID();
+        auto pMap = GetMap( mapID );
+        EE_ASSERT( pMap != nullptr );
+        return pMap;
+    }
+
     EntityMapID EntityWorld::LoadMap( ResourceID const& mapResourceID )
     {
         EE_ASSERT( mapResourceID.IsValid() && mapResourceID.GetResourceTypeID() == EntityModel::SerializedEntityMap::GetStaticResourceTypeID() );
@@ -449,6 +459,25 @@ namespace EE
     //-------------------------------------------------------------------------
 
     #if EE_DEVELOPMENT_TOOLS
+
+    void EntityWorld::BeginComponentEdit( Entity* pEntity )
+    {
+        EE_ASSERT( pEntity != nullptr );
+
+        auto pMap = GetMap( pEntity->GetMapID() );
+        EE_ASSERT( pMap != nullptr );
+        pMap->BeginComponentEdit( m_loadingContext, m_initializationContext, pEntity->GetID() );
+    }
+
+    void EntityWorld::EndComponentEdit( Entity* pEntity )
+    {
+        EE_ASSERT( pEntity != nullptr );
+
+        auto pMap = GetMap( pEntity->GetMapID() );
+        EE_ASSERT( pMap != nullptr );
+        pMap->EndComponentEdit( m_loadingContext, m_initializationContext, pEntity->GetID() );
+    }
+
     void EntityWorld::BeginComponentEdit( EntityComponent* pComponent )
     {
         EE_ASSERT( pComponent != nullptr );

@@ -12,13 +12,13 @@ namespace EE::AI
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINE_API AIManager : public IEntityWorldSystem
+    class EE_ENGINE_API AIManager : public EntityWorldSystem
     {
         friend class AIDebugView;
 
     public:
 
-        EE_REGISTER_ENTITY_WORLD_SYSTEM( AIManager, RequiresUpdate( UpdateStage::PrePhysics ) );
+        EE_ENTITY_WORLD_SYSTEM( AIManager, RequiresUpdate( UpdateStage::PrePhysics ) );
 
     private:
 
@@ -28,6 +28,9 @@ namespace EE::AI
         virtual void UpdateSystem( EntityWorldUpdateContext const& ctx ) override;
 
         bool TrySpawnAI( EntityWorldUpdateContext const& ctx );
+
+        // Hack
+        void HackTrySpawnAI( EntityWorldUpdateContext const& ctx, int32_t numAIToSpawn );
 
     private:
 

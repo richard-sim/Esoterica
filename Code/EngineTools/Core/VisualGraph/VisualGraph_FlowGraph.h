@@ -35,7 +35,7 @@ namespace EE::VisualGraph
             constexpr static char const* const s_IDKey = "ID";
             constexpr static char const* const s_nameKey = "Name";
             constexpr static char const* const s_typeKey = "Type";
-            constexpr static char const* const s_dynamicKey = "Type";
+            constexpr static char const* const s_dynamicKey = "IsDynamic";
             constexpr static char const* const s_allowMultipleConnectionsKey = "AllowMultipleConnections";
 
         public:
@@ -51,7 +51,7 @@ namespace EE::VisualGraph
 
             UUID                    m_ID = UUID::GenerateID();
             String                  m_name;
-            uint32_t                m_type; // Generic type that allows user to set custom data be it StringIDs or enum values
+            StringID                m_type;
             Direction               m_direction;
             Float2                  m_screenPosition = Float2( 0, 0 ); // Updated each frame (Screen Space)
             Float2                  m_size = Float2( -1, -1 ); // Updated each frame
@@ -70,7 +70,7 @@ namespace EE::VisualGraph
             friend FlowGraph;
             friend GraphView;
 
-            EE_REGISTER_TYPE( Node );
+            EE_REFLECT_TYPE( Node );
 
             constexpr static char const* const s_inputPinsKey = "InputPins";
             constexpr static char const* const s_outputPinsKey = "OutputPins";
@@ -85,38 +85,29 @@ namespace EE::VisualGraph
             // Get node category name (separated via '/')
             virtual char const* GetCategory() const { return nullptr; }
 
-            // Pins
+            // Input Pins
             //-------------------------------------------------------------------------
 
-            // Does this node support dynamic inputs
-            virtual bool SupportsDynamicInputPins() const { return false; }
+            // Does this node support user editing of dynamic input pins
+            virtual bool SupportsUserEditableDynamicInputPins() const { return false; }
 
             // Whats the name of the dynamic inputs
             virtual TInlineString<100> GetNewDynamicInputPinName() const { return "Pin"; }
 
             // What's the value type of the dynamic inputs
-            virtual uint32_t GetDynamicInputPinValueType() const { return 0; }
-
-            // Does this node have an output pin
-            inline bool HasOutputPin() const { return !m_outputPins.empty(); }
+            virtual StringID GetDynamicInputPinValueType() const { return StringID(); }
 
             // Get the number of input pins on this node
             inline int32_t GetNumInputPins() const { return (int32_t) m_inputPins.size(); }
 
-            // Get the number of input pins on this node
-            inline int32_t GetNumOutputPins() const { return (int32_t) m_outputPins.size(); }
-
             // Get all input pins
             inline TInlineVector<Pin, 4> const& GetInputPins() const { return m_inputPins; }
-
-            // Get all output pins
-            inline TInlineVector<Pin, 1> const& GetOutputPins() const { return m_outputPins; }
 
             // Does an input pin exist with this ID
             inline bool HasInputPin( UUID const& pinID ) const { return GetInputPin( pinID ) != nullptr; }
 
-            // Does an input pin exist with this ID
-            inline bool HasOutputPin( UUID const& pinID ) const { return GetOutputPin( pinID ) != nullptr; }
+            // Does an output pin exist with this index
+            inline bool HasInputPin( int32_t pinIdx ) const { return pinIdx >= 0 && pinIdx < m_inputPins.size(); }
 
             // Get an input pin for this node
             inline Pin* GetInputPin( int32_t pinIdx ) { EE_ASSERT( pinIdx >= 0 && pinIdx < m_inputPins.size() ); return &m_inputPins[pinIdx]; }
@@ -124,17 +115,38 @@ namespace EE::VisualGraph
             // Get an input pin for this node
             inline Pin const* GetInputPin( int32_t pinIdx ) const { EE_ASSERT( pinIdx >= 0 && pinIdx < m_inputPins.size() ); return &m_inputPins[pinIdx]; }
 
-            // Get an output pin for this node
-            inline Pin* GetOutputPin( int32_t pinIdx = 0 ) { EE_ASSERT( pinIdx >= 0 && pinIdx < m_outputPins.size() ); return &m_outputPins[pinIdx]; }
-
-            // Get an output pin for this node
-            inline Pin const* GetOutputPin( int32_t pinIdx = 0 ) const { EE_ASSERT( pinIdx >= 0 && pinIdx < m_outputPins.size() ); return &m_outputPins[pinIdx]; }
-
             // Get a specific input pin via ID
             inline Pin const* GetInputPin( UUID const& pinID ) const;
 
             // Get a specific input pin via ID
             inline Pin* GetInputPin( UUID const& pinID ) { return const_cast<Pin*>( const_cast<Node const*>( this )->GetInputPin( pinID ) ); }
+
+            // Get the index for a specific input pin via ID
+            int32_t GetInputPinIndex( UUID const& pinID ) const;
+
+            // Output Pins
+            //-------------------------------------------------------------------------
+
+            // Get the number of output pins on this node
+            inline int32_t GetNumOutputPins() const { return (int32_t) m_outputPins.size(); }
+
+            // Get all output pins
+            inline TInlineVector<Pin, 1> const& GetOutputPins() const { return m_outputPins; }
+
+            // Does this node have an output pin
+            inline bool HasOutputPin() const { return !m_outputPins.empty(); }
+
+            // Does an output pin exist with this ID
+            inline bool HasOutputPin( UUID const& pinID ) const { return GetOutputPin( pinID ) != nullptr; }
+
+            // Does an output pin exist with this index
+            inline bool HasOutputPin( int32_t pinIdx ) const { return pinIdx >= 0 && pinIdx < m_outputPins.size(); }
+
+            // Get an output pin for this node
+            inline Pin* GetOutputPin( int32_t pinIdx = 0 ) { EE_ASSERT( pinIdx >= 0 && pinIdx < m_outputPins.size() ); return &m_outputPins[pinIdx]; }
+
+            // Get an output pin for this node
+            inline Pin const* GetOutputPin( int32_t pinIdx = 0 ) const { EE_ASSERT( pinIdx >= 0 && pinIdx < m_outputPins.size() ); return &m_outputPins[pinIdx]; }
 
             // Get a specific output pin via ID
             inline Pin const* GetOutputPin( UUID const& pinID ) const;
@@ -144,9 +156,6 @@ namespace EE::VisualGraph
 
             // Does the specified pin ID exist on this node
             inline bool HasPin( UUID const& pinID ) const { return HasInputPin( pinID ) || HasOutputPin( pinID ); }
-
-            // Get the index for a specific input pin via ID
-            int32_t GetInputPinIndex( UUID const& pinID ) const;
 
             // Get the index for a specific output pin via ID
             int32_t GetOutputPinIndex( UUID const& pinID ) const;
@@ -189,6 +198,9 @@ namespace EE::VisualGraph
             // Create a new dynamic pin
             void CreateDynamicInputPin();
 
+            // Create a new dynamic pin
+            void CreateDynamicInputPin( char const* pPinName, StringID pinType );
+
             // Called just after creating a dynamic pin
             virtual void OnDynamicPinCreation( UUID pinID ) {}
 
@@ -198,13 +210,16 @@ namespace EE::VisualGraph
             // Called just before actually destroying a dynamic pin
             virtual void OnDynamicPinDestruction( UUID pinID ) {}
 
-            void CreateInputPin( char const* pPinName, uint32_t valueType );
-            void CreateOutputPin( char const* pPinName, uint32_t valueType, bool allowMultipleOutputConnections = false );
+            void CreateInputPin( char const* pPinName, StringID pinType );
+            void CreateOutputPin( char const* pPinName, StringID pinType, bool allowMultipleOutputConnections = false );
             void DestroyInputPin( int32_t pinIdx );
             void DestroyOutputPin( int32_t pinIdx );
+            
             void DestroyPin( UUID const& pinID );
 
             // Serialization
+            //-------------------------------------------------------------------------
+
             virtual void SerializeCustom( TypeSystem::TypeRegistry const& typeRegistry, Serialization::JsonValue const& nodeObjectValue ) override;
             virtual void SerializeCustom( TypeSystem::TypeRegistry const& typeRegistry, Serialization::JsonWriter& writer ) const override;
 
@@ -251,7 +266,7 @@ namespace EE::VisualGraph
 
     class EE_ENGINETOOLS_API FlowGraph : public BaseGraph
     {
-        EE_REGISTER_TYPE( FlowGraph );
+        EE_REFLECT_TYPE( FlowGraph );
 
         friend GraphView;
 
@@ -296,8 +311,11 @@ namespace EE::VisualGraph
         // Do we support creating new nodes directly from a pin
         virtual bool SupportsAutoConnection() const { return false; }
 
-        // Draw the graph context menu options - returns true if the menu should be closed i.e. a cusotm selection or action has been made
+        // Draw the graph context menu options - returns true if the menu should be closed i.e. a custom selection or action has been made
         virtual bool DrawContextMenuOptions( DrawContext const& ctx, UserContext* pUserContext, Float2 const& mouseCanvasPos, TVector<String> const& filterTokens, Flow::Node* pSourceNode, Flow::Pin* pSourcePin ) { return false; }
+
+        // Should we show the context menu filter?
+        virtual bool HasContextMenuFilter() const { return true; }
 
         // Serialization
         //-------------------------------------------------------------------------

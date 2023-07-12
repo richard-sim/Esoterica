@@ -6,7 +6,7 @@
 #include "Engine/Entity/EntityWorld.h"
 #include "Engine/Entity/EntityWorldUpdateContext.h"
 #include "System/Imgui/ImguiX.h"
-#include "System/Math/MathStringHelpers.h"
+#include "System/Math/MathUtils.h"
 
 //-------------------------------------------------------------------------
 
@@ -54,12 +54,6 @@ namespace EE::Animation
                         {
                             stringValue = "Unset";
                         }
-                    }
-                    break;
-
-                    case GraphValueType::Int:
-                    {
-                        stringValue.sprintf( "%d", pGraphInstance->GetControlParameterValue<int32_t>( i ) );
                     }
                     break;
 
@@ -149,6 +143,16 @@ namespace EE::Animation
 
         // Always use the task system from the context as this is guaranteed to be set
         auto pTaskSystem = pGraphInstance->m_graphContext.m_pTaskSystem;
+        DrawGraphActiveTasksDebugView( pTaskSystem );
+    }
+
+    void AnimationDebugView::DrawGraphActiveTasksDebugView( TaskSystem* pTaskSystem )
+    {
+        if ( pTaskSystem == nullptr )
+        {
+            return;
+        }
+
         if ( !pTaskSystem->HasTasks() )
         {
             ImGui::Text( "No Active Tasks" );
@@ -195,7 +199,7 @@ namespace EE::Animation
                 InlineString const tR( InlineString::CtorSprintf(), "x=%.3f, y=%.3f, z=%.3f", vR.m_x, vR.m_y, vR.m_z );
 
                 Vector vT = pAction->m_rootMotionDelta.GetTranslation();
-                InlineString const tT( InlineString::CtorSprintf(), "x=%f, y=%f, z=%f", vT.m_x, vT.m_y, vT.m_z );
+                InlineString const tT( InlineString::CtorSprintf(), "x=%f, y=%f, z=%f", vT.GetX(), vT.GetY(), vT.GetZ() );
 
                 ImGui::Text( "R: %s, T: %s", tR.c_str(), tT.c_str() );
             }
@@ -357,7 +361,7 @@ namespace EE::Animation
         if ( ImGui::BeginTable( "StateEventsTable", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable ) )
         {
             ImGui::TableSetupColumn( "Branch", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 18 );
-            ImGui::TableSetupColumn( "Ignored", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 18 );
+            ImGui::TableSetupColumn( "Status", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 18 );
             ImGui::TableSetupColumn( "Weight", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 40 );
             ImGui::TableSetupColumn( "Event", ImGuiTableColumnFlags_WidthStretch, 0.5f );
             ImGui::TableSetupColumn( "Source", ImGuiTableColumnFlags_WidthStretch, 0.5f );
@@ -410,8 +414,16 @@ namespace EE::Animation
                 ImGui::Text( "%.2f", sampledEvent.GetWeight() );
 
                 ImGui::TableNextColumn();
-                ImGui::Text( sampledEvent.GetStateEventID().c_str() );
-                ImGuiX::TextTooltip( sampledEvent.GetStateEventID().c_str() );
+                {
+                    static ImColor const stateEventTypeColors[] = { ImGuiX::ImColors::Gold, ImGuiX::ImColors::Lime, ImGuiX::ImColors::OrangeRed, ImGuiX::ImColors::DodgerBlue };
+
+                    ImGui::PushStyleColor( ImGuiCol_Text, stateEventTypeColors[ (uint8_t) sampledEvent.GetStateEventType()].Value );
+                    ImGui::Text( "[%s]", GetNameForStateEventType( sampledEvent.GetStateEventType() ) );
+                    ImGui::PopStyleColor();
+                    ImGui::SameLine();
+                    ImGui::Text( sampledEvent.GetStateEventID().c_str() );
+                    ImGuiX::TextTooltip( sampledEvent.GetStateEventID().c_str() );
+                }
 
                 ImGui::TableNextColumn();
                 String const& nodePath = pGraphInstance->m_pGraphVariation->GetDefinition()->GetNodePath( sampledEvent.GetSourceNodeIndex() );
@@ -495,7 +507,7 @@ namespace EE::Animation
     void AnimationDebugView::DrawMenu( EntityWorldUpdateContext const& context )
     {
         InlineString componentName;
-        for ( AnimationGraphComponent* pGraphComponent : m_pAnimationWorldSystem->m_graphComponents )
+        for ( GraphComponent* pGraphComponent : m_pAnimationWorldSystem->m_graphComponents )
         {
             EntityID const entityID = pGraphComponent->GetEntityID();
             auto pEntity = m_pWorld->FindEntity( entityID );
@@ -620,6 +632,7 @@ namespace EE::Animation
                 {
                     bool keepOpen = true;
                     title.sprintf( "Control Parameters: %s (%s)", pGraphComponent->GetNameID().c_str(), pEntity->GetNameID().c_str() );
+                    if ( pWindowClass != nullptr ) ImGui::SetNextWindowClass( pWindowClass );
                     ImGui::SetNextWindowSize( ImVec2( 600, 700 ), ImGuiCond_FirstUseEver );
                     if ( ImGui::Begin( title.c_str(), &keepOpen, ImGuiWindowFlags_NoSavedSettings) )
                     {
@@ -639,6 +652,7 @@ namespace EE::Animation
                 {
                     bool keepOpen = true;
                     title.sprintf( "Active Tasks: %s (%s)", pGraphComponent->GetNameID().c_str(), pEntity->GetNameID().c_str() );
+                    if ( pWindowClass != nullptr ) ImGui::SetNextWindowClass( pWindowClass );
                     ImGui::SetNextWindowSize( ImVec2( 600, 700 ), ImGuiCond_FirstUseEver );
                     if ( ImGui::Begin( title.c_str(), &keepOpen, ImGuiWindowFlags_NoSavedSettings ) )
                     {
@@ -658,6 +672,7 @@ namespace EE::Animation
                 {
                     bool keepOpen = true;
                     title.sprintf( "Sampled Events: %s (%s)", pGraphComponent->GetNameID().c_str(), pEntity->GetNameID().c_str() );
+                    if ( pWindowClass != nullptr ) ImGui::SetNextWindowClass( pWindowClass );
                     ImGui::SetNextWindowSize( ImVec2( 600, 700 ), ImGuiCond_FirstUseEver );
                     if ( ImGui::Begin( title.c_str(), &keepOpen, ImGuiWindowFlags_NoSavedSettings ) )
                     {

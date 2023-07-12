@@ -40,9 +40,17 @@ namespace EE::TypeSystem::Reflection
         inline bool operator==( ReflectedProperty const& RHS ) const { return m_propertyID == RHS.m_propertyID; }
         inline bool operator!=( ReflectedProperty const& RHS ) const { return m_propertyID != RHS.m_propertyID; }
 
-        // Dev tools helpers
+        // Dev Info
+        //-------------------------------------------------------------------------
+
         String GetFriendlyName() const;
-        String GetCategory() const { return String(); }
+        String GetCategory() const { return m_category; }
+
+        // MetaData
+        //-------------------------------------------------------------------------
+
+        bool HasMetaData() const { return !m_metaData.empty(); }
+        void ParseMetaData();
 
     public:
 
@@ -50,12 +58,18 @@ namespace EE::TypeSystem::Reflection
         int32_t                                         m_lineNumber = -1;
         TypeID                                          m_typeID;
         String                                          m_name;
+        String                                          m_metaData;
         String                                          m_description;
         String                                          m_typeName;
         String                                          m_templateArgTypeName;
         int32_t                                         m_arraySize = -1;
         TBitFlags<PropertyInfo::Flags>                  m_flags;
         bool                                            m_isDevOnly = true;
+
+        // From MetaData
+        String                                          m_category;
+        bool                                            m_isToolsReadOnly = false;
+        StringID                                        m_customEditorID;
     };
 
     //-------------------------------------------------------------------------
@@ -97,7 +111,6 @@ namespace EE::TypeSystem::Reflection
         inline bool IsEntityWorldSystem() const { return m_flags.IsFlagSet( Flags::IsEntityWorldSystem ); }
 
         // Structure functions
-        inline bool IsDerivedType() const { return !m_parents.empty(); }
         ReflectedProperty const* GetPropertyDescriptor( StringID propertyID ) const;
 
         // Enum functions
@@ -125,7 +138,7 @@ namespace EE::TypeSystem::Reflection
         TBitFlags<Flags>                                m_flags;
 
         // Structures
-        TVector<TypeID>                                 m_parents;
+        TypeID                                          m_parentID;
         TVector<ReflectedProperty>                      m_properties;
 
         // Enums

@@ -1,6 +1,5 @@
 #include "PlayerAction_Dash.h"
 #include "Game/Player/Components/Component_MainPlayer.h"
-#include "Game/Player/Physics/PlayerPhysicsController.h"
 #include "Game/Player/Camera/PlayerCameraController.h"
 #include "Game/Player/Animation/PlayerAnimationController.h"
 #include "Game/Player/Animation/PlayerGraphController_Ability.h"
@@ -38,7 +37,7 @@ namespace EE::Player
         if( isDashAllowed && ctx.m_pInputState->GetControllerState()->WasPressed( Input::ControllerButton::FaceButtonRight ) )
         {
             ctx.m_pPlayerComponent->ConsumeEnergy( g_dashEnergyCost );
-            ctx.m_pCharacterController->DisableGravity();
+            ctx.m_pCharacterComponent->SetGravityMode( Physics::ControllerGravityMode::NoGravity );
 
             auto const pControllerState = ctx.m_pInputState->GetControllerState();
             EE_ASSERT( pControllerState != nullptr );
@@ -50,8 +49,8 @@ namespace EE::Player
             {
                 auto const& camFwd = ctx.m_pCameraController->GetCameraRelativeForwardVector2D();
                 auto const& camRight = ctx.m_pCameraController->GetCameraRelativeRightVector2D();
-                auto const forward = camFwd * movementInputs.m_y;
-                auto const right = camRight * movementInputs.m_x;
+                auto const forward = camFwd * movementInputs.GetY();
+                auto const right = camRight * movementInputs.GetX();
                 m_dashDirection = ( forward + right ).GetNormalized2();
             }
             else
@@ -93,8 +92,8 @@ namespace EE::Player
         
         // Update animation controller
         //-------------------------------------------------------------------------
-        auto pLocomotionGraphController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
-        pLocomotionGraphController->SetLocomotionDesires(ctx.GetDeltaTime(), desiredVelocity, ctx.m_pCharacterComponent->GetForwardVector() );
+        auto pGraphController = ctx.GetAnimSubGraphController<AbilityGraphController>();
+        pGraphController->SetDesiredMovement(ctx.GetDeltaTime(), desiredVelocity, ctx.m_pCharacterComponent->GetForwardVector() );
 
         if( m_dashDurationTimer.Update( ctx.GetDeltaTime() ) > g_dashDuration && !m_isInSettle )
         {
@@ -104,7 +103,7 @@ namespace EE::Player
 
         if( m_isInSettle )
         {
-            pLocomotionGraphController->SetLocomotionDesires( ctx.GetDeltaTime(), m_initialVelocity, ctx.m_pCharacterComponent->GetForwardVector() );
+            pGraphController->SetDesiredMovement( ctx.GetDeltaTime(), m_initialVelocity, ctx.m_pCharacterComponent->GetForwardVector() );
 
             if( m_hackSettleTimer.Update( ctx.GetDeltaTime() ) > 0.1f )
             {

@@ -1,6 +1,6 @@
 #include "ResourceServerUI.h"
 #include "ResourceServer.h"
-#include "System/Platform/PlatformHelpers_Win32.h"
+#include "System/Platform/PlatformUtils_Win32.h"
 #include "System/Imgui/ImguiSystem.h"
 #include "EngineTools/Core/ToolsEmbeddedResources.inl"
 #include <eastl/sort.h>
@@ -48,14 +48,15 @@ namespace EE::Resource
 
         auto DrawTitleBarContents = [this] ()
         {
-            ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( 2, 4 ) );
+            ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( 0, 4 ) );
             ImGuiX::Image( m_resourceServerIcon );
             ImGui::SameLine();
-            ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( 2, 3 ) );
+            ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( -8, -2 ) );
+            ImGui::AlignTextToFramePadding();
             ImGui::Text( "Resource Server" );
         };
 
-        m_titleBar.Draw( DrawTitleBarContents, 140 );
+        m_titleBar.Draw( DrawTitleBarContents, 200 );
 
         // Create dock space
         //-------------------------------------------------------------------------
@@ -132,7 +133,7 @@ namespace EE::Resource
 
             ImGuiX::ScopedFont const BigScopedFont( ImGuiX::Font::Small );
 
-            if ( ImGui::BeginTable( "Requests", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY, ImVec2( 0, tableHeight ) ) )
+            if ( ImGui::BeginTable( "Requests", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY, ImVec2( 0, tableHeight ) ) )
             {
                 auto const& requests = m_resourceServer.GetRequests();
 
@@ -143,7 +144,6 @@ namespace EE::Resource
                 ImGui::TableSetupColumn( "Origin", ImGuiTableColumnFlags_WidthStretch );
                 ImGui::TableSetupColumn( "Destination", ImGuiTableColumnFlags_WidthStretch );
                 ImGui::TableSetupColumn( "Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 30 );
-                ImGui::TableSetupColumn( "Up To Date", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 60 );
                 ImGui::TableSetupColumn( "Compile", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 60 );
                 ImGui::TableSetupScrollFreeze( 0, 1 );
 
@@ -165,6 +165,17 @@ namespace EE::Resource
 
                         //-------------------------------------------------------------------------
 
+                        auto HandleContextMenuOpening = [&] ()
+                        {
+                            if ( ImGui::IsItemHovered() && ImGui::IsMouseReleased( ImGuiMouseButton_Right ) )
+                            {
+                                ImGui::OpenPopup( "RequestContextMenu" );
+                                m_pContextMenuRequest = pRequest;
+                            }
+                        };
+
+                        //-------------------------------------------------------------------------
+
                         ImGui::TableSetColumnIndex( 0 );
                         switch ( pRequest->GetStatus() )
                         {
@@ -172,6 +183,7 @@ namespace EE::Resource
                             {
                                 itemColor = Colors::LightGray.ToFloat4();
                                 ImGui::TextColored( itemColor, EE_ICON_CLOCK );
+                                HandleContextMenuOpening();
                                 ImGuiX::TextTooltip( "Pending" );
                             }
                             break;
@@ -180,6 +192,7 @@ namespace EE::Resource
                             {
                                 itemColor = Colors::Cyan.ToFloat4();
                                 ImGui::TextColored( itemColor, EE_ICON_COG );
+                                HandleContextMenuOpening();
                                 ImGuiX::TextTooltip( "Compiling" );
                             }
                             break;
@@ -188,6 +201,7 @@ namespace EE::Resource
                             {
                                 itemColor = Colors::Lime.ToFloat4();
                                 ImGui::TextColored( itemColor, EE_ICON_CHECK );
+                                HandleContextMenuOpening();
                                 ImGuiX::TextTooltip( "Succeeded" );
                             }
                             break;
@@ -196,6 +210,7 @@ namespace EE::Resource
                             {
                                 itemColor = Colors::Yellow.ToFloat4();
                                 ImGui::TextColored( itemColor, EE_ICON_ALERT );
+                                HandleContextMenuOpening();
                                 ImGuiX::TextTooltip( "Succeeded with Warnings" );
                             }
                             break;
@@ -204,6 +219,7 @@ namespace EE::Resource
                             {
                                 itemColor = Colors::Lime.ToFloat4();
                                 ImGui::TextColored( itemColor, EE_ICON_CLOCK_CHECK );
+                                HandleContextMenuOpening();
                                 ImGuiX::TextTooltip( "Up To Date" );
                             }
                             break;
@@ -212,6 +228,7 @@ namespace EE::Resource
                             {
                                 itemColor = Colors::Red.ToFloat4();
                                 ImGui::TextColored( itemColor, EE_ICON_ALERT_OCTAGON );
+                                HandleContextMenuOpening();
                                 ImGuiX::TextTooltip( "Failed" );
                             }
                             break;
@@ -249,48 +266,91 @@ namespace EE::Resource
                                 ImGui::Text( "Package" );
                             }
                             break;
+
                         }
+                        HandleContextMenuOpening();
 
                         //-------------------------------------------------------------------------
 
                         ImGui::TableSetColumnIndex( 2 );
                         ImGui::TextColored( itemColor, pRequest->GetSourceFilePath().c_str() );
+                        HandleContextMenuOpening();
 
                         //-------------------------------------------------------------------------
 
                         ImGui::TableSetColumnIndex( 3 );
-                        bool const isItemSelected = ( pRequest == m_pSelectedCompletedRequest );
+                        bool const isItemSelected = ( pRequest == m_pSelectedRequest );
                         if ( ImGui::Selectable( pRequest->GetDestinationFilePath().c_str(), isItemSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap, ImVec2( 0, 0 ) ) )
                         {
                             if ( pRequest->IsComplete() )
                             {
-                                m_pSelectedCompletedRequest = pRequest;
+                                m_pSelectedRequest = pRequest;
                             }
                         }
+                        HandleContextMenuOpening();
 
                         //-------------------------------------------------------------------------
 
                         auto const resourceTypeStr = pRequest->GetResourceID().GetResourceTypeID().ToString();
                         ImGui::TableSetColumnIndex( 4 );
                         ImGui::Text( "%s", resourceTypeStr.c_str() );
+                        HandleContextMenuOpening();
 
                         //-------------------------------------------------------------------------
 
                         ImGui::TableSetColumnIndex( 5 );
-                        ImGui::Text( "%.3fms", pRequest->GetUptoDateCheckElapsedTime().ToFloat() );
-
-                        ImGui::TableSetColumnIndex( 6 );
                         ImGui::Text( "%.3fms", pRequest->GetCompilationElapsedTime().ToFloat() );
+                        HandleContextMenuOpening();
 
                         ImGui::PopID();
                     }
                 }
+
+                //-------------------------------------------------------------------------
 
                 // Auto scroll the table
                 if ( ImGui::GetScrollY() >= ImGui::GetScrollMaxY() )
                 {
                     ImGui::SetScrollHereY( 1.0f );
                 }
+
+                //-------------------------------------------------------------------------
+
+                // Context Menu
+                ImGui::PushID( m_pContextMenuRequest );
+                if ( ImGui::BeginPopup( "RequestContextMenu" ) )
+                {
+                    if ( ImGui::MenuItem( EE_ICON_CONTENT_COPY" Copy Compiler Args") )
+                    {
+                        String path( "-compile " );
+                        path += m_pContextMenuRequest->GetCompilerArgs();
+                        ImGui::SetClipboardText( path.c_str() );
+                    }
+
+                    if ( ImGui::MenuItem( EE_ICON_COG" Recompile" ) )
+                    {
+                        m_resourceServer.CompileResource( m_pContextMenuRequest->GetResourceID() );
+                    }
+
+                    if ( ImGui::MenuItem( EE_ICON_FILE" Go to Source File" ) )
+                    {
+                        Platform::Win32::OpenInExplorer( m_pContextMenuRequest->GetSourceFilePath() );
+                    }
+
+                    if ( ImGui::MenuItem( EE_ICON_FILE_CHECK" Go to Compiled File" ) )
+                    {
+                        Platform::Win32::OpenInExplorer( m_pContextMenuRequest->GetDestinationFilePath() );
+                    }
+                    ImGui::EndPopup();
+                }
+
+                if ( !ImGui::IsPopupOpen( "RequestContextMenu" ) )
+                {
+                    m_pContextMenuRequest = nullptr;
+                }
+                ImGui::PopID();
+
+                //-------------------------------------------------------------------------
 
                 ImGui::EndTable();
             }
@@ -302,15 +362,15 @@ namespace EE::Resource
             //-------------------------------------------------------------------------
 
             char emptyBuffer[2] = { 0 };
-            bool const hasSelectedItem = m_pSelectedCompletedRequest != nullptr;
+            bool const hasSelectedItem = m_pSelectedRequest != nullptr;
 
             {
                 ImGuiX::ScopedFont const scopedFont( ImGuiX::Font::Medium );
 
-                if ( m_pSelectedCompletedRequest != nullptr )
+                if ( m_pSelectedRequest != nullptr )
                 {
                     ImGui::SetNextItemWidth( textfieldWidth );
-                    ImGui::InputText( "##Name", const_cast<char*>( m_pSelectedCompletedRequest->GetCompilerArgs() ), strlen( m_pSelectedCompletedRequest->GetCompilerArgs() ), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_ReadOnly );
+                    ImGui::InputText( "##Name", const_cast<char*>( m_pSelectedRequest->GetCompilerArgs() ), strlen( m_pSelectedRequest->GetCompilerArgs() ), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_ReadOnly );
                 }
                 else
                 {
@@ -320,36 +380,36 @@ namespace EE::Resource
 
                 ImGui::BeginDisabled( !hasSelectedItem );
                 ImGui::SameLine();
-                if( ImGui::Button( EE_ICON_CONTENT_COPY "Copy Args", ImVec2( buttonWidth, 0 ) ) )
+                if( ImGui::Button( EE_ICON_CONTENT_COPY " Copy Args", ImVec2( buttonWidth, 0 ) ) )
                 {
                     String path( "-compile " );
-                    path += m_pSelectedCompletedRequest->GetCompilerArgs();
+                    path += m_pSelectedRequest->GetCompilerArgs();
                     ImGui::SetClipboardText( path.c_str() );
                 }
 
                 ImGui::SameLine();
-                if ( ImGui::Button( EE_ICON_COG "Recompile", ImVec2( buttonWidth, 0 ) ) )
+                if ( ImGui::Button( EE_ICON_COG " Recompile", ImVec2( buttonWidth, 0 ) ) )
                 {
-                    m_resourceServer.CompileResource( m_pSelectedCompletedRequest->GetResourceID() );
+                    m_resourceServer.CompileResource( m_pSelectedRequest->GetResourceID() );
                 }
 
                 ImGui::SameLine();
-                if ( ImGui::Button( EE_ICON_FILE "Source File", ImVec2( buttonWidth, 0 ) ) )
+                if ( ImGui::Button( EE_ICON_FILE " Source File", ImVec2( buttonWidth, 0 ) ) )
                 {
-                    Platform::Win32::OpenInExplorer( m_pSelectedCompletedRequest->GetSourceFilePath() );
+                    Platform::Win32::OpenInExplorer( m_pSelectedRequest->GetSourceFilePath() );
                 }
 
                 ImGui::SameLine();
-                if ( ImGui::Button( EE_ICON_FILE_CHECK "Compiled File", ImVec2( buttonWidth, 0 ) ) )
+                if ( ImGui::Button( EE_ICON_FILE_CHECK " Compiled File", ImVec2( buttonWidth, 0 ) ) )
                 {
-                    Platform::Win32::OpenInExplorer( m_pSelectedCompletedRequest->GetDestinationFilePath() );
+                    Platform::Win32::OpenInExplorer( m_pSelectedRequest->GetDestinationFilePath() );
                 }
 
                 ImGui::EndDisabled();
 
                 ImGui::SameLine();
                 ImGui::BeginDisabled( m_resourceServer.IsBusy() );
-                if ( ImGui::Button( EE_ICON_DELETE "Clear History", ImVec2( buttonWidth, 0 ) ) )
+                if ( ImGui::Button( EE_ICON_DELETE " Clear History", ImVec2( buttonWidth, 0 ) ) )
                 {
                     m_resourceServer.CleanHistory();
                 }
@@ -358,9 +418,9 @@ namespace EE::Resource
 
             //-------------------------------------------------------------------------
 
-            if ( m_pSelectedCompletedRequest != nullptr )
+            if ( m_pSelectedRequest != nullptr )
             {
-                ImGui::InputTextMultiline( "##Output", const_cast<char*>( m_pSelectedCompletedRequest->GetLog() ), strlen( m_pSelectedCompletedRequest->GetLog() ), ImVec2( ( ImGui::GetWindowContentRegionMax() - ImGui::GetWindowContentRegionMin() ).x, compilationLogFieldHeight ), ImGuiInputTextFlags_ReadOnly );
+                ImGui::InputTextMultiline( "##Output", const_cast<char*>( m_pSelectedRequest->GetLog() ), strlen( m_pSelectedRequest->GetLog() ), ImVec2( ( ImGui::GetWindowContentRegionMax() - ImGui::GetWindowContentRegionMin() ).x, compilationLogFieldHeight ), ImGuiInputTextFlags_ReadOnly );
             }
             else
             {

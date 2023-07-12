@@ -9,7 +9,7 @@ namespace EE::Render
 {
     enum class ShaderType : uint8_t
     {
-        EE_REGISTER_ENUM
+        EE_REFLECT_ENUM
 
         Vertex = 0,
         Geometry,
@@ -36,7 +36,7 @@ namespace EE::Render
 
     struct EE_ENGINETOOLS_API ShaderResourceDescriptor : public Resource::ResourceDescriptor
     {
-        EE_REGISTER_TYPE( ShaderResourceDescriptor );
+        EE_REFLECT_TYPE( ShaderResourceDescriptor );
 
     public:
 
@@ -52,11 +52,11 @@ namespace EE::Render
 
     public:
 
-        EE_REGISTER ShaderType                      m_shaderType = ShaderType::Vertex;
-        EE_EXPOSE ShaderBackendLanguage             m_shaderBackendLanguage = ShaderBackendLanguage::DX11;
-        EE_EXPOSE ShaderLanguage                    m_shaderLanguage = ShaderLanguage::Hlsl;
-        EE_EXPOSE ResourcePath                      m_shaderPath;
-        EE_EXPOSE String                            m_shaderEntryName = "main";
+        EE_REFLECT() ShaderType                      m_shaderType = ShaderType::Vertex;
+        EE_REFLECT() ShaderBackendLanguage             m_shaderBackendLanguage = ShaderBackendLanguage::DX11;
+        EE_REFLECT() ShaderLanguage                    m_shaderLanguage = ShaderLanguage::Hlsl;
+        EE_REFLECT() ResourcePath                      m_shaderPath;
+        EE_REFLECT() String                            m_shaderEntryName = "main";
     };
 
     //-------------------------------------------------------------------------

@@ -17,7 +17,7 @@ namespace EE::Player
 
     class PlayerDebugView : public EntityWorldDebugView
     {
-        EE_REGISTER_TYPE( PlayerDebugView );
+        EE_REFLECT_TYPE( PlayerDebugView );
 
     public:
 
@@ -38,10 +38,10 @@ namespace EE::Player
 
     private:
 
-        EntityWorld const*              m_pWorld = nullptr;
-        PlayerManager*                  m_pPlayerManager = nullptr;
-        bool                            m_isActionDebugWindowOpen = false;
-        bool                            m_isCharacterControllerDebugWindowOpen = false;
+        EntityWorld const*                          m_pWorld = nullptr;
+        PlayerManager*                              m_pPlayerManager = nullptr;
+        bool                                        m_isActionDebugWindowOpen = false;
+        bool                                        m_isCharacterControllerDebugWindowOpen = false;
     };
 }
 #endif

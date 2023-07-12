@@ -8,7 +8,7 @@
 
 namespace EE::Physics
 {
-    class Scene;
+    class PhysicsWorld;
 }
 
 //-------------------------------------------------------------------------
@@ -68,12 +68,16 @@ namespace EE::Animation
         inline GraphInstance( GraphVariation const* pGraphVariation, uint64_t ownerID ) : GraphInstance( pGraphVariation, ownerID, nullptr ) {}
         ~GraphInstance();
 
-        // Info 
+        // Info
         //-------------------------------------------------------------------------
 
+        inline GraphVariation const* GetGraphVariation() const { return m_pGraphVariation; }
         inline StringID const& GetVariationID() const { return m_pGraphVariation->m_dataSet.m_variationID; }
         inline ResourceID const& GetResourceID() const { return m_pGraphVariation->GetResourceID(); }
         inline ResourceID const& GetDefinitionResourceID() const { return m_pGraphVariation->m_pGraphDefinition->GetResourceID(); }
+
+        // Returns the list of all resource LUTs used by this instance: the graph def + all connected external graphs
+        void GetResourceLookupTables( TInlineVector<ResourceLUT const*, 10>& outLUTs ) const;
 
         // Pose
         //-------------------------------------------------------------------------
@@ -81,20 +85,38 @@ namespace EE::Animation
         // Get the final pose from the task system
         Pose const* GetPose();
 
-        // Does the task system has unexecuted pose tasks
+        // Task System
+        //-------------------------------------------------------------------------
+
+        // Enable task serialization
+        void EnableTaskSystemSerialization( TypeSystem::TypeRegistry const& typeRegistry );
+
+        // Disable task serialization
+        void DisableTaskSystemSerialization();
+
+        // Does the task system have any pending pose tasks
         bool DoesTaskSystemNeedUpdate() const;
+
+        // Serialize the currently registered pose tasks. Note: This can only be done after the task system has executed!
+        void SerializeTaskList( Blob& outBlob ) const;
 
         // Graph State
         //-------------------------------------------------------------------------
 
+        // Is this a valid instance (i.e. has a valid root node)
+        bool IsValid() const { return m_pRootNode != nullptr && m_pRootNode->IsValid(); }
+
         // Is this a valid instance that has been correctly initialized
-        bool IsInitialized() const { return m_pRootNode != nullptr && m_pRootNode->IsValid(); }
+        bool IsInitialized() const { return m_pRootNode != nullptr && m_pRootNode->IsValid() && m_pRootNode->IsInitialized(); }
+
+        // Reset the graph state with an initial time
+        void ResetGraphState( SyncTrackTime initTime = SyncTrackTime() );
 
         // Run the graph logic - returns the root motion delta for the update
-        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::Scene* pPhysicsScene, bool resetGraphState = false );
+        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, bool resetGraphState = false );
 
         // Run the graph logic synchronized (needed for external graph support) - returns the root motion delta for the update
-        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::Scene* pPhysicsScene, SyncTrackTimeRange const& updateRange, bool resetGraphState = false );
+        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, SyncTrackTimeRange const& updateRange, bool resetGraphState = false );
 
         // Execute any pre-physics pose tasks (assumes the character is at its final position for this frame)
         void ExecutePrePhysicsPoseTasks( Transform const& endWorldTransform );
@@ -255,8 +277,18 @@ namespace EE::Animation
             return pValueNode->GetValue<T>( const_cast<GraphContext&>( m_graphContext ) );
         }
 
+        // Get a node instance for debugging
+        inline GraphNode const* GetNodeDebugInstance( int16_t nodeIdx ) const
+        {
+            EE_ASSERT( IsValidNodeIndex( nodeIdx ) );
+            return m_nodes[nodeIdx];
+        }
+
         // Get the runtime log for this graph instance
         TVector<GraphLogEntry> const& GetLog() const { return m_log; }
+
+        // Log any errors/warnings occurring from the graph update!
+        void OutputLog();
 
         // Draw graph debug visualizations
         void DrawDebug( Drawing::DrawContext& drawContext );
@@ -266,11 +298,23 @@ namespace EE::Animation
         //-------------------------------------------------------------------------
 
         #if EE_DEVELOPMENT_TOOLS
-        inline bool IsRecording() const { return m_pUpdateRecorder != nullptr; }
-        void StartRecording( RecordedGraphState& outState, GraphUpdateRecorder* pUpdateRecorder = nullptr );
+        // Are we currently recording this graph
+        inline bool IsRecording() const { return m_pRecorder != nullptr; }
+
+        // Start a graph recording
+        void StartRecording( GraphRecorder* pRecorder );
+
+        // Stop a graph recording
         void StopRecording();
+
+        // Set the "per-frame update" data needed to evaluate a recorded graph execution
+        void SetRecordedFrameUpdateData( RecordedGraphFrameData const& recordedUpdateData );
+
+        // Record the current state of this graph
+        void RecordGraphState( RecordedGraphState& recordedState );
+
+        // Set to a previously recorded state
         void SetToRecordedState( RecordedGraphState const& recordedState );
-        void SetRecordedUpdateData( RecordedGraphFrameData const& recordedUpdateData );
         #endif
 
     private:
@@ -291,7 +335,16 @@ namespace EE::Animation
         //-------------------------------------------------------------------------
 
         #if EE_DEVELOPMENT_TOOLS
-        void RecordGraphUpdateData( Seconds const deltaTime, Transform const& startWorldTransform );
+        void RecordPreGraphEvaluateState( Seconds const deltaTime, Transform const& startWorldTransform );
+
+        // Calculate the sync update range for this update
+        void RecordPostGraphEvaluateState();
+
+        // Directly set the update range for this update
+        void RecordPostGraphEvaluateState( SyncTrackTimeRange const& range );
+
+        // Record all the registered tasks for this update
+        void RecordTasks();
         #endif
 
     private:
@@ -313,7 +366,8 @@ namespace EE::Animation
         RootMotionDebugger                      m_rootMotionDebugger; // Allows nodes to record root motion operations
         TVector<int16_t>                        m_debugFilterNodes; // The list of nodes that are allowed to debug draw (if this is empty all nodes will draw)
         TVector<GraphLogEntry>                  m_log;
-        GraphUpdateRecorder*                    m_pUpdateRecorder = nullptr;
+        int32_t                                 m_lastOutputtedLogItemIdx = 0;
+        GraphRecorder*                          m_pRecorder = nullptr;
         #endif
     };
 }

@@ -19,7 +19,7 @@ namespace EE::Animation
 
     class EE_ENGINE_API AnimationDebugView : public EntityWorldDebugView
     {
-        EE_REGISTER_TYPE( AnimationDebugView );
+        EE_REFLECT_TYPE( AnimationDebugView );
 
         struct ComponentDebugState
         {
@@ -37,6 +37,7 @@ namespace EE::Animation
 
         static void DrawGraphControlParameters( GraphInstance* pGraphInstance );
         static void DrawGraphActiveTasksDebugView( GraphInstance* pGraphInstance );
+        static void DrawGraphActiveTasksDebugView( TaskSystem* pTaskSystem );
         static void DrawRootMotionDebugView( GraphInstance* pGraphInstance );
         static void DrawSampledAnimationEventsView( GraphInstance* pGraphInstance );
         static void DrawSampledStateEventsView( GraphInstance* pGraphInstance );

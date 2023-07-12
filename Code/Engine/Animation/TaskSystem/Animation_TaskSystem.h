@@ -1,6 +1,12 @@
 #pragma once
 
 #include "Animation_Task.h"
+#include "Animation_TaskSerializer.h"
+#include "Engine/Animation/AnimationBoneMask.h"
+
+//-------------------------------------------------------------------------
+
+namespace EE::TypeSystem { class TypeRegistry; }
 
 //-------------------------------------------------------------------------
 
@@ -18,7 +24,11 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    class TaskSystem
+    class TaskSerializer;
+
+    //-------------------------------------------------------------------------
+
+    class EE_ENGINE_API TaskSystem
     {
         friend class AnimationDebugView;
 
@@ -57,6 +67,7 @@ namespace EE::Animation
         //-------------------------------------------------------------------------
 
         inline UUID CreateCachedPose() { return m_posePool.CreateCachedPoseBuffer(); }
+        inline void ResetCachedPose( UUID const& cachedPoseID ) { return m_posePool.ResetCachedPoseBuffer( cachedPoseID ); }
         inline void DestroyCachedPose( UUID const& cachedPoseID ) { m_posePool.DestroyCachedPoseBuffer( cachedPoseID ); }
 
         // Task Registration
@@ -78,6 +89,26 @@ namespace EE::Animation
         TaskIndex GetCurrentTaskIndexMarker() const { return (TaskIndex) m_tasks.size(); }
         void RollbackToTaskIndexMarker( TaskIndex const marker );
 
+        // Task Serialization
+        //-------------------------------------------------------------------------
+
+        // Have we enabled serialization
+        bool IsSerializationEnabled() const { return m_serializationEnabled; }
+
+        // Enable serialization
+        void EnableSerialization( TypeSystem::TypeRegistry const& typeRegistry );
+
+        // Disable Serialization
+        void DisableSerialization();
+
+        // Serialized the current executed tasks - NOTE: this can fail since some tasks (i.e. physics) cannot be serialized!
+        // Only do this if there are no currently pending tasks!
+        bool SerializeTasks( TInlineVector<ResourceLUT const*, 10> const& LUTs, Blob& outSerializedData ) const;
+
+        // Create a new set of tasks from a serialized set of data
+        // Only do this if there are no registered tasks!
+        void DeserializeTasks( TInlineVector<ResourceLUT const*, 10> const& LUTs, Blob const& inSerializedData );
+
         // Debug
         //-------------------------------------------------------------------------
 
@@ -92,23 +123,28 @@ namespace EE::Animation
         bool AddTaskChainToPrePhysicsList( TaskIndex taskIdx );
         void ExecuteTasks();
 
-        #if EE_DEVELOPMENT_TOOLS
-        void CalculateTaskOffset( TaskIndex taskIdx, Float2 const& currentOffset, TInlineVector<Float2, 16>& offsets );
-        #endif
-
     private:
 
-        TVector<Task*>                  m_tasks;
-        PoseBufferPool                  m_posePool;
-        TaskContext                     m_taskContext;
-        TInlineVector<TaskIndex, 16>    m_prePhysicsTaskIndices;
-        Pose                            m_finalPose;
-        bool                            m_hasPhysicsDependency = false;
-        bool                            m_hasCodependentPhysicsTasks = false;
-        bool                            m_needsUpdate = false;
+        TVector<Task*>                          m_tasks;
+        PoseBufferPool                          m_posePool;
+        BoneMaskPool                            m_boneMaskPool;
+        TaskContext                             m_taskContext;
+        TInlineVector<TaskIndex, 16>            m_prePhysicsTaskIndices;
+        Pose                                    m_finalPose;
+        bool                                    m_hasPhysicsDependency = false;
+        bool                                    m_hasCodependentPhysicsTasks = false;
+        bool                                    m_needsUpdate = false;
+
+        //-------------------------------------------------------------------------
+
+        TVector<TypeSystem::TypeInfo const*>    m_taskTypeRemapTable;
+        uint32_t                                m_maxBitsForTaskTypeID = 0;
+        bool                                    m_serializationEnabled = false;
+
+        //-------------------------------------------------------------------------
 
         #if EE_DEVELOPMENT_TOOLS
-        TaskSystemDebugMode             m_debugMode = TaskSystemDebugMode::Off;
+        TaskSystemDebugMode                     m_debugMode = TaskSystemDebugMode::Off;
         #endif
     };
 }

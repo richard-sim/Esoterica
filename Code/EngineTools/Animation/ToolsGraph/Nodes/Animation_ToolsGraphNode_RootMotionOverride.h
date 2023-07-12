@@ -7,11 +7,11 @@ namespace EE::Animation::GraphNodes
 {
     class RootMotionOverrideToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( RootMotionOverrideToolsNode );
+        EE_REFLECT_TYPE( RootMotionOverrideToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        RootMotionOverrideToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Pose; }
         virtual char const* GetTypeName() const override { return "Root Motion Override"; }
@@ -22,18 +22,31 @@ namespace EE::Animation::GraphNodes
     private:
 
         // Set to negative to disable the velocity limiter
-        EE_EXPOSE float                m_maxLinearVelocity = -1.0f;
+        EE_REFLECT();
+        float                m_maxLinearVelocity = -1.0f;
 
         // Set to negative to disable the velocity limiter
-        EE_EXPOSE float                m_maxAngularVelocity = -1.0f;
+        EE_REFLECT();
+        float                m_maxAngularVelocity = -1.0f;
 
-        // Limits
-        EE_EXPOSE bool                 m_overrideHeadingX = true;
-        EE_EXPOSE bool                 m_overrideHeadingY = true;
-        EE_EXPOSE bool                 m_overrideHeadingZ = true;
-        EE_EXPOSE bool                 m_allowPitchForFacing = false;
+        // Allow movement along the x axis
+        EE_REFLECT();
+        bool                 m_overrideMoveDirX = true;
+
+        // Allow movement along the y axis
+        EE_REFLECT();
+        bool                 m_overrideMoveDirY = true;
+
+        // Allow movement along the z axis
+        EE_REFLECT();
+        bool                 m_overrideMoveDirZ = true;
+
+        // Allow us to pitch the character facing (i.e. 3D facing)
+        EE_REFLECT();
+        bool                 m_allowPitchForFacing = false;
 
         // Events
-        EE_EXPOSE bool                 m_listenForRootMotionEvents = false;
+        EE_REFLECT();
+        bool                 m_listenForRootMotionEvents = false;
     };
 }

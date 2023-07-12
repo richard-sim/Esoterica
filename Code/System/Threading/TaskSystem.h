@@ -18,6 +18,7 @@ namespace EE
 
     using ITaskSet = enki::ITaskSet;
     using IPinnedTask = enki::IPinnedTask;
+    using ICompleteableTask = enki::ICompletable;
     using AsyncTask = enki::TaskSet;
     using TaskSetPartition = enki::TaskSetPartition;
     using TaskFunction = enki::TaskSetFunction;
@@ -29,7 +30,7 @@ namespace EE
 
     public:
 
-        EE_SYSTEM_ID( TaskSystem );
+        EE_SYSTEM( TaskSystem );
 
     public:
 
@@ -43,7 +44,10 @@ namespace EE
         inline bool IsBusy() const { return m_taskScheduler.GetIsRunning(); }
         inline uint32_t GetNumWorkers() const { return m_numWorkers; }
 
-        inline void WaitForAll() { m_taskScheduler.WaitforAll(); }
+        inline void WaitForAll() 
+        {
+            m_taskScheduler.WaitforAll(); 
+        }
 
         inline void ScheduleTask( ITaskSet* pTask )
         {

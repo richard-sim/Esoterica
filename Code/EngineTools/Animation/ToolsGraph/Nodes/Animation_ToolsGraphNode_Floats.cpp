@@ -5,9 +5,9 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void FloatRemapToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatRemapToolsNode::FloatRemapToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Float", GraphValueType::Float );
     }
@@ -53,9 +53,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatClampToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatClampToolsNode::FloatClampToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Value", GraphValueType::Float );
     }
@@ -106,9 +106,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatAbsToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatAbsToolsNode::FloatAbsToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Float", GraphValueType::Float );
     }
@@ -143,9 +143,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatEaseToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatEaseToolsNode::FloatEaseToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Value", GraphValueType::Float );
     }
@@ -198,9 +198,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatCurveToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatCurveToolsNode::FloatCurveToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Float", GraphValueType::Float );
     }
@@ -239,9 +239,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatMathToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatMathToolsNode::FloatMathToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "A", GraphValueType::Float );
         CreateInputPin( "B (Optional)", GraphValueType::Float );
@@ -339,11 +339,12 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatComparisonToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatComparisonToolsNode::FloatComparisonToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Bool, true );
         CreateInputPin( "Float", GraphValueType::Float );
+        CreateInputPin( "Comparand (Optional)", GraphValueType::Float );
     }
 
     int16_t FloatComparisonToolsNode::Compile( GraphCompilationContext& context ) const
@@ -373,6 +374,22 @@ namespace EE::Animation::GraphNodes
 
             //-------------------------------------------------------------------------
 
+            auto pValueNode = GetConnectedInputNode<FlowToolsNode>( 1 );
+            if ( pValueNode != nullptr )
+            {
+                int16_t const compiledNodeIdx = pValueNode->Compile( context );
+                if ( compiledNodeIdx != InvalidIndex )
+                {
+                    pSettings->m_comparandValueNodeIdx = compiledNodeIdx;
+                }
+                else
+                {
+                    return InvalidIndex;
+                }
+            }
+
+            //-------------------------------------------------------------------------
+
             pSettings->m_comparison = m_comparison;
             pSettings->m_epsilon = m_epsilon;
             pSettings->m_comparisonValue = m_comparisonValue;
@@ -382,6 +399,8 @@ namespace EE::Animation::GraphNodes
 
     void FloatComparisonToolsNode::DrawInfoText( VisualGraph::DrawContext const& ctx )
     {
+        DrawInternalSeparator( ctx );
+
         static char const* comparisionStr[] =
         {
             ">=",
@@ -391,14 +410,22 @@ namespace EE::Animation::GraphNodes
             "<",
         };
 
-        ImGui::Text( "%s %.2f", comparisionStr[(int32_t)m_comparison], m_comparisonValue );
+        if ( GetConnectedInputNode<FlowToolsNode>( 1 ) != nullptr )
+        {
+            ImGui::Text( "%s Comparand", comparisionStr[(int32_t) m_comparison] );
+        }
+        else
+        {
+            ImGui::Text( "%s %.2f", comparisionStr[(int32_t)m_comparison], m_comparisonValue );
+        }
     }
 
     //-------------------------------------------------------------------------
 
-    void FloatRangeComparisonToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatRangeComparisonToolsNode::FloatRangeComparisonToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
+        
         CreateOutputPin( "Result", GraphValueType::Bool, true );
         CreateInputPin( "Float", GraphValueType::Float );
     }
@@ -450,9 +477,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatSwitchToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatSwitchToolsNode::FloatSwitchToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Bool", GraphValueType::Bool );
         CreateInputPin( "If True", GraphValueType::Float );
@@ -531,9 +558,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FloatAngleMathToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FloatAngleMathToolsNode::FloatAngleMathToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Angle (deg)", GraphValueType::Float );
     }
@@ -567,5 +594,115 @@ namespace EE::Animation::GraphNodes
         pSettings->m_operation = m_operation;
 
         return pSettings->m_nodeIdx;
+    }
+
+    //-------------------------------------------------------------------------
+
+    FloatSelectorToolsNode::FloatSelectorToolsNode()
+        : FlowToolsNode()
+    {
+        CreateOutputPin( "Result", GraphValueType::Float, true );
+        CreateInputPin( "Option 0", GraphValueType::Bool );
+        CreateInputPin( "Option 1", GraphValueType::Bool );
+
+        m_pinValues.resize( 2, 0.0f );
+    }
+
+    int16_t FloatSelectorToolsNode::Compile( GraphCompilationContext& context ) const
+    {
+        FloatSelectorNode::Settings* pSettings = nullptr;
+        NodeCompilationState const state = context.GetSettings<FloatSelectorNode>( this, pSettings );
+        if ( state == NodeCompilationState::NeedCompilation )
+        {
+            int32_t const numOptions = GetNumInputPins();
+            for ( auto i = 0; i < numOptions; i++ )
+            {
+                auto pInputNode = GetConnectedInputNode<FlowToolsNode>( i );
+                if ( pInputNode != nullptr )
+                {
+                    int16_t const compiledNodeIdx = pInputNode->Compile( context );
+                    if ( compiledNodeIdx != InvalidIndex )
+                    {
+                        pSettings->m_conditionNodeIndices.emplace_back( compiledNodeIdx );
+                        pSettings->m_values.emplace_back( m_pinValues[i] );
+                    }
+                    else
+                    {
+                        return InvalidIndex;
+                    }
+                }
+                else
+                {
+                    context.LogError( this, "Disconnected input pin!" );
+                    return InvalidIndex;
+                }
+            }
+        }
+
+        //-------------------------------------------------------------------------
+
+        pSettings->m_defaultValue = m_defaultValue;
+
+        return pSettings->m_nodeIdx;
+    }
+
+    TInlineString<100> FloatSelectorToolsNode::GetNewDynamicInputPinName() const
+    {
+        int32_t const numOptions = GetNumInputPins();
+        TInlineString<100> pinName;
+        pinName.sprintf( "Option %d", numOptions - 1 );
+        return pinName;
+    }
+
+    void FloatSelectorToolsNode::OnDynamicPinCreation( UUID pinID )
+    {
+        m_pinValues.emplace_back( 0.0f );
+    }
+
+    void FloatSelectorToolsNode::OnDynamicPinDestruction( UUID pinID )
+    {
+        int32_t const numOptions = GetNumInputPins();
+        int32_t const pinToBeRemovedIdx = GetInputPinIndex( pinID );
+        EE_ASSERT( pinToBeRemovedIdx != InvalidIndex );
+
+        m_pinValues.erase( m_pinValues.begin() + pinToBeRemovedIdx );
+
+        // Rename all pins
+        //-------------------------------------------------------------------------
+
+        int32_t newPinIdx = 2;
+        for ( auto i = 2; i < numOptions; i++ )
+        {
+            if ( i == pinToBeRemovedIdx )
+            {
+                continue;
+            }
+
+            TInlineString<100> newPinName;
+            newPinName.sprintf( "Option %d", newPinIdx );
+            GetInputPin( i )->m_name = newPinName;
+            newPinIdx++;
+        }
+    }
+
+    bool FloatSelectorToolsNode::DrawPinControls( VisualGraph::UserContext* pUserContext, VisualGraph::Flow::Pin const& pin )
+    {
+        FlowToolsNode::DrawPinControls( pUserContext, pin );
+
+        // Add parameter value input field
+        if ( pin.IsInputPin() && pin.m_type == GetPinTypeForValueType( GraphValueType::Bool ) )
+        {
+            int32_t const valueIdx = GetInputPinIndex( pin.m_ID );
+            EE_ASSERT( valueIdx >= 0 && valueIdx < m_pinValues.size() );
+
+            ImGui::PushID( &m_pinValues[valueIdx] );
+            ImGui::SetNextItemWidth( 50 );
+            ImGui::InputFloat( "##parameter", &m_pinValues[valueIdx], 0.0f, 0.0f, "%.2f" );
+            ImGui::PopID();
+
+            return true;
+        }
+
+        return false;
     }
 }

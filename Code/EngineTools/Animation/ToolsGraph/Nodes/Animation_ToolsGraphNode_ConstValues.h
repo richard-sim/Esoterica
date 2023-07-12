@@ -7,131 +7,112 @@ namespace EE::Animation::GraphNodes
 {
     class ConstBoolToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ConstBoolToolsNode );
+        EE_REFLECT_TYPE( ConstBoolToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ConstBoolToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "Bool"; }
-        virtual char const* GetCategory() const override { return "Values/Const"; }
+        virtual char const* GetCategory() const override { return "Values/Bool"; }
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
         virtual void DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext ) override;
 
     private:
 
-        EE_EXPOSE bool m_value;
+        EE_REFLECT() bool m_value;
     };
 
     //-------------------------------------------------------------------------
 
     class ConstIDToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ConstIDToolsNode );
+        EE_REFLECT_TYPE( ConstIDToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ConstIDToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::ID; }
         virtual char const* GetTypeName() const override { return "ID"; }
-        virtual char const* GetCategory() const override { return "Values/Const"; }
+        virtual char const* GetCategory() const override { return "Values/ID"; }
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
         virtual void DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext ) override;
+        virtual void GetLogicAndEventIDs( TVector<StringID>& outIDs ) const override { outIDs.emplace_back( m_value ); }
+        virtual void RenameLogicAndEventIDs( StringID oldID, StringID newID ) override { if ( m_value == oldID ) { VisualGraph::ScopedNodeModification snm( this ); m_value = newID; } }
 
     private:
 
-        EE_EXPOSE StringID m_value;
-    };
-
-    //-------------------------------------------------------------------------
-    
-    class ConstIntToolsNode final : public FlowToolsNode
-    {
-        EE_REGISTER_TYPE( ConstIntToolsNode );
-
-    public:
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
-
-        virtual GraphValueType GetValueType() const override { return GraphValueType::Int; }
-        virtual char const* GetTypeName() const override { return "Int"; }
-        virtual char const* GetCategory() const override { return "Values/Const"; }
-        virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
-        virtual int16_t Compile( GraphCompilationContext& context ) const override;
-        virtual void DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext ) override;
-
-    private:
-
-        EE_EXPOSE int32_t m_value;
+        EE_REFLECT( "CustomEditor" : "AnimGraph_ID" );
+        StringID m_value;
     };
 
     //-------------------------------------------------------------------------
 
     class ConstFloatToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ConstFloatToolsNode );
+        EE_REFLECT_TYPE( ConstFloatToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ConstFloatToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float"; }
-        virtual char const* GetCategory() const override { return "Values/Const"; }
+        virtual char const* GetCategory() const override { return "Values/Float"; }
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
         virtual void DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext ) override;
 
     private:
 
-        EE_EXPOSE float m_value;
+        EE_REFLECT() float m_value;
     };
 
     //-------------------------------------------------------------------------
 
     class ConstVectorToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ConstVectorToolsNode );
+        EE_REFLECT_TYPE( ConstVectorToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ConstVectorToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
         virtual char const* GetTypeName() const override { return "Vector"; }
-        virtual char const* GetCategory() const override { return "Values/Const"; }
+        virtual char const* GetCategory() const override { return "Values/Vector"; }
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
         virtual void DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext ) override;
 
     private:
 
-        EE_EXPOSE Float4 m_value;
+        EE_REFLECT() Float4 m_value;
     };
 
     //-------------------------------------------------------------------------
 
     class ConstTargetToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ConstTargetToolsNode );
+        EE_REFLECT_TYPE( ConstTargetToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ConstTargetToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Target; }
         virtual char const* GetTypeName() const override { return "Target"; }
-        virtual char const* GetCategory() const override { return "Values/Const"; }
+        virtual char const* GetCategory() const override { return "Values/Target"; }
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
         virtual void DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext ) override;
 
     private:
 
-        EE_EXPOSE Transform m_value;
+        EE_REFLECT() Transform m_value;
     };
 }

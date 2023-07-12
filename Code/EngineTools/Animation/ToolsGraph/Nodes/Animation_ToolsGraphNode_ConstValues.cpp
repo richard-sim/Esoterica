@@ -6,9 +6,9 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void ConstBoolToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ConstBoolToolsNode::ConstBoolToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Value", GraphValueType::Bool, true );
     }
 
@@ -32,9 +32,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void ConstIDToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ConstIDToolsNode::ConstIDToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Value", GraphValueType::ID, true );
     }
 
@@ -51,40 +51,15 @@ namespace EE::Animation::GraphNodes
     void ConstIDToolsNode::DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext )
     {
         BeginDrawInternalRegion( ctx, Color( 40, 40, 40 ) );
-        ImGui::Text( m_value.c_str() );
+        ImGui::Text( m_value.IsValid() ? m_value.c_str() : "" );
         EndDrawInternalRegion( ctx );
     }
 
     //-------------------------------------------------------------------------
 
-    void ConstIntToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ConstFloatToolsNode::ConstFloatToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
-        CreateOutputPin( "Value", GraphValueType::Int, true );
-    }
-
-    int16_t ConstIntToolsNode::Compile( GraphCompilationContext& context ) const
-    {
-        ConstIntNode::Settings* pSettings = nullptr;
-        if ( context.GetSettings<ConstIntNode>( this, pSettings ) == NodeCompilationState::NeedCompilation )
-        {
-            pSettings->m_value = m_value;
-        }
-        return pSettings->m_nodeIdx;
-    }
-
-    void ConstIntToolsNode::DrawExtraControls( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext )
-    {
-        BeginDrawInternalRegion( ctx, Color( 40, 40, 40 ) );
-        ImGui::Text( "%d", m_value );
-        EndDrawInternalRegion( ctx );
-    }
-
-    //-------------------------------------------------------------------------
-
-    void ConstFloatToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
-    {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Value", GraphValueType::Float, true );
     }
 
@@ -107,9 +82,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void ConstVectorToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ConstVectorToolsNode::ConstVectorToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Value", GraphValueType::Vector, true );
     }
 
@@ -132,9 +107,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void ConstTargetToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ConstTargetToolsNode::ConstTargetToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Value", GraphValueType::Target, true );
     }
 

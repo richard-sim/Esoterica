@@ -13,12 +13,12 @@ namespace EE
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINE_API CameraManager : public IEntityWorldSystem
+    class EE_ENGINE_API CameraManager : public EntityWorldSystem
     {
 
     public:
 
-        EE_REGISTER_ENTITY_WORLD_SYSTEM( CameraManager, RequiresUpdate( UpdateStage::FrameStart, UpdatePriority::Highest ) );
+        EE_ENTITY_WORLD_SYSTEM( CameraManager, RequiresUpdate( UpdateStage::FrameStart, UpdatePriority::Highest ) );
 
         //-------------------------------------------------------------------------
 
@@ -56,7 +56,9 @@ namespace EE
 
         TVector<CameraComponent*>                   m_cameras;
         CameraComponent*                            m_pActiveCamera = nullptr;
+        int32_t                                     m_newlyAddedCamerasStartIdx = InvalidIndex;
         bool                                        m_registeredCamerasStateChanged = false;
+        bool                                        m_hasAddedNonDebugCamera = false;
 
         #if EE_DEVELOPMENT_TOOLS
         Entity*                                     m_pDebugCameraEntity = nullptr;

@@ -2,7 +2,7 @@
 #include "Engine/Animation/Graph/Animation_RuntimeGraph_Definition.h"
 #include "System/Serialization/BinarySerialization.h"
 #include "System/TypeSystem/TypeDescriptors.h"
-#include "System/Log.h"
+
 
 //-------------------------------------------------------------------------
 
@@ -118,6 +118,19 @@ namespace EE::Animation
                 if ( dataSet.m_resources[i].GetResourceID().IsValid() )
                 {
                     dataSet.m_resources[i] = GetInstallDependency( installDependencies, dataSet.m_resources[i].GetResourceID() );
+
+                    // Add to LUT
+                    dataSet.m_resourceLUT.insert( TPair<uint32_t, Resource::ResourcePtr>( dataSet.m_resources[i].GetResourceID().GetPathID(), dataSet.m_resources[i] ) );
+
+                    // Add child graph resources to the LUT
+                    if ( dataSet.m_resources[i].GetResourceTypeID() == GraphVariation::GetStaticResourceTypeID() )
+                    {
+                        auto pChildGraphDataSet = dataSet.m_resources[i].GetPtr<GraphVariation>();
+                        for ( auto const& iter : pChildGraphDataSet->m_dataSet.m_resourceLUT )
+                        {
+                            dataSet.m_resourceLUT.insert( TPair<uint32_t, Resource::ResourcePtr>( iter.second.GetResourceID().GetPathID(), iter.second ) );
+                        }
+                    }
                 }
             }
         }

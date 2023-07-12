@@ -59,21 +59,21 @@ namespace EE::VisualGraph::Flow
 
     //-------------------------------------------------------------------------
 
-    void Node::CreateInputPin( char const* pPinName, uint32_t valueType )
+    void Node::CreateInputPin( char const* pPinName, StringID pinType )
     {
         ScopedNodeModification snm( this );
         auto& newPin = m_inputPins.emplace_back( Pin() );
         newPin.m_name = pPinName;
-        newPin.m_type = valueType;
+        newPin.m_type = pinType;
         newPin.m_direction = Pin::Direction::In;
     }
 
-    void Node::CreateOutputPin( char const* pPinName, uint32_t valueType, bool allowMultipleOutputConnections )
+    void Node::CreateOutputPin( char const* pPinName, StringID pinType, bool allowMultipleOutputConnections )
     {
         ScopedNodeModification snm( this );
         auto& newPin = m_outputPins.emplace_back( Pin() );
         newPin.m_name = pPinName;
-        newPin.m_type = valueType;
+        newPin.m_type = pinType;
         newPin.m_direction = Pin::Direction::Out;
         newPin.m_allowMultipleOutConnections = allowMultipleOutputConnections;
     }
@@ -132,6 +132,17 @@ namespace EE::VisualGraph::Flow
         OnDynamicPinCreation( newPin.m_ID );
     }
 
+    void Node::CreateDynamicInputPin( char const* pPinName, StringID pinType )
+    {
+        ScopedNodeModification snm( this );
+        auto& newPin = m_inputPins.emplace_back( Pin() );
+        newPin.m_name = pPinName;
+        newPin.m_type = pinType;
+        newPin.m_direction = Pin::Direction::In;
+        newPin.m_isDynamic = true;
+        OnDynamicPinCreation( newPin.m_ID );
+    }
+    
     void Node::DestroyDynamicInputPin( UUID const& pinID )
     {
         ScopedNodeModification snm( this );
@@ -157,30 +168,77 @@ namespace EE::VisualGraph::Flow
     {
         EE_ASSERT( nodeObjectValue.IsObject() );
 
+        // Read all serialized pins
         //-------------------------------------------------------------------------
 
-        m_inputPins.clear();
+        TInlineVector<Pin, 20> serializedInputPins;
         for ( auto& pinObjectValue : nodeObjectValue[s_inputPinsKey].GetArray() )
         {
-            Pin& pin = m_inputPins.emplace_back();
+            Pin& pin = serializedInputPins.emplace_back();
             pin.m_direction = Pin::Direction::In;
             pin.m_ID = UUID( pinObjectValue[Pin::s_IDKey].GetString() );
             pin.m_name = pinObjectValue[Pin::s_nameKey].GetString();
-            pin.m_type = pinObjectValue[Pin::s_typeKey].GetUint();
+            pin.m_type = StringID( pinObjectValue[Pin::s_typeKey].GetString() );
             pin.m_isDynamic = pinObjectValue[Pin::s_dynamicKey].GetBool();
         }
 
         //-------------------------------------------------------------------------
 
-        m_outputPins.clear();
+        TInlineVector<Pin, 20> serializedOutputPins;
         for ( auto& pinObjectValue : nodeObjectValue[s_outputPinsKey].GetArray() )
         {
-            Pin& pin = m_outputPins.emplace_back();
+            Pin& pin = serializedOutputPins.emplace_back();
             pin.m_direction = Pin::Direction::Out;
             pin.m_ID = UUID( pinObjectValue[Pin::s_IDKey].GetString() );
             pin.m_name = pinObjectValue[Pin::s_nameKey].GetString();
-            pin.m_type = pinObjectValue[Pin::s_typeKey].GetUint();
+            pin.m_type = StringID( pinObjectValue[Pin::s_typeKey].GetString() );
             pin.m_allowMultipleOutConnections = pinObjectValue[Pin::s_allowMultipleConnectionsKey].GetBool();
+        }
+
+        // Default pins
+        //-------------------------------------------------------------------------
+
+        // Find serialized version by name and copy data
+        // We erase each found pin to ensure we can handle multiple pins with the same name
+        for ( auto& pin : m_inputPins )
+        {
+            for ( auto i = 0; i < serializedInputPins.size(); i++ )
+            {
+                if ( pin.m_name == serializedInputPins[i].m_name && pin.m_type == serializedInputPins[i].m_type )
+                {
+                    pin = serializedInputPins[i];
+                    serializedInputPins.erase( serializedInputPins.begin() + i );
+                    break;
+                }
+            }
+        }
+
+        // Find serialized version by name and copy data
+        // We erase each found pin to ensure we can handle multiple pins with the same name
+        for ( auto& pin : m_outputPins )
+        {
+            for ( auto i = 0; i < serializedOutputPins.size(); i++ )
+            {
+                if ( pin.m_name == serializedOutputPins[i].m_name && pin.m_type == serializedOutputPins[i].m_type )
+                {
+                    pin = serializedOutputPins[i];
+                    serializedOutputPins.erase( serializedOutputPins.begin() + i );
+                    break;
+                }
+            }
+        }
+
+        // Dynamic pins
+        //-------------------------------------------------------------------------
+
+        for ( auto& pin : serializedInputPins )
+        {
+            if ( !pin.m_isDynamic )
+            {
+                continue;
+            }
+
+            m_inputPins.emplace_back( pin );
         }
     }
 
@@ -201,7 +259,7 @@ namespace EE::VisualGraph::Flow
             writer.String( pin.m_name.c_str() );
 
             writer.Key( Pin::s_typeKey );
-            writer.Uint( pin.m_type );
+            writer.String( pin.m_type.IsValid() ? pin.m_type.c_str() : "" );
 
             writer.Key( Pin::s_dynamicKey );
             writer.Bool( pin.m_isDynamic );
@@ -227,7 +285,7 @@ namespace EE::VisualGraph::Flow
             writer.String( pin.m_name.c_str() );
 
             writer.Key( Pin::s_typeKey );
-            writer.Uint( pin.m_type );
+            writer.String( pin.m_type.IsValid() ? pin.m_type.c_str() : "" );
 
             writer.Key( Pin::s_allowMultipleConnectionsKey );
             writer.Bool( pin.m_allowMultipleOutConnections );
@@ -479,13 +537,26 @@ namespace EE::VisualGraph
 
             connection.m_pStartNode = GetNode( startNodeID );
             connection.m_pEndNode = GetNode( endNodeID );
+
+            // Skip invalid connections
+            if ( connection.m_pStartNode == nullptr || connection.m_pEndNode == nullptr )
+            {
+                continue;
+            }
+
             connection.m_startPinID = UUID( connectionObjectValue[Connection::s_startPinKey].GetString() );
             connection.m_endPinID = UUID( connectionObjectValue[Connection::s_endPinKey].GetString() );
 
-            if ( connection.m_pStartNode != nullptr && connection.m_pEndNode != nullptr )
+            auto pStartPin = connection.m_pStartNode->GetOutputPin( connection.m_startPinID );
+            auto pEndPin = connection.m_pEndNode->GetInputPin( connection.m_endPinID );
+
+            // Skip invalid connections
+            if ( pStartPin == nullptr || pEndPin == nullptr )
             {
-                m_connections.emplace_back( connection );
+                continue;
             }
+
+            m_connections.emplace_back( connection );
         }
     }
 

@@ -26,7 +26,7 @@ namespace EE::Animation
 
         // Read Skeleton Data
         //-------------------------------------------------------------------------
-            
+
         FileSystem::Path skeletonFilePath;
         if ( !ConvertResourcePathToFilePath( resourceDescriptor.m_skeletonPath, skeletonFilePath ) )
         {
@@ -58,7 +58,9 @@ namespace EE::Animation
         //-------------------------------------------------------------------------
 
         Serialization::BinaryOutputArchive archive;
-        archive << Resource::ResourceHeader( s_version, Skeleton::GetStaticResourceTypeID() ) << skeleton;
+        archive << Resource::ResourceHeader( s_version, Skeleton::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
+        archive << skeleton;
+        archive << resourceDescriptor.m_boneMaskDefinitions;
 
         if ( archive.WriteToFile( ctx.m_outputFilePath ) )
         {

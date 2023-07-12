@@ -4,12 +4,24 @@
 
 namespace EE::VisualGraph
 {
-    constexpr static float const g_transitionArrowWidth = 3.0f;
-    constexpr static float const g_transitionArrowOffset = 4.0f;
-    constexpr static float const g_spacingBetweenTitleAndNodeContents = 6.0f;
-    constexpr static float const g_pinRadius = 5.0f;
-    constexpr static float const g_pinSelectionExtraRadius = 10.0f;
-    constexpr static float const g_spacingBetweenInputOutputPins = 16.0f;
+    static ImVec2 const                 g_graphTitleMargin( 16, 10 );
+    constexpr static float const        g_gridSpacing = 30;
+    constexpr static float const        g_nodeSelectionBorderThickness = 2.0f;
+    constexpr static float const        g_connectionSelectionExtraRadius = 5.0f;
+    constexpr static float const        g_transitionArrowWidth = 3.0f;
+    constexpr static float const        g_transitionArrowOffset = 8.0f;
+    constexpr static float const        g_spacingBetweenTitleAndNodeContents = 6.0f;
+    constexpr static float const        g_pinRadius = 6.0f;
+    constexpr static float const        g_pinSelectionExtraRadius = 10.0f;
+    constexpr static float const        g_spacingBetweenInputOutputPins = 16.0f;
+
+    static ImColor const                g_gridBackgroundColor( 40, 40, 40, 200 );
+    static ImColor const                g_gridLineColor( 200, 200, 200, 40 );
+    constexpr static uint32_t const     g_graphTitleColor = IM_COL32( 255, 255, 255, 255 );
+    constexpr static uint32_t const     g_graphTitleReadOnlyColor = IM_COL32( 196, 196, 196, 255 );
+
+    static ImColor const                g_selectionBoxOutlineColor( 61, 224, 133, 150 );
+    static ImColor const                g_selectionBoxFillColor( 61, 224, 133, 30 );
 
     //-------------------------------------------------------------------------
 
@@ -51,12 +63,12 @@ namespace EE::VisualGraph
         : m_pUserContext( m_pUserContext )
     {
         EE_ASSERT( m_pUserContext != nullptr );
-        m_graphEndModificationBindingID = VisualGraph::BaseGraph::OnEndModification().Bind( [this] ( VisualGraph::BaseGraph* pGraph ) { OnGraphModified( pGraph ); } );
+        m_graphEndModificationBindingID = VisualGraph::BaseGraph::OnEndRootGraphModification().Bind( [this] ( VisualGraph::BaseGraph* pGraph ) { OnGraphModified( pGraph ); } );
     }
 
     GraphView::~GraphView()
     {
-        VisualGraph::BaseGraph::OnEndModification().Unbind( m_graphEndModificationBindingID );
+        VisualGraph::BaseGraph::OnEndRootGraphModification().Unbind( m_graphEndModificationBindingID );
     }
 
     void GraphView::OnGraphModified( VisualGraph::BaseGraph* pModifiedGraph )
@@ -91,7 +103,28 @@ namespace EE::VisualGraph
         if ( m_pGraph != nullptr )
         {
             m_pViewOffset = &m_pGraph->m_viewOffset;
+
+            // Ensure that the view overlaps some section of the nodes in the graph
+            // We dont want to show an empty area of graph
+            ImRect canvasAreaWithNodes;
+            for ( auto pNode : m_pGraph->GetNodes() )
+            {
+                canvasAreaWithNodes.Add( pNode->GetCanvasRect() );
+            }
+
+            ImRect visibleCanvasRect( *m_pViewOffset, ImVec2( *m_pViewOffset ) + m_canvasSize );
+            if ( !visibleCanvasRect.Overlaps( canvasAreaWithNodes ) )
+            {
+                *m_pViewOffset = canvasAreaWithNodes.Min;
+            }
+
+            // Notify graph it is being viewed
             m_pGraph->OnShowGraph();
+        }
+        else
+        {
+            m_defaultViewOffset = Float2::Zero;
+            m_pViewOffset = &m_defaultViewOffset;
         }
 
         RefreshNodeSizes();
@@ -138,20 +171,19 @@ namespace EE::VisualGraph
         //-------------------------------------------------------------------------
 
         ImGui::PushID( this );
-        ImGui::PushStyleColor( ImGuiCol_ChildBg, ImGuiX::Style::s_gridBackgroundColor.Value );
+        ImGui::PushStyleColor( ImGuiCol_ChildBg, g_gridBackgroundColor.Value );
         bool const childVisible = ImGui::BeginChild( "GraphCanvas", ImVec2( 0.f, childHeightOverride ), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse );
         if ( childVisible )
         {
             auto pWindow = ImGui::GetCurrentWindow();
             auto pDrawList = ImGui::GetWindowDrawList();
 
-            m_hasFocus = ImGui::IsWindowFocused( ImGuiFocusedFlags_ChildWindows );
+            m_hasFocus = ImGui::IsWindowFocused( ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy );
             m_isViewHovered = ImGui::IsWindowHovered();
             m_canvasSize = ImGui::GetWindowContentRegionMax() - ImGui::GetWindowContentRegionMin();
 
             // Background
             //-------------------------------------------------------------------------
-
 
             ImRect const windowRect = pWindow->Rect();
             ImVec2 const windowTL = windowRect.GetTL();
@@ -159,20 +191,40 @@ namespace EE::VisualGraph
             float const canvasHeight = windowRect.GetHeight();
 
             // Draw Grid
-            for ( float x = Math::FModF( 0, VisualSettings::s_gridSpacing ); x < canvasWidth; x += VisualSettings::s_gridSpacing )
+            for ( float x = Math::FModF( 0, g_gridSpacing ); x < canvasWidth; x += g_gridSpacing )
             {
-                pDrawList->AddLine( windowTL + ImVec2( x, 0.0f ), windowTL + ImVec2( x, canvasHeight ), ImGuiX::Style::s_gridLineColor );
+                pDrawList->AddLine( windowTL + ImVec2( x, 0.0f ), windowTL + ImVec2( x, canvasHeight ), g_gridLineColor );
             }
 
-            for ( float y = Math::FModF( 0, VisualSettings::s_gridSpacing ); y < canvasHeight; y += VisualSettings::s_gridSpacing )
+            for ( float y = Math::FModF( 0, g_gridSpacing ); y < canvasHeight; y += g_gridSpacing )
             {
-                pDrawList->AddLine( windowTL + ImVec2( 0.0f, y ), windowTL + ImVec2( canvasWidth, y ), ImGuiX::Style::s_gridLineColor );
+                pDrawList->AddLine( windowTL + ImVec2( 0.0f, y ), windowTL + ImVec2( canvasWidth, y ), g_gridLineColor );
+            }
+        }
+
+        return childVisible;
+    }
+
+    void GraphView::EndDrawCanvas( DrawContext const& ctx )
+    {
+        // Is the canvas visible?
+        if ( ctx.m_pDrawList != nullptr )
+        {
+            // Border
+            //-------------------------------------------------------------------------
+
+            if ( IsReadOnly() )
+            {
+                static constexpr float const rectThickness = 8.0f;
+                static constexpr float const rectMargin = 2.0f;
+                static ImVec2 const offset( ( rectThickness / 2.f ) + rectMargin, ( rectThickness / 2.f ) + rectMargin );
+                ctx.m_pDrawList->AddRect( ctx.m_windowRect.Min + offset, ctx.m_windowRect.Max - offset, ImGuiX::Style::s_colorGray0, 8.0f, 0, rectThickness );
             }
 
             // Title Block
             //-------------------------------------------------------------------------
 
-            ImVec2 textPosition = windowRect.Min + VisualSettings::s_graphTitleMargin;
+            ImVec2 textPosition = ctx.m_windowRect.Min + g_graphTitleMargin;
             {
                 ImGuiX::ScopedFont font( ImGuiX::Font::LargeBold );
                 auto pViewedGraph = GetViewedGraph();
@@ -181,44 +233,27 @@ namespace EE::VisualGraph
                     // Draw title text
                     //-------------------------------------------------------------------------
 
-                    ImFont* pLargeFont = ImGuiX::GetFont( ImGuiX::Font::LargeBold );
-                    ImGui::PushFont( pLargeFont );
-                    pDrawList->AddText( textPosition, VisualSettings::s_graphTitleColor, pViewedGraph->GetTitle() );
-                    ImGui::PopFont();
-                    textPosition += ImVec2( 0, pLargeFont->FontSize );
+                    ImFont* pTitleFont = ImGuiX::GetFont( ImGuiX::Font::LargeBold );
+                    InlineString const title( InlineString::CtorSprintf(), "%s%s", pViewedGraph->GetTitle(), IsReadOnly() ? " (Read-Only)" : "" );
+                    ctx.m_pDrawList->AddText( pTitleFont, pTitleFont->FontSize, textPosition, IsReadOnly() ? ImGuiX::Style::s_colorTextDisabled : g_graphTitleColor, title.c_str() );
+                    textPosition += ImVec2( 0, pTitleFont->FontSize );
 
                     // Draw extra info
                     //-------------------------------------------------------------------------
 
                     ImFont* pMediumFont = ImGuiX::GetFont( ImGuiX::Font::Medium );
-                    ImGui::PushFont( pMediumFont );
-
                     if ( !m_pUserContext->GetExtraGraphTitleInfoText().empty() )
                     {
-                        pDrawList->AddText( textPosition, m_pUserContext->GetExtraTitleInfoTextColor(), m_pUserContext->GetExtraGraphTitleInfoText().c_str() );
-                        textPosition += ImVec2( 0, pMediumFont->FontSize );
+                        ctx.m_pDrawList->AddText( pMediumFont, pMediumFont->FontSize, textPosition, m_pUserContext->GetExtraTitleInfoTextColor(), m_pUserContext->GetExtraGraphTitleInfoText().c_str() );
                     }
-
-                    if ( m_isReadOnly )
-                    {
-                        pDrawList->AddText( textPosition, ImGuiX::Style::s_colorTextDisabled, "Read-Only" );
-                        textPosition += ImVec2( 0, pMediumFont->FontSize );
-                    }
-
-                    ImGui::PopFont();
                 }
                 else
                 {
-                    pDrawList->AddText( textPosition, ImGuiX::Style::s_colorTextDisabled, "Nothing to Show" );
+                    ctx.m_pDrawList->AddText( textPosition, ImGuiX::Style::s_colorTextDisabled, m_isReadOnly ? "Nothing to Show (Read-Only)" : "Nothing to Show" );
                 }
             }
         }
 
-        return childVisible;
-    }
-
-    void GraphView::EndDrawCanvas()
-    {
         ImGui::EndChild();
         ImGui::PopStyleColor();
         ImGui::PopID();
@@ -229,11 +264,11 @@ namespace EE::VisualGraph
         EE_ASSERT( pNode != nullptr );
 
         ImGui::BeginGroup();
-        ImGuiX::ScopedFont fontOverride( ImGuiX::Font::Tiny );
+        ImGuiX::ScopedFont fontOverride( ImGuiX::Font::Medium );
         if ( pNode->GetIcon() != nullptr )
         {
             ImGui::Text( pNode->GetIcon() );
-            ImGui::SameLine( 0, 2 );
+            ImGui::SameLine();
         }
         ImGui::Text( pNode->GetName() );
         ImGui::EndGroup();
@@ -254,17 +289,7 @@ namespace EE::VisualGraph
         ImVec2 const rectMax = windowNodePosition + pNode->m_size + nodeMargin;
         ImVec2 const rectTitleBarMax = windowNodePosition + ImVec2( newNodeSize.x, pNode->m_titleRectSize.m_y ) + nodeMargin;
 
-        // Colors
-        //-------------------------------------------------------------------------
-
-        ImColor const nodeBackgroundColor( VisualSettings::s_genericNodeBackgroundColor );
-        ImColor nodeTitleColor( pNode->GetTitleBarColor() );
-
         auto pStateMachineGraph = GetStateMachineGraph();
-        if ( pNode->m_ID == pStateMachineGraph->m_entryStateID )
-        {
-            nodeTitleColor = ImGuiX::ImColors::Green;
-        }
 
         NodeVisualState visualState = pNode->IsActive( m_pUserContext ) ? NodeVisualState::Active : NodeVisualState::None;
         if ( IsNodeSelected( pNode ) )
@@ -276,6 +301,25 @@ namespace EE::VisualGraph
             visualState = NodeVisualState::Hovered;
         }
 
+        // Colors
+        //-------------------------------------------------------------------------
+
+        ImColor nodeTitleColor( pNode->GetTitleBarColor() );
+        if ( pNode->m_ID == pStateMachineGraph->m_entryStateID )
+        {
+            nodeTitleColor = ImGuiX::ImColors::Green;
+        }
+
+        ImColor nodeBackgroundColor( BaseNode::s_defaultBackgroundColor );
+        if ( visualState == NodeVisualState::Selected )
+        {
+            nodeBackgroundColor = ImGuiX::ToIm( ImGuiX::FromIm( nodeBackgroundColor ).GetScaledColor( 1.5f ) );
+        }
+        else if ( visualState == NodeVisualState::Hovered )
+        {
+            nodeBackgroundColor = ImGuiX::ToIm( ImGuiX::FromIm( nodeBackgroundColor ).GetScaledColor( 1.15f ) );
+        }
+
         // Draw
         //-------------------------------------------------------------------------
 
@@ -283,12 +327,12 @@ namespace EE::VisualGraph
         {
             ctx.m_pDrawList->AddRectFilled( rectMin, rectMax, nodeBackgroundColor, 3, ImDrawFlags_RoundCornersAll );
             ctx.m_pDrawList->AddRectFilled( rectMin, rectTitleBarMax, nodeTitleColor, 3, ImDrawFlags_RoundCornersTop );
-            ctx.m_pDrawList->AddRect( rectMin, rectMax, pNode->GetNodeBorderColor( ctx, m_pUserContext, visualState ), 3, ImDrawFlags_RoundCornersAll, VisualSettings::s_nodeSelectionBorder );
+            ctx.m_pDrawList->AddRect( rectMin, rectMax, pNode->GetNodeBorderColor( ctx, m_pUserContext, visualState ), 3, ImDrawFlags_RoundCornersAll, g_nodeSelectionBorderThickness );
         }
         else // Non-state node
         {
             ctx.m_pDrawList->AddRectFilled( rectMin, rectMax, nodeBackgroundColor, 3 );
-            ctx.m_pDrawList->AddRect( rectMin, rectMax, pNode->GetNodeBorderColor( ctx, m_pUserContext, visualState ), 3, ImDrawFlags_RoundCornersAll, VisualSettings::s_nodeSelectionBorder );
+            ctx.m_pDrawList->AddRect( rectMin, rectMax, pNode->GetNodeBorderColor( ctx, m_pUserContext, visualState ), 3, ImDrawFlags_RoundCornersAll, g_nodeSelectionBorderThickness );
         }
     }
 
@@ -323,8 +367,13 @@ namespace EE::VisualGraph
 
             {
                 ImGuiX::ScopedFont const sf( ImGuiX::Font::Tiny );
+
+                auto const cursorStartPos = ImGui::GetCursorPos();
                 ImGui::BeginGroup();
                 pNode->DrawExtraControls( ctx, m_pUserContext );
+                auto const cursorEndPos = ImGui::GetCursorPos();
+                ImGui::SetCursorPos( cursorStartPos );
+                ImGui::Dummy( cursorEndPos - cursorStartPos );
                 ImGui::EndGroup();
             }
 
@@ -382,7 +431,7 @@ namespace EE::VisualGraph
         NodeVisualState visualState = pTransition->IsActive( m_pUserContext ) ? NodeVisualState::Active : NodeVisualState::None;
 
         ImVec2 const closestPointOnTransitionToMouse = ImLineClosestPoint( startPoint, endPoint, ctx.m_mouseCanvasPos );
-        if ( m_isViewHovered && ImLengthSqr( ctx.m_mouseCanvasPos - closestPointOnTransitionToMouse ) < Math::Pow( VisualSettings::s_connectionSelectionExtraRadius, 2 ) )
+        if ( m_isViewHovered && ImLengthSqr( ctx.m_mouseCanvasPos - closestPointOnTransitionToMouse ) < Math::Pow( g_connectionSelectionExtraRadius, 2 ) )
         {
             visualState = NodeVisualState::Hovered;
             pTransition->m_isHovered = true;
@@ -393,11 +442,28 @@ namespace EE::VisualGraph
             visualState = NodeVisualState::Selected;
         }
 
-        // Draw
+        // Draw Extra Controls
         //-------------------------------------------------------------------------
 
-        ImColor const transitionColor = pTransition->GetNodeBorderColor( ctx, m_pUserContext, visualState );
-        ImGuiX::DrawArrow( ctx.m_pDrawList, ctx.CanvasPositionToScreenPosition( startPoint ), ctx.CanvasPositionToScreenPosition( endPoint ), transitionColor, g_transitionArrowWidth );
+        pTransition->DrawExtraControls( ctx, m_pUserContext, startPoint, endPoint );
+
+        // Draw Arrows
+        //-------------------------------------------------------------------------
+
+        float const transitionProgress = pTransition->m_transitionProgress.GetNormalizedTime().ToFloat();
+        bool const hasTransitionProgress = transitionProgress > 0.0f;
+        ImColor const transitionColor = pTransition->GetColor( ctx, m_pUserContext, visualState );
+
+        if ( hasTransitionProgress )
+        {
+            ImGuiX::DrawArrow( ctx.m_pDrawList, ctx.CanvasPositionToScreenPosition( startPoint ), ctx.CanvasPositionToScreenPosition( endPoint ), ImGuiX::ImColors::DimGray, g_transitionArrowWidth );
+            ImVec2 const progressEndPoint = Math::Lerp( startPoint, endPoint, transitionProgress );
+            ImGuiX::DrawArrow( ctx.m_pDrawList, ctx.CanvasPositionToScreenPosition( startPoint ), ctx.CanvasPositionToScreenPosition( progressEndPoint ), transitionColor, g_transitionArrowWidth );
+        }
+        else
+        {
+            ImGuiX::DrawArrow( ctx.m_pDrawList, ctx.CanvasPositionToScreenPosition( startPoint ), ctx.CanvasPositionToScreenPosition( endPoint ), transitionColor, g_transitionArrowWidth );
+        }
 
         // Update transition position and size
         //-------------------------------------------------------------------------
@@ -415,11 +481,11 @@ namespace EE::VisualGraph
         EE_ASSERT( pNode != nullptr );
 
         ImGui::BeginGroup();
-        ImGuiX::ScopedFont fontOverride( ImGuiX::Font::Tiny, ImColor( VisualSettings::s_genericNodeTitleTextColor ) );
+        ImGuiX::ScopedFont fontOverride( ImGuiX::Font::Medium, ImColor( BaseNode::s_defaultTitleColor ) );
         if ( pNode->GetIcon() != nullptr )
         {
             ImGui::Text( pNode->GetIcon() );
-            ImGui::SameLine( 0, 2 );
+            ImGui::SameLine();
         }
         ImGui::Text( pNode->GetName() );
         ImGui::EndGroup();
@@ -549,7 +615,7 @@ namespace EE::VisualGraph
 
             pinRowRectSize.x += estimatedSpacingBetweenPins;
             pinRectSize.x = Math::Max( pinRectSize.x, pinRowRectSize.x );
-            pinRectSize.y += pinRowRectSize.y;
+            pinRectSize.y += pinRowRectSize.y + ImGui::GetStyle().ItemSpacing.y;
         }
 
         // Update node size with the max width of all output pins
@@ -572,9 +638,6 @@ namespace EE::VisualGraph
         // Draw
         //-------------------------------------------------------------------------
 
-        ctx.m_pDrawList->AddRectFilled( rectMin, rectMax, VisualSettings::s_genericNodeBackgroundColor, 3, ImDrawFlags_RoundCornersAll );
-        ctx.m_pDrawList->AddRectFilled( rectMin, rectTitleBarMax, pNode->GetTitleBarColor(), 3, ImDrawFlags_RoundCornersTop );
-
         NodeVisualState visualState = pNode->IsActive( m_pUserContext ) ? NodeVisualState::Active : NodeVisualState::None;
 
         if ( IsNodeSelected( pNode ) )
@@ -586,7 +649,19 @@ namespace EE::VisualGraph
             visualState = NodeVisualState::Hovered;
         }
 
-        ctx.m_pDrawList->AddRect( rectMin, rectMax, pNode->GetNodeBorderColor( ctx, m_pUserContext, visualState ), 3, ImDrawFlags_RoundCornersAll, VisualSettings::s_nodeSelectionBorder );
+        ImColor nodeBackgroundColor = BaseNode::s_defaultBackgroundColor;
+        if ( visualState == NodeVisualState::Selected )
+        {
+            nodeBackgroundColor = ImGuiX::ToIm( ImGuiX::FromIm( nodeBackgroundColor ).GetScaledColor( 1.5f ) );
+        }
+        else if ( visualState == NodeVisualState::Hovered )
+        {
+            nodeBackgroundColor = ImGuiX::ToIm( ImGuiX::FromIm( nodeBackgroundColor ).GetScaledColor( 1.15f ) );
+        }
+
+        ctx.m_pDrawList->AddRectFilled( rectMin, rectMax, nodeBackgroundColor, 3, ImDrawFlags_RoundCornersAll );
+        ctx.m_pDrawList->AddRectFilled( rectMin, rectTitleBarMax, pNode->GetTitleBarColor(), 3, ImDrawFlags_RoundCornersTop );
+        ctx.m_pDrawList->AddRect( rectMin, rectMax, pNode->GetNodeBorderColor( ctx, m_pUserContext, visualState ), 3, ImDrawFlags_RoundCornersAll, g_nodeSelectionBorderThickness );
     }
 
     void GraphView::DrawFlowNode( DrawContext const& ctx, Flow::Node* pNode )
@@ -621,13 +696,21 @@ namespace EE::VisualGraph
             {
                 ImGuiX::ScopedFont const sf( ImGuiX::Font::Tiny );
 
+                ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 0, 2 ) );
                 DrawFlowNodePins( ctx, pNode, newNodeSize );
+                ImGui::PopStyleVar();
 
                 //-------------------------------------------------------------------------
 
+                ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 0, 4 ) );
+                auto const cursorStartPos = ImGui::GetCursorPos();
                 ImGui::BeginGroup();
                 pNode->DrawExtraControls( ctx, m_pUserContext );
+                auto const cursorEndPos = ImGui::GetCursorPos();
+                ImGui::SetCursorPos( cursorStartPos );
+                ImGui::Dummy( cursorEndPos - cursorStartPos );
                 ImGui::EndGroup();
+                ImGui::PopStyleVar();
             }
 
             ImVec2 const extraControlsRectSize = ImGui::GetItemRectSize();
@@ -658,6 +741,8 @@ namespace EE::VisualGraph
     void GraphView::UpdateAndDraw( TypeSystem::TypeRegistry const& typeRegistry, float childHeightOverride )
     {
         EE_ASSERT( m_pUserContext != nullptr );
+
+        ImGui::SetWindowFontScale( 1.0f );
  
         // Update context
         //-------------------------------------------------------------------------
@@ -666,13 +751,24 @@ namespace EE::VisualGraph
         m_pUserContext->m_isCtrlDown = ImGui::GetIO().KeyCtrl;
         m_pUserContext->m_isShiftDown = ImGui::GetIO().KeyShift;
 
+        // Node visual update
+        //-------------------------------------------------------------------------
+
+        if ( m_pGraph != nullptr )
+        {
+            for ( auto pNode : m_pGraph->m_nodes )
+            {
+                pNode->PreDrawUpdate( m_pUserContext );
+            }
+        }
+
         // Draw Graph
         //-------------------------------------------------------------------------
 
         DrawContext drawingContext;
         drawingContext.m_isReadOnly = m_isReadOnly;
 
-        if ( BeginDrawCanvas( childHeightOverride ) && m_pGraph != nullptr )
+        if ( BeginDrawCanvas( childHeightOverride ) )
         {
             auto pWindow = ImGui::GetCurrentWindow();
             ImVec2 const mousePos = ImGui::GetMousePos();
@@ -686,91 +782,94 @@ namespace EE::VisualGraph
 
             //-------------------------------------------------------------------------
 
-            m_pHoveredNode = nullptr;
-            m_pHoveredPin = nullptr;
-
-            // State Machine Graph
-            if ( IsViewingStateMachineGraph() )
+            if ( m_pGraph != nullptr )
             {
-                for ( auto pNode : m_pGraph->m_nodes )
+                m_pHoveredNode = nullptr;
+                m_pHoveredPin = nullptr;
+
+                // State Machine Graph
+                if ( IsViewingStateMachineGraph() )
                 {
-                    // If we have a rect width, perform culling
-                    auto pStateMachineNode = Cast<SM::Node>( pNode );
+                    for ( auto pNode : m_pGraph->m_nodes )
+                    {
+                        // If we have a rect width, perform culling
+                        auto pStateMachineNode = Cast<SM::Node>( pNode );
 
-                    if ( auto pTransition = TryCast<SM::TransitionConduit>( pNode ) )
-                    {
-                        DrawStateMachineTransitionConduit( drawingContext, pTransition );
-                    }
-                    else
-                    {
-                        DrawStateMachineNode( drawingContext, pStateMachineNode );
-                    }
+                        if ( auto pTransition = TryCast<SM::TransitionConduit>( pNode ) )
+                        {
+                            DrawStateMachineTransitionConduit( drawingContext, pTransition );
+                        }
+                        else
+                        {
+                            DrawStateMachineNode( drawingContext, pStateMachineNode );
+                        }
 
-                    if ( pStateMachineNode->m_isHovered )
-                    {
-                        m_pHoveredNode = pStateMachineNode;
+                        if ( pStateMachineNode->m_isHovered )
+                        {
+                            m_pHoveredNode = pStateMachineNode;
+                        }
                     }
                 }
-            }
-            else // Flow Graph
-            {
-                auto pFlowGraph = GetFlowGraph();
+                else // Flow Graph
+                {
+                    auto pFlowGraph = GetFlowGraph();
 
-                // Draw Nodes
+                    // Draw Nodes
+                    //-------------------------------------------------------------------------
+
+                    for ( auto pNode : m_pGraph->m_nodes )
+                    {
+                        auto pFlowNode = Cast<Flow::Node>( pNode );
+                        DrawFlowNode( drawingContext, pFlowNode );
+
+                        if ( pFlowNode->m_isHovered )
+                        {
+                            m_pHoveredNode = pFlowNode;
+                            m_pHoveredPin = pFlowNode->m_pHoveredPin;
+                        }
+                    }
+
+                    // Draw connections
+                    //-------------------------------------------------------------------------
+
+                    m_hoveredConnectionID.Clear();
+                    for ( auto const& connection : pFlowGraph->m_connections )
+                    {
+                        auto pStartPin = connection.m_pStartNode->GetOutputPin( connection.m_startPinID );
+                        auto pEndPin = connection.m_pEndNode->GetInputPin( connection.m_endPinID );
+
+                        ImColor connectionColor = connection.m_pStartNode->GetPinColor( *pStartPin );
+
+                        bool const invertOrder = pStartPin->m_screenPosition.m_x > pEndPin->m_screenPosition.m_x;
+                        ImVec2 const& p1 = invertOrder ? pEndPin->m_screenPosition : pStartPin->m_screenPosition;
+                        ImVec2 const& p4 = invertOrder ? pStartPin->m_screenPosition : pEndPin->m_screenPosition;
+                        ImVec2 const p2 = p1 + ImVec2( 50, 0 );
+                        ImVec2 const p3 = p4 + ImVec2( -50, 0 );
+
+                        if ( m_hasFocus && IsHoveredOverCurve( p1, p2, p3, p4, drawingContext.m_mouseScreenPos, g_connectionSelectionExtraRadius ) )
+                        {
+                            m_hoveredConnectionID = connection.m_ID;
+                            connectionColor = ImColor( BaseNode::s_connectionColorHovered );
+                        }
+
+                        drawingContext.m_pDrawList->AddBezierCubic( p1, p2, p3, p4, connectionColor, 3.0f );
+                    }
+                }
+
+                // Extra
                 //-------------------------------------------------------------------------
 
-                for ( auto pNode : m_pGraph->m_nodes )
-                {
-                    auto pFlowNode = Cast<Flow::Node>( pNode );
-                    DrawFlowNode( drawingContext, pFlowNode );
+                m_pGraph->DrawExtraInformation( drawingContext, m_pUserContext );
 
-                    if ( pFlowNode->m_isHovered )
-                    {
-                        m_pHoveredNode = pFlowNode;
-                        m_pHoveredPin = pFlowNode->m_pHoveredPin;
-                    }
-                }
-
-                // Draw connections
                 //-------------------------------------------------------------------------
 
-                m_hoveredConnectionID.Clear();
-                for ( auto const& connection : pFlowGraph->m_connections )
-                {
-                    auto pStartPin = connection.m_pStartNode->GetOutputPin( connection.m_startPinID );
-                    auto pEndPin = connection.m_pEndNode->GetInputPin( connection.m_endPinID );
-
-                    ImColor connectionColor = connection.m_pStartNode->GetPinColor( *pStartPin );
-
-                    bool const invertOrder = pStartPin->m_screenPosition.m_x > pEndPin->m_screenPosition.m_x;
-                    ImVec2 const& p1 = invertOrder ? pEndPin->m_screenPosition : pStartPin->m_screenPosition;
-                    ImVec2 const& p4 = invertOrder ? pStartPin->m_screenPosition : pEndPin->m_screenPosition;
-                    ImVec2 const p2 = p1 + ImVec2( 50, 0 );
-                    ImVec2 const p3 = p4 + ImVec2( -50, 0 );
-
-                    if ( m_hasFocus && IsHoveredOverCurve( p1, p2, p3, p4, drawingContext.m_mouseScreenPos, VisualSettings::s_connectionSelectionExtraRadius ) )
-                    {
-                        m_hoveredConnectionID = connection.m_ID;
-                        connectionColor = ImColor( VisualSettings::s_connectionColorHovered );
-                    }
-
-                    drawingContext.m_pDrawList->AddBezierCubic( p1, p2, p3, p4, connectionColor, 3.0f );
-                }
+                HandleContextMenu( drawingContext );
+                HandleInput( typeRegistry, drawingContext );
+                DrawDialogs();
             }
-
-            // Extra
-            //-------------------------------------------------------------------------
-
-            m_pGraph->DrawExtraInformation( drawingContext, m_pUserContext );
-
-            //-------------------------------------------------------------------------
-
-            HandleContextMenu( drawingContext );
-            HandleInput( typeRegistry, drawingContext );
-            DrawDialogs();
         }
 
-        EndDrawCanvas();
+        EndDrawCanvas( drawingContext );
 
         // Handle drag and drop
         //-------------------------------------------------------------------------
@@ -809,8 +908,11 @@ namespace EE::VisualGraph
             for ( int32_t i = 1; i < numNodes; i++ )
             {
                 auto pNode = m_pGraph->m_nodes[i];
-                ImRect const nodeRect( pNode->GetCanvasPosition(), ImVec2( pNode->GetCanvasPosition() ) + pNode->GetSize() );
-                totalRect.Add( nodeRect );
+                if ( pNode->IsVisible() )
+                {
+                    ImRect const nodeRect( pNode->GetCanvasPosition(), ImVec2( pNode->GetCanvasPosition() ) + pNode->GetSize() );
+                    totalRect.Add( nodeRect );
+                }
             }
 
             *m_pViewOffset = totalRect.GetCenter() - ( m_canvasSize / 2 );
@@ -845,6 +947,17 @@ namespace EE::VisualGraph
         EE_ASSERT( GetViewedGraph()->FindNode( pNode->GetID() ) != nullptr );
         ClearSelection();
         AddToSelection( const_cast<BaseNode*>( pNode ) );
+    }
+
+    void GraphView::SelectNodes( TVector<BaseNode const*> pNodes )
+    {
+        ClearSelection();
+
+        for ( auto pNode : pNodes )
+        {
+            EE_ASSERT( GetViewedGraph()->FindNode( pNode->GetID() ) != nullptr );
+            AddToSelection( const_cast<BaseNode*>( pNode ) );
+        }
     }
 
     void GraphView::ClearSelection()
@@ -1203,7 +1316,8 @@ namespace EE::VisualGraph
 
             EE_ASSERT( !m_isReadOnly );
             ScopedNodeModification const snm( m_pNodeBeingRenamed );
-            String const uniqueName = m_pNodeBeingRenamed->GetParentGraph()->GetUniqueNameForRenameableNode( m_renameBuffer, m_pNodeBeingRenamed );
+            auto pParentGraph = m_pNodeBeingRenamed->GetParentGraph();
+            String const uniqueName = pParentGraph->GetUniqueNameForRenameableNode( m_renameBuffer, m_pNodeBeingRenamed );
             m_pNodeBeingRenamed->SetName( uniqueName );
         }
 
@@ -1269,8 +1383,8 @@ namespace EE::VisualGraph
             return;
         }
 
-        ctx.m_pDrawList->AddRectFilled( m_dragState.m_startValue, ImGui::GetMousePos(), ImGuiX::Style::s_selectionBoxFillColor );
-        ctx.m_pDrawList->AddRect( m_dragState.m_startValue, ImGui::GetMousePos(), ImGuiX::Style::s_selectionBoxOutlineColor );
+        ctx.m_pDrawList->AddRectFilled( m_dragState.m_startValue, ImGui::GetMousePos(), g_selectionBoxFillColor );
+        ctx.m_pDrawList->AddRect( m_dragState.m_startValue, ImGui::GetMousePos(), g_selectionBoxOutlineColor );
     }
 
     void GraphView::StopDraggingSelection( DrawContext const& ctx )
@@ -1378,7 +1492,7 @@ namespace EE::VisualGraph
             auto pEndState = TryCast<SM::State>( m_pHoveredNode );
 
             bool const isValidConnection = pEndState != nullptr && pStateMachineGraph->CanCreateTransitionConduit( Cast<SM::State>( m_dragState.m_pNode ), pEndState );
-            ImColor const connectionColor = isValidConnection ? VisualSettings::s_connectionColorValid : VisualSettings::s_connectionColorInvalid;
+            ImColor const connectionColor = isValidConnection ? BaseNode::s_connectionColorValid : BaseNode::s_connectionColorInvalid;
             ImGuiX::DrawArrow( ctx.m_pDrawList, ctx.CanvasPositionToScreenPosition( m_dragState.m_pNode->GetCanvasRect().GetCenter() ), ctx.m_mouseScreenPos, connectionColor, g_transitionArrowWidth );
         }
         else
@@ -1394,7 +1508,7 @@ namespace EE::VisualGraph
                 // Trying to make an invalid connection to a pin with the same direction or the same node
                 if ( m_pHoveredPin->m_direction == m_dragState.m_pPin->m_direction || m_pHoveredNode == m_dragState.m_pNode )
                 {
-                    connectionColor = VisualSettings::s_connectionColorInvalid;
+                    connectionColor = BaseNode::s_connectionColorInvalid;
                 }
                 else // Check connection validity
                 {
@@ -1402,14 +1516,14 @@ namespace EE::VisualGraph
                     {
                         if ( !pFlowGraph->IsValidConnection( pDraggedFlowNode, m_dragState.m_pPin, pHoveredFlowNode, m_pHoveredPin ) )
                         {
-                            connectionColor = VisualSettings::s_connectionColorInvalid;
+                            connectionColor = BaseNode::s_connectionColorInvalid;
                         }
                     }
                     else // The hovered pin is the output pin
                     {
                         if ( !pFlowGraph->IsValidConnection( pHoveredFlowNode, m_pHoveredPin, pDraggedFlowNode, m_dragState.m_pPin ) )
                         {
-                            connectionColor = VisualSettings::s_connectionColorInvalid;
+                            connectionColor = BaseNode::s_connectionColorInvalid;
                         }
                     }
                 }
@@ -1761,8 +1875,8 @@ namespace EE::VisualGraph
 
         if ( IsContextMenuOpen() )
         {
-            ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 4, 4 ) );
-            ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 4, 4 ) );
+            ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 8, 8 ) );
+            ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 4, 8 ) );
             if ( ImGui::BeginPopupContextItem( "GraphContextMenu" ) )
             {
                 if ( IsViewingFlowGraph() )
@@ -1796,10 +1910,17 @@ namespace EE::VisualGraph
         {
             auto pFlowNode = m_contextMenuState.GetAsFlowNode();
 
+            // Default node Menu
+            pFlowNode->DrawContextMenuOptions( ctx, m_pUserContext, m_contextMenuState.m_mouseCanvasPos, m_contextMenuState.m_pPin );
+
+            //-------------------------------------------------------------------------
+
             if ( !m_isReadOnly )
             {
+                ImGuiX::TextSeparator( "Connections" );
+
                 // Dynamic Pins
-                if ( pFlowNode->SupportsDynamicInputPins() )
+                if ( pFlowNode->SupportsUserEditableDynamicInputPins() )
                 {
                     if ( ImGui::MenuItem( EE_ICON_PLUS_CIRCLE_OUTLINE" Add Input" ) )
                     {
@@ -1824,13 +1945,23 @@ namespace EE::VisualGraph
 
             //-------------------------------------------------------------------------
 
-            // Default node Menu
-            pFlowNode->DrawContextMenuOptions( ctx, m_pUserContext, m_contextMenuState.m_mouseCanvasPos, m_contextMenuState.m_pPin );
-
-            //-------------------------------------------------------------------------
-
             if ( !m_isReadOnly )
             {
+                ImGuiX::TextSeparator( "Node" );
+
+                if ( ImGui::BeginMenu( EE_ICON_IDENTIFIER" Node ID" ) )
+                {
+                    // UUID
+                    auto IDStr = m_contextMenuState.m_pNode->GetID().ToString();
+                    InlineString const label( InlineString::CtorSprintf(), "%s", IDStr.c_str() );
+                    if ( ImGui::MenuItem( label.c_str() ) )
+                    {
+                        ImGui::SetClipboardText( IDStr.c_str() );
+                    }
+
+                    ImGui::EndMenu();
+                }
+
                 // Renameable Nodes
                 if ( m_contextMenuState.m_pNode->IsRenameable() )
                 {
@@ -1840,7 +1971,7 @@ namespace EE::VisualGraph
                     }
                 }
 
-                // DestroyableNodes
+                // Destroyable Nodes
                 if ( m_contextMenuState.m_pNode->IsDestroyable() && m_pGraph->CanDeleteNode( m_contextMenuState.m_pNode ) )
                 {
                     if ( ImGui::MenuItem( EE_ICON_DELETE" Delete Node" ) )
@@ -1854,12 +1985,19 @@ namespace EE::VisualGraph
         }
         else // Graph Menu
         {
-            m_contextMenuState.m_filterWidget.DrawAndUpdate( ImGuiX::FilterWidget::TakeInitialFocus );
+            if ( pFlowGraph->HasContextMenuFilter() )
+            {
+                m_contextMenuState.m_filterWidget.DrawAndUpdate( -1, ImGuiX::FilterWidget::TakeInitialFocus );
+            }
 
-            if ( ImGui::MenuItem( EE_ICON_IMAGE_FILTER_CENTER_FOCUS" Reset View" ) )
+            //-------------------------------------------------------------------------
+
+            if ( ImGui::MenuItem( EE_ICON_FIT_TO_PAGE_OUTLINE" Reset View" ) )
             {
                 ResetView();
             }
+
+            //-------------------------------------------------------------------------
 
             if ( pFlowGraph->DrawContextMenuOptions( ctx, m_pUserContext, m_contextMenuState.m_mouseCanvasPos, m_contextMenuState.m_filterWidget.GetFilterTokens(), TryCast<Flow::Node>( m_contextMenuState.m_pNode ), m_contextMenuState.m_pPin ) )
             {
@@ -1925,7 +2063,10 @@ namespace EE::VisualGraph
         }
         else // Graph Menu
         {
-            m_contextMenuState.m_filterWidget.DrawAndUpdate();
+            if ( pStateMachineGraph->HasContextMenuFilter() )
+            {
+                m_contextMenuState.m_filterWidget.DrawAndUpdate();
+            }
 
             if ( ImGui::MenuItem( EE_ICON_IMAGE_FILTER_CENTER_FOCUS" Reset View" ) )
             {
@@ -1958,7 +2099,7 @@ namespace EE::VisualGraph
             ImGui::SetNextWindowSize( ImVec2( 400, -1 ) );
             if ( ImGui::BeginPopupModal( s_dialogID_Rename, nullptr, ImGuiWindowFlags_NoSavedSettings ) )
             {
-                if ( ImGui::IsKeyPressed( ImGuiKey_Escape ) || m_selectedNodes.size() != 1 || m_isReadOnly )
+                if ( ImGui::IsKeyPressed( ImGuiKey_Escape ) || m_selectedNodes.size() != 1 )
                 {
                     EndRenameNode( false );
                     ImGui::CloseCurrentPopup();

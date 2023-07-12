@@ -2,7 +2,7 @@
 
 #include "RenderBuffer.h"
 #include "System/Resource/IResource.h"
-#include "System/TypeSystem/RegisteredType.h"
+#include "System/TypeSystem/ReflectedType.h"
 
 //-------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ namespace EE
             friend class PipelineRegistry;
 
             EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode, m_shaderEntryName );
-            EE_REGISTER_RESOURCE( 'shdr', "Render Shader" );
+            EE_RESOURCE( 'shdr', "Render Shader" );
 
         public:
 
@@ -102,7 +102,7 @@ namespace EE
         class EE_SYSTEM_API PixelShader : public Shader
         {
             EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ) );
-            EE_REGISTER_RESOURCE( 'psdr', "Pixel Shader" );
+            EE_RESOURCE( 'psdr', "Pixel Shader" );
 
             friend class PipelineRegistry;
 
@@ -119,7 +119,7 @@ namespace EE
         class EE_SYSTEM_API GeometryShader : public Shader
         {
             EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ) );
-            EE_REGISTER_RESOURCE( 'gsdr', "Geometry Shader");
+            EE_RESOURCE( 'gsdr', "Geometry Shader");
 
             friend class PipelineRegistry;
 
@@ -136,7 +136,7 @@ namespace EE
         class EE_SYSTEM_API ComputeShader : public Shader
         {
             EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ) );
-            EE_REGISTER_RESOURCE( 'csdr', "Compute Shader" );
+            EE_RESOURCE( 'csdr', "Compute Shader" );
 
             friend class RenderDevice;
             friend class ShaderCompiler;

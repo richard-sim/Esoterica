@@ -6,7 +6,7 @@
 #include "Engine/Entity/EntityWorldUpdateContext.h"
 #include "Engine/Animation/AnimationPose.h"
 #include "System/Profiling.h"
-#include "System/Log.h"
+
 
 //-------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ namespace EE::Animation
         {
             m_animPlayers.emplace_back( pAnimPlayerComponent );
         }
-        else if ( auto pGraphComponent = TryCast<AnimationGraphComponent>( pComponent ) )
+        else if ( auto pGraphComponent = TryCast<GraphComponent>( pComponent ) )
         {
             m_animGraphs.emplace_back( pGraphComponent );
         }
@@ -56,7 +56,7 @@ namespace EE::Animation
         {
             m_animPlayers.erase_first_unsorted( pAnimPlayerComponent );
         }
-        else if ( auto pGraphComponent = TryCast<AnimationGraphComponent>( pComponent ) )
+        else if ( auto pGraphComponent = TryCast<GraphComponent>( pComponent ) )
         {
             m_animGraphs.erase_first_unsorted( pGraphComponent );
         }
@@ -184,7 +184,7 @@ namespace EE::Animation
                 if ( !pAnimComponent->RequiresManualUpdate() )
                 {
                     // Evaluate the graph nodes and calculate the root motion delta
-                    pAnimComponent->EvaluateGraph( ctx.GetDeltaTime(), characterWorldTransform, pPhysicsWorldSystem->GetScene() );
+                    pAnimComponent->EvaluateGraph( ctx.GetDeltaTime(), characterWorldTransform, pPhysicsWorldSystem->GetWorld() );
 
                     // Apply the root motion if desired
                     Transform adjustedCharacterTransform = characterWorldTransform;

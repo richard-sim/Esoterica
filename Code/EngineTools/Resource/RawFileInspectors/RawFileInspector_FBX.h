@@ -1,7 +1,6 @@
 #pragma once
 #include "EngineTools/Resource/RawFileInspector.h"
-#include "EngineTools/RawAssets/Fbx/FbxSceneContext.h"
-
+#include "EngineTools/RawAssets/Formats/FBX.h"
 #include "System/Time/Time.h"
 
 //-------------------------------------------------------------------------
@@ -15,7 +14,7 @@ namespace EE::Resource
             None,
             SkeletalMesh,
             StaticMesh,
-            PhysicsMesh,
+            PhysicsCollision,
             Skeleton,
             Animation
         };

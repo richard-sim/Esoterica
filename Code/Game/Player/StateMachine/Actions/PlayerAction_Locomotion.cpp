@@ -1,13 +1,12 @@
 #include "PlayerAction_Locomotion.h"
 #include "Game/Player/Components/Component_MainPlayer.h"
-#include "Game/Player/Physics/PlayerPhysicsController.h"
 #include "Game/Player/Camera/PlayerCameraController.h"
 #include "Game/Player/Animation/PlayerAnimationController.h"
 #include "Game/Player/Animation/PlayerGraphController_Locomotion.h"
 #include "Engine/Physics/Components/Component_PhysicsCharacter.h"
 #include "System/Drawing/DebugDrawingSystem.h"
 #include "System/Input/InputSystem.h"
-#include "System/Math/MathHelpers.h"
+#include "System/Math/MathUtils.h"
 #include "System/Imgui/ImguiX.h"
 
 //-------------------------------------------------------------------------
@@ -17,8 +16,6 @@ namespace EE::Player
     constexpr static float      g_maxSprintSpeed = 7.5f;                      // meters/second
     constexpr static float      g_maxRunSpeed = 5.0f;                         // meters/second
     constexpr static float      g_maxCrouchSpeed = 3.0f;                      // meters/second
-    constexpr static float      g_timeToTriggerSprint = 1.5f;                 // seconds
-    constexpr static float      g_timeToTriggerCrouch = 0.5f;                 // seconds
     constexpr static float      g_sprintStickAmplitude = 0.8f;                // [0,1]
 
     constexpr static float      g_idle_immediateStartThresholdAngle = Math::DegreesToRadians * 45.0f;
@@ -43,15 +40,15 @@ namespace EE::Player
     bool LocomotionAction::TryStartInternal( ActionContext const& ctx )
     {
         Transform const characterWorldTransform = ctx.m_pCharacterComponent->GetWorldTransform();
-        Vector const& characterVelocity = ctx.m_pCharacterComponent->GetCharacterVelocity();
-        float const horizontalSpeed = characterVelocity.GetLength2();
 
         ctx.m_pAnimationController->SetCharacterState( CharacterAnimationState::Locomotion );
-        ctx.m_pCharacterController->EnableGravity( characterVelocity.m_z );
-        ctx.m_pCharacterController->EnableProjectionOntoFloor();
-        ctx.m_pCharacterController->EnableStepHeight();
+        ctx.m_pCharacterComponent->SetGravityMode( Physics::ControllerGravityMode::Acceleration );
+        ctx.m_pCharacterComponent->TryMaintainVerticalMomentum();
+        SetCrouchState( ctx, ctx.m_pPlayerComponent->m_crouchFlag );
 
         // Set initial state
+        Vector const& characterVelocity = ctx.m_pCharacterComponent->GetCharacterVelocity();
+        float const horizontalSpeed = characterVelocity.GetLength2();
         if ( horizontalSpeed > 0.1f )
         {
             RequestMoving( ctx, characterVelocity.Get2D() );
@@ -79,8 +76,8 @@ namespace EE::Player
         Vector const& camRight = ctx.m_pCameraController->GetCameraRelativeRightVector2D();
 
         // Use last frame camera orientation
-        Vector const stickDesiredForward = camFwd * movementInputs.m_y;
-        Vector const stickDesiredRight = camRight * movementInputs.m_x;
+        Vector const stickDesiredForward = camFwd * movementInputs.GetY();
+        Vector const stickDesiredRight = camRight * movementInputs.GetX();
         Vector const stickInputVectorWS = ( stickDesiredForward + stickDesiredRight );
 
         // Handle player state
@@ -130,7 +127,7 @@ namespace EE::Player
 
         bool isSliding = false;
 
-        if ( ctx.m_pCharacterController->GetFloorType() != CharacterPhysicsController::FloorType::Navigable && ctx.m_pCharacterComponent->GetCharacterVelocity().m_z < -Math::Epsilon )
+        /*if ( ctx.m_pCharacterController->GetFloorType() != CharacterPhysicsController::FloorType::Navigable && ctx.m_pCharacterComponent->GetCharacterVelocity().GetZ() < -Math::Epsilon )
         {
             m_unnavigableSurfaceSlideTimer.Update( ctx.GetDeltaTime() );
             if ( m_unnavigableSurfaceSlideTimer.GetElapsedTimeSeconds() > g_unnavigableSurfaceSlideThreshold )
@@ -142,7 +139,7 @@ namespace EE::Player
         else
         {
             m_unnavigableSurfaceSlideTimer.Reset();
-        }
+        }*/
 
         // Update animation controller
         //-------------------------------------------------------------------------
@@ -172,7 +169,21 @@ namespace EE::Player
     void LocomotionAction::StopInternal( ActionContext const& ctx, StopReason reason )
     {
         ctx.m_pPlayerComponent->m_sprintFlag = false;
-        ctx.m_pPlayerComponent->m_crouchFlag = false;
+    }
+
+    void LocomotionAction::SetCrouchState( ActionContext const& ctx, bool isCrouchEnabled )
+    {
+        // Enable crouch
+        if ( isCrouchEnabled )
+        {
+            ctx.m_pCharacterComponent->ResizeCapsule( ctx.m_pCharacterComponent->GetCapsuleRadius(), 0.2f );
+            ctx.m_pPlayerComponent->m_crouchFlag = true;
+        }
+        else // Disable crouch
+        {
+            ctx.m_pCharacterComponent->ResetCapsuleSize();
+            ctx.m_pPlayerComponent->m_crouchFlag = false;
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -181,7 +192,7 @@ namespace EE::Player
     {
         Transform const characterWorldTransform = ctx.m_pCharacterComponent->GetWorldTransform();
 
-        m_desiredHeading = Vector::Zero;
+        m_desiredMovementVelocity = Vector::Zero;
         m_cachedFacing = Vector::Zero;
         m_desiredTurnDirection = Vector::Zero;
         m_desiredFacing = characterWorldTransform.GetForwardVector();
@@ -202,7 +213,7 @@ namespace EE::Player
         EE_ASSERT( pControllerState != nullptr );
         if ( pControllerState->WasPressed( Input::ControllerButton::FaceButtonLeft ) )
         {
-            ctx.m_pPlayerComponent->m_crouchFlag = !ctx.m_pPlayerComponent->m_crouchFlag;
+            SetCrouchState( ctx, !ctx.m_pPlayerComponent->m_crouchFlag );
         }
 
         //-------------------------------------------------------------------------
@@ -210,7 +221,7 @@ namespace EE::Player
         Transform const characterWorldTransform = ctx.m_pCharacterComponent->GetWorldTransform();
         Vector const characterForward = characterWorldTransform.GetForwardVector();
 
-        m_desiredHeading = Vector::Zero;
+        m_desiredMovementVelocity = Vector::Zero;
 
         // If the stick direction is in the same direction the character is facing, go directly to start
         if ( stickAmplitude < g_idle_minimumStickAmplitudeThreshold )
@@ -236,7 +247,7 @@ namespace EE::Player
 
     void LocomotionAction::RequestTurnOnSpot( ActionContext const& ctx, Vector const& desiredFacingDirection )
     {
-        m_desiredHeading = Vector::Zero;
+        m_desiredMovementVelocity = Vector::Zero;
         m_cachedFacing = ctx.m_pCharacterComponent->GetForwardVector();
         m_desiredFacing = m_desiredTurnDirection = desiredFacingDirection.GetNormalized2();
         m_cachedFacing = Vector::Zero;
@@ -289,8 +300,9 @@ namespace EE::Player
 
         //-------------------------------------------------------------------------
 
-        auto pAnimController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
-        if ( pAnimController->IsTurningOnSpot() && pAnimController->IsAnyTransitionAllowed() )
+        auto pGraphController = ctx.m_pAnimationController;
+        auto pLocomotionGraphController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
+        if ( pLocomotionGraphController->IsTurningOnSpot() && pGraphController->IsAnyTransitionAllowed() )
         {
             RequestIdle( ctx );
         }
@@ -302,7 +314,7 @@ namespace EE::Player
     {
         Transform const characterWorldTransform = ctx.m_pCharacterComponent->GetWorldTransform();
 
-        m_desiredHeading = stickInputVector;
+        m_desiredMovementVelocity = stickInputVector;
         m_cachedFacing = stickInputVector;
         m_desiredTurnDirection = Vector::Zero;
         m_desiredFacing = stickInputVector;
@@ -341,13 +353,13 @@ namespace EE::Player
     {
         Transform const characterWorldTransform = ctx.m_pCharacterComponent->GetWorldTransform();
 
-        m_desiredHeading = initialVelocity;
+        m_desiredMovementVelocity = initialVelocity;
         m_cachedFacing = Vector::Zero;
         m_desiredTurnDirection = Vector::Zero;
-        m_desiredFacing = m_desiredHeading.GetNormalized3();
+        m_desiredFacing = m_desiredMovementVelocity.GetNormalized3();
 
         auto pAnimController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
-        pAnimController->RequestMove( ctx.GetDeltaTime(), m_desiredHeading, m_desiredFacing );
+        pAnimController->RequestMove( ctx.GetDeltaTime(), m_desiredMovementVelocity, m_desiredFacing );
 
         m_state = LocomotionState::Moving;
     }
@@ -381,7 +393,7 @@ namespace EE::Player
             }
 
             // Keep existing locomotion parameters when we have no input
-            pAnimController->RequestMove( ctx.GetDeltaTime(), m_desiredHeading, m_desiredFacing );
+            pAnimController->RequestMove( ctx.GetDeltaTime(), m_desiredMovementVelocity, m_desiredFacing );
         }
         else
         {
@@ -404,16 +416,16 @@ namespace EE::Player
                 if ( characterSpeed > 1.0f && pControllerState->WasPressed( Input::ControllerButton::ThumbstickLeft ) )
                 {
                     ctx.m_pPlayerComponent->m_sprintFlag = true;
-                    ctx.m_pPlayerComponent->m_crouchFlag = false;
+                    SetCrouchState( ctx, false );
                 }
 
                 if ( !ctx.m_pPlayerComponent->m_sprintFlag && pControllerState->WasPressed( Input::ControllerButton::FaceButtonLeft ) )
                 {
-                    ctx.m_pPlayerComponent->m_crouchFlag = !ctx.m_pPlayerComponent->m_crouchFlag;
+                    SetCrouchState( ctx, !ctx.m_pPlayerComponent->m_crouchFlag );
                 }
             }
 
-            // Calculate desired heading and facing
+            // Calculate desired movement and facing
             //-------------------------------------------------------------------------
 
             float const speed = ConvertStickAmplitudeToSpeed( ctx, stickAmplitude );
@@ -436,16 +448,16 @@ namespace EE::Player
                 }
 
                 Quaternion const rotation( AxisAngle( Vector::WorldUp, rotationAngle ) );
-                m_desiredHeading = rotation.RotateVector( characterForward ) * speed;
+                m_desiredMovementVelocity = rotation.RotateVector( characterForward ) * speed;
             }
             else
             {
-                m_desiredHeading = stickInputVectorWS * speed;
+                m_desiredMovementVelocity = stickInputVectorWS * speed;
             }
 
-            m_desiredFacing = m_desiredHeading.IsZero2() ? ctx.m_pCharacterComponent->GetForwardVector() : m_desiredHeading.GetNormalized2();
+            m_desiredFacing = m_desiredMovementVelocity.IsZero2() ? ctx.m_pCharacterComponent->GetForwardVector() : m_desiredMovementVelocity.GetNormalized2();
 
-            pAnimController->RequestMove( ctx.GetDeltaTime(), m_desiredHeading, m_desiredFacing );
+            pAnimController->RequestMove( ctx.GetDeltaTime(), m_desiredMovementVelocity, m_desiredFacing );
         }
     }
 
@@ -455,7 +467,7 @@ namespace EE::Player
     {
         Transform const characterWorldTransform = ctx.m_pCharacterComponent->GetWorldTransform();
 
-        m_desiredHeading = Vector::Zero;
+        m_desiredMovementVelocity = Vector::Zero;
         m_cachedFacing = Vector::Zero;
         m_desiredTurnDirection = Vector::Zero;
         m_desiredFacing = characterWorldTransform.GetForwardVector();
@@ -468,12 +480,13 @@ namespace EE::Player
 
     void LocomotionAction::UpdateStopping( ActionContext const& ctx, Vector const& stickInputVectorWS, float stickAmplitude )
     {
-        auto pAnimController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
-        if ( pAnimController->IsIdle() )
+        auto pGraphController = ctx.m_pAnimationController;
+        auto pLocomotionController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
+        if ( pLocomotionController->IsIdle() )
         {
             RequestIdle( ctx );
         }
-        else if ( stickAmplitude > 0.1f && pAnimController->IsAnyTransitionAllowed() )
+        else if ( stickAmplitude > 0.1f && pGraphController->IsAnyTransitionAllowed() )
         {
             // TODO: handle starting directly from here
             RequestIdle( ctx );

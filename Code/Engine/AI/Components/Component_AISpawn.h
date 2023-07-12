@@ -10,16 +10,24 @@ namespace EE::AI
 {
     class EE_ENGINE_API AISpawnComponent : public SpatialEntityComponent
     {
-        EE_REGISTER_ENTITY_COMPONENT( AISpawnComponent );
+        EE_ENTITY_COMPONENT( AISpawnComponent );
 
     public:
 
         inline AISpawnComponent() = default;
 
-        inline EntityModel::SerializedEntityCollection const* GetEntityCollectionDesc() const { return m_pAIEntityDesc.GetPtr(); }
+        inline EntityModel::SerializedEntityCollection const* GetEntityCollectionDesc() const
+        {
+            if ( !m_AIEntityDesc.IsSet() )
+            {
+                return nullptr;
+            }
+
+            return m_AIEntityDesc.IsLoaded() ? m_AIEntityDesc.GetPtr() : nullptr;
+        }
 
     private:
 
-        EE_EXPOSE TResourcePtr<EntityModel::SerializedEntityCollection>    m_pAIEntityDesc = nullptr;
+        EE_REFLECT() TResourcePtr<EntityModel::SerializedEntityCollection>    m_AIEntityDesc;
     };
 }

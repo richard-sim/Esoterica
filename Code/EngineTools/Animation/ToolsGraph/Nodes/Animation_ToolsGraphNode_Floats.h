@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class FloatRemapToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatRemapToolsNode );
+        EE_REFLECT_TYPE( FloatRemapToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatRemapToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Remap"; }
@@ -23,19 +23,19 @@ namespace EE::Animation::GraphNodes
 
     public:
 
-        EE_EXPOSE FloatRemapNode::RemapRange  m_inputRange;
-        EE_EXPOSE FloatRemapNode::RemapRange  m_outputRange;
+        EE_REFLECT() FloatRemapNode::RemapRange  m_inputRange;
+        EE_REFLECT() FloatRemapNode::RemapRange  m_outputRange;
     };
 
     //-------------------------------------------------------------------------
 
     class FloatClampToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatClampToolsNode );
+        EE_REFLECT_TYPE( FloatClampToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatClampToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Clamp"; }
@@ -46,18 +46,18 @@ namespace EE::Animation::GraphNodes
 
     public:
 
-        EE_EXPOSE FloatRange                   m_clampRange = FloatRange( 0 );
+        EE_REFLECT() FloatRange                   m_clampRange = FloatRange( 0 );
     };
 
     //-------------------------------------------------------------------------
 
     class FloatAbsToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatAbsToolsNode );
+        EE_REFLECT_TYPE( FloatAbsToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatAbsToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Abs"; }
@@ -70,11 +70,11 @@ namespace EE::Animation::GraphNodes
 
     class FloatEaseToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatEaseToolsNode );
+        EE_REFLECT_TYPE( FloatEaseToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatEaseToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Ease"; }
@@ -85,21 +85,21 @@ namespace EE::Animation::GraphNodes
 
     public:
 
-        EE_EXPOSE Math::Easing::Type          m_easingType = Math::Easing::Type::Linear;
-        EE_EXPOSE float                       m_easeTime = 1.0f;
-        EE_EXPOSE bool                        m_useStartValue = true; // Should we initialize this node to the input value or to the specified start value
-        EE_EXPOSE float                       m_startValue = 0.0f; // Optional initialization value for this node
+        EE_REFLECT() Math::Easing::Type          m_easingType = Math::Easing::Type::Linear;
+        EE_REFLECT() float                       m_easeTime = 1.0f;
+        EE_REFLECT() bool                        m_useStartValue = true; // Should we initialize this node to the input value or to the specified start value
+        EE_REFLECT() float                       m_startValue = 0.0f; // Optional initialization value for this node
     };
 
     //-------------------------------------------------------------------------
 
     class FloatCurveToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatCurveToolsNode );
+        EE_REFLECT_TYPE( FloatCurveToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatCurveToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Curve"; }
@@ -109,18 +109,18 @@ namespace EE::Animation::GraphNodes
 
     public:
 
-        EE_EXPOSE FloatCurve                   m_curve;
+        EE_REFLECT() FloatCurve                   m_curve;
     };
 
     //-------------------------------------------------------------------------
 
     class FloatMathToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatMathToolsNode );
+        EE_REFLECT_TYPE( FloatMathToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatMathToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Math"; }
@@ -131,20 +131,20 @@ namespace EE::Animation::GraphNodes
 
     public:
 
-        EE_EXPOSE bool                       m_returnAbsoluteResult = false;
-        EE_EXPOSE FloatMathNode::Operator    m_operator = FloatMathNode::Operator::Add;
-        EE_EXPOSE float                      m_valueB = 0.0f;
+        EE_REFLECT() bool                       m_returnAbsoluteResult = false;
+        EE_REFLECT() FloatMathNode::Operator    m_operator = FloatMathNode::Operator::Add;
+        EE_REFLECT() float                      m_valueB = 0.0f;
     };
 
     //-------------------------------------------------------------------------
 
     class FloatComparisonToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatComparisonToolsNode );
+        EE_REFLECT_TYPE( FloatComparisonToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatComparisonToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "Float Comparison"; }
@@ -155,20 +155,20 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE FloatComparisonNode::Comparison         m_comparison = FloatComparisonNode::Comparison::GreaterThanEqual;
-        EE_EXPOSE float                                   m_comparisonValue = 0.0f;
-        EE_EXPOSE float                                   m_epsilon = 0.0f;
+        EE_REFLECT() FloatComparisonNode::Comparison         m_comparison = FloatComparisonNode::Comparison::GreaterThanEqual;
+        EE_REFLECT() float                                   m_comparisonValue = 0.0f;
+        EE_REFLECT() float                                   m_epsilon = 0.0f;
     };
 
     //-------------------------------------------------------------------------
 
     class FloatRangeComparisonToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatRangeComparisonToolsNode );
+        EE_REFLECT_TYPE( FloatRangeComparisonToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatRangeComparisonToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "Float Range Check"; }
@@ -179,19 +179,19 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE  FloatRange                              m_range = FloatRange( 0, 1 );
-        EE_EXPOSE  bool                                    m_isInclusiveCheck = true;
+        EE_REFLECT()  FloatRange                              m_range = FloatRange( 0, 1 );
+        EE_REFLECT()  bool                                    m_isInclusiveCheck = true;
     };
 
     //-------------------------------------------------------------------------
 
     class FloatSwitchToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatSwitchToolsNode );
+        EE_REFLECT_TYPE( FloatSwitchToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatSwitchToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Float Switch"; }
@@ -204,11 +204,11 @@ namespace EE::Animation::GraphNodes
 
     class FloatAngleMathToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( FloatAngleMathToolsNode );
+        EE_REFLECT_TYPE( FloatAngleMathToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        FloatAngleMathToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Angle Math"; }
@@ -218,6 +218,38 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE FloatAngleMathNode::Operation m_operation = FloatAngleMathNode::Operation::ClampTo180;
+        EE_REFLECT() FloatAngleMathNode::Operation m_operation = FloatAngleMathNode::Operation::ClampTo180;
+    };
+
+    //-------------------------------------------------------------------------
+
+    class FloatSelectorToolsNode final : public FlowToolsNode
+    {
+        EE_REFLECT_TYPE( FloatSelectorToolsNode );
+
+    public:
+
+        FloatSelectorToolsNode();
+
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
+        virtual char const* GetTypeName() const override { return "Float Selector"; }
+        virtual char const* GetCategory() const override { return "Values/Float"; }
+        virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
+        virtual int16_t Compile( GraphCompilationContext& context ) const override;
+
+        virtual bool DrawPinControls( VisualGraph::UserContext* pUserContext, VisualGraph::Flow::Pin const& pin ) override;
+        virtual bool SupportsUserEditableDynamicInputPins() const override { return true; }
+        virtual TInlineString<100> GetNewDynamicInputPinName() const override;
+        virtual StringID GetDynamicInputPinValueType() const override { return GetPinTypeForValueType( GraphValueType::Bool ); }
+        virtual void OnDynamicPinCreation( UUID pinID ) override;
+        virtual void OnDynamicPinDestruction( UUID pinID ) override;
+
+    private:
+
+        EE_REFLECT();
+        TVector<float>      m_pinValues;
+
+        EE_REFLECT();
+        float               m_defaultValue = 0.0f;
     };
 }

@@ -241,7 +241,7 @@ namespace EE::Render
         }
 
         RawAssets::ReaderContext readerCtx = { [this]( char const* pString ) { Warning( pString ); }, [this] ( char const* pString ) { Error( pString ); } };
-        TUniquePtr<RawAssets::RawMesh> pRawMesh = RawAssets::ReadStaticMesh( readerCtx, meshFilePath, resourceDescriptor.m_meshName );
+        TUniquePtr<RawAssets::RawMesh> pRawMesh = RawAssets::ReadStaticMesh( readerCtx, meshFilePath, resourceDescriptor.m_meshesToInclude );
         if ( pRawMesh == nullptr )
         {
             return Error( "Failed to read mesh from source file" );
@@ -262,7 +262,7 @@ namespace EE::Render
         // Serialize
         //-------------------------------------------------------------------------
 
-        Resource::ResourceHeader hdr( s_version, StaticMesh::GetStaticResourceTypeID() );
+        Resource::ResourceHeader hdr( s_version, StaticMesh::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
         SetMeshInstallDependencies( staticMesh, hdr );
 
         Serialization::BinaryOutputArchive archive;
@@ -312,7 +312,7 @@ namespace EE::Render
 
         RawAssets::ReaderContext readerCtx = { [this]( char const* pString ) { Warning( pString ); }, [this] ( char const* pString ) { Error( pString ); } };
         int32_t const maxBoneInfluences = 4;
-        TUniquePtr<RawAssets::RawMesh> pRawMesh = RawAssets::ReadSkeletalMesh( readerCtx, meshFilePath, maxBoneInfluences );
+        TUniquePtr<RawAssets::RawMesh> pRawMesh = RawAssets::ReadSkeletalMesh( readerCtx, meshFilePath, resourceDescriptor.m_meshesToInclude, maxBoneInfluences );
         if ( pRawMesh == nullptr )
         {
             return Error( "Failed to read mesh from source file" );
@@ -332,7 +332,7 @@ namespace EE::Render
         // Serialize
         //-------------------------------------------------------------------------
 
-        Resource::ResourceHeader hdr( s_version, SkeletalMesh::GetStaticResourceTypeID() );
+        Resource::ResourceHeader hdr( s_version, SkeletalMesh::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
         SetMeshInstallDependencies( skeletalMesh, hdr );
 
         Serialization::BinaryOutputArchive archive;

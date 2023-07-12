@@ -19,7 +19,7 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public PoseNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
             EE_SERIALIZE_GRAPHNODESETTINGS( PoseNode::Settings, m_childGraphIdx );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
@@ -30,7 +30,10 @@ namespace EE::Animation::GraphNodes
     private:
 
         virtual SyncTrack const& GetSyncTrack() const override;
+
         virtual void InitializeInternal( GraphContext& context, SyncTrackTime const& initialTime ) override;
+        virtual void ShutdownInternal( GraphContext& context ) override;
+
         virtual GraphPoseNodeResult Update( GraphContext& context ) override;
         virtual GraphPoseNodeResult Update( GraphContext& context, SyncTrackTimeRange const& updateRange ) override;
 
@@ -47,6 +50,5 @@ namespace EE::Animation::GraphNodes
 
         GraphInstance*                          m_pGraphInstance = nullptr;
         TInlineVector<ValueNode*, 10>           m_parameterMapping;
-        bool                                    m_isFirstUpdate = false;
     };
 }

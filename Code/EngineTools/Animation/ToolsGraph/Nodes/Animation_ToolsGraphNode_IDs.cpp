@@ -5,11 +5,13 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void IDComparisonToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    IDComparisonToolsNode::IDComparisonToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Bool, true );
         CreateInputPin( "ID", GraphValueType::ID );
+
+        m_IDs.emplace_back();
     }
 
     int16_t IDComparisonToolsNode::Compile( GraphCompilationContext& context ) const
@@ -79,11 +81,44 @@ namespace EE::Animation::GraphNodes
         ImGui::Text( infoText.c_str() );
     }
 
+    void IDComparisonToolsNode::GetLogicAndEventIDs( TVector<StringID>& outIDs ) const
+    {
+        for ( auto ID : m_IDs )
+        {
+            outIDs.emplace_back( ID );
+        }
+    }
+
+    void IDComparisonToolsNode::RenameLogicAndEventIDs( StringID oldID, StringID newID )
+    {
+        bool foundMatch = false;
+        for ( auto const ID : m_IDs )
+        {
+            if ( ID == oldID )
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if ( foundMatch )
+        {
+            VisualGraph::ScopedNodeModification snm( this );
+            for ( auto& ID : m_IDs )
+            {
+                if ( ID == oldID )
+                {
+                    ID = newID;
+                }
+            }
+        }
+    }
+
     //-------------------------------------------------------------------------
 
-    void IDToFloatToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    IDToFloatToolsNode::IDToFloatToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "ID", GraphValueType::ID );
     }
@@ -166,5 +201,38 @@ namespace EE::Animation::GraphNodes
         }
 
         return true;
+    }
+
+    void IDToFloatToolsNode::GetLogicAndEventIDs( TVector<StringID>& outIDs ) const
+    {
+        for ( auto const& mapping : m_mappings )
+        {
+            outIDs.emplace_back( mapping.m_ID );
+        }
+    }
+
+    void IDToFloatToolsNode::RenameLogicAndEventIDs( StringID oldID, StringID newID )
+    {
+        bool foundMatch = false;
+        for ( auto const& mapping : m_mappings )
+        {
+            if ( mapping.m_ID == oldID )
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if ( foundMatch )
+        {
+            VisualGraph::ScopedNodeModification snm( this );
+            for ( auto& mapping : m_mappings )
+            {
+                if ( mapping.m_ID == oldID )
+                {
+                    mapping.m_ID = newID;
+                }
+            }
+        }
     }
 }

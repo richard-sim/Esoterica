@@ -5,19 +5,19 @@
 
 namespace EE::VisualGraph
 {
-    ImColor SM::TransitionConduit::GetNodeBorderColor( VisualGraph::DrawContext const& ctx, UserContext* pUserContext, NodeVisualState visualState ) const
+    ImColor SM::TransitionConduit::GetColor( VisualGraph::DrawContext const& ctx, UserContext* pUserContext, NodeVisualState visualState ) const
     {
         if ( visualState == NodeVisualState::Hovered )
         {
-            return VisualSettings::s_connectionColorHovered;
+            return s_connectionColorHovered;
         }
         else if ( visualState == NodeVisualState::Selected )
         {
-            return VisualSettings::s_genericSelectionColor;
+            return s_defaultSelectedColor;
         }
         else
         {
-            return VisualSettings::s_connectionColor;
+            return s_connectionColor;
         }
     }
 

@@ -2,10 +2,10 @@
 #include "Engine/Animation/AnimationClip.h"
 #include "Engine/Animation/TaskSystem/Tasks/Animation_Task_DefaultPose.h"
 #include "Engine/Animation/TaskSystem/Animation_TaskSystem.h"
-#include "System/Log.h"
+
 #include "System/Drawing/DebugDrawing.h"
 #include "System/Math/Curves.h"
-#include "System/Math/MathHelpers.h"
+#include "System/Math/MathUtils.h"
 
 //-------------------------------------------------------------------------
 
@@ -51,16 +51,18 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    bool TargetWarpNode::IsValid() const
-    {
-        return PoseNode::IsValid() && m_pClipReferenceNode->IsValid();
-    }
-
     void TargetWarpNode::Settings::InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const
     {
         auto pNode = CreateNode<TargetWarpNode>( context, options );
         context.SetNodePtrFromIndex( m_clipReferenceNodeIdx, pNode->m_pClipReferenceNode );
         context.SetNodePtrFromIndex( m_targetValueNodeIdx, pNode->m_pTargetValueNode );
+    }
+
+    //-------------------------------------------------------------------------
+
+    bool TargetWarpNode::IsValid() const
+    {
+        return PoseNode::IsValid() && m_pClipReferenceNode->IsValid();
     }
 
     void TargetWarpNode::InitializeInternal( GraphContext& context, SyncTrackTime const& initialTime )
@@ -71,6 +73,22 @@ namespace EE::Animation::GraphNodes
         PoseNode::InitializeInternal( context, initialTime );
         m_pClipReferenceNode->Initialize( context, initialTime );
         m_pTargetValueNode->Initialize( context );
+
+        //-------------------------------------------------------------------------
+
+        if ( m_pClipReferenceNode->IsValid() )
+        {
+            m_duration = m_pClipReferenceNode->GetDuration();
+            m_previousTime = m_pClipReferenceNode->GetPreviousTime();
+            m_currentTime = m_pClipReferenceNode->GetCurrentTime();
+        }
+        else
+        {
+            m_previousTime = m_currentTime = 0.0f;
+            m_duration = 0;
+        }
+
+        EE_ASSERT( m_duration != 0.0f );
 
         //-------------------------------------------------------------------------
 
@@ -677,7 +695,7 @@ namespace EE::Animation::GraphNodes
         if ( m_translationXYSectionIdx == InvalidIndex )
         {
             Vector adjustedTranslation = originalRM.m_transforms.back().GetTranslation();
-            adjustedTranslation.m_z = m_requestedWarpTarget.GetTranslation().m_z;
+            adjustedTranslation.SetZ( m_requestedWarpTarget.GetTranslation().GetZ() );
             m_warpTarget.SetTranslation( adjustedTranslation );
         }
 
@@ -685,7 +703,7 @@ namespace EE::Animation::GraphNodes
         if ( !m_isTranslationAllowedZ )
         {
             Vector adjustedTranslation = m_requestedWarpTarget.GetTranslation();
-            adjustedTranslation.m_z = originalRM.m_transforms.back().GetTranslation().m_z;
+            adjustedTranslation.SetZ( originalRM.m_transforms.back().GetTranslation().GetZ() );
             m_warpTarget.SetTranslation( adjustedTranslation );
         }
 
@@ -765,7 +783,7 @@ namespace EE::Animation::GraphNodes
             if ( warpSection.m_warpRule == TargetWarpRule::WarpZ )
             {
                 // Calculate how much Z correction to apply
-                float correctionZ = warpDelta.GetTranslation().m_z;
+                float correctionZ = warpDelta.GetTranslation().GetZ();
                 if ( m_numSectionZ > 1 )
                 {
                     float const percentageCorrectionToApply = float( warpSection.GetNumWarpableFrames() ) / m_totalNumWarpableZFrames;
@@ -797,7 +815,7 @@ namespace EE::Animation::GraphNodes
             if ( warpSection.m_warpRule == TargetWarpRule::WarpZ )
             {
                 // Calculate how much Z correction to apply
-                float correctionZ = warpDelta.GetTranslation().m_z;
+                float correctionZ = warpDelta.GetTranslation().GetZ();
                 if ( m_numSectionZ > 1 )
                 {
                     float const percentageCorrectionToApply = float( warpSection.GetNumWarpableFrames() ) / m_totalNumWarpableZFrames;
@@ -824,7 +842,7 @@ namespace EE::Animation::GraphNodes
 
                 Vector alignmentDir;
 
-                // Align all the section post T to the incoming heading dir for T's start frame
+                // Align all the section post T to the incoming movement dir for T's start frame
                 Vector const startToTarget = targetTransform.GetTranslation() - startTransformT.GetTranslation();
                 if ( startToTarget.IsNearZero2() )
                 {
@@ -849,9 +867,9 @@ namespace EE::Animation::GraphNodes
                 Vector const deltaDistance = unwarpedDeltaPostT.GetTranslation().Length2();
                 sectionStartTransform.SetTranslation( Vector::NegativeMultiplySubtract( alignmentDir, deltaDistance, targetTransform.GetTranslation() ) );
 
-                Quaternion const unwarpedHeadingOrientation = originalRM.GetOutgoingHeadingOrientation2DAtFrame( m_warpSections[tIdx].m_endFrame );
+                Quaternion const unwarpedMovementOrientation = originalRM.GetOutgoingMovementOrientation2DAtFrame( m_warpSections[tIdx].m_endFrame );
                 Quaternion const originalFacingOrientation = originalRM.m_transforms[m_warpSections[tIdx].m_endFrame].GetRotation();
-                Quaternion const offset = Quaternion::Delta( unwarpedHeadingOrientation, originalFacingOrientation );
+                Quaternion const offset = Quaternion::Delta( unwarpedMovementOrientation, originalFacingOrientation );
                 sectionStartTransform.SetRotation( offset * Quaternion::FromRotationBetweenNormalizedVectors( Vector::WorldForward, alignmentDir ) );
 
                 // Calculate the start transform for this section by applying the delta for each section
@@ -866,7 +884,7 @@ namespace EE::Animation::GraphNodes
 
                 #if EE_DEVELOPMENT_TOOLS
                 warpSection.m_debugPoints[0] = targetTransform.GetTranslation();
-                warpSection.m_debugPoints[1] = targetTransform.GetTranslation() + unwarpedHeadingOrientation.RotateVector( Vector::WorldForward );
+                warpSection.m_debugPoints[1] = targetTransform.GetTranslation() + unwarpedMovementOrientation.RotateVector( Vector::WorldForward );
                 warpSection.m_debugPoints[2] = targetTransform.GetTranslation() + estimatedSectionEndTransform.GetRotation().RotateVector( Vector::WorldForward );
                 #endif
 
@@ -913,21 +931,21 @@ namespace EE::Animation::GraphNodes
                 }
                 else
                 {
-                    // Calculate estimated unwarped heading
+                    // Calculate estimated unwarped movement
                     Transform const endFramePlusOne = m_deltaTransforms[warpSection.m_endFrame + 1] * sectionEndTransform;
-                    Vector outgoingHeading = endFramePlusOne.GetTranslation() - sectionEndTransform.GetTranslation();
-                    if ( outgoingHeading.IsNearZero2() )
+                    Vector outgoingMovement = endFramePlusOne.GetTranslation() - sectionEndTransform.GetTranslation();
+                    if ( outgoingMovement.IsNearZero2() )
                     {
-                        outgoingHeading = sectionEndTransform.GetRotation().RotateVector( Vector::WorldForward );
+                        outgoingMovement = sectionEndTransform.GetRotation().RotateVector( Vector::WorldForward );
                     }
 
                     #if EE_DEVELOPMENT_TOOLS
                     warpSection.m_debugPoints[0] = sectionEndTransform.GetTranslation();
-                    warpSection.m_debugPoints[1] = sectionEndTransform.GetTranslation() + outgoingHeading.GetNormalized2();
+                    warpSection.m_debugPoints[1] = sectionEndTransform.GetTranslation() + outgoingMovement.GetNormalized2();
                     warpSection.m_debugPoints[2] = sectionEndTransform.GetTranslation() + toTarget.GetNormalized2();
                     #endif
 
-                    requiredCorrection = Quaternion::FromRotationBetweenNormalizedVectors( outgoingHeading.GetNormalized2(), toTarget.GetNormalized2() );
+                    requiredCorrection = Quaternion::FromRotationBetweenNormalizedVectors( outgoingMovement.GetNormalized2(), toTarget.GetNormalized2() );
                 }
 
                 SolveRotationSection( context, warpSection, sectionStartTransform, requiredCorrection );
@@ -946,7 +964,7 @@ namespace EE::Animation::GraphNodes
             else if ( warpSection.m_warpRule == TargetWarpRule::WarpZ )
             {
                 // Calculate how much Z correction to apply
-                float correctionZ = warpDelta.GetTranslation().m_z;
+                float correctionZ = warpDelta.GetTranslation().GetZ();
                 if ( m_numSectionZ > 1 )
                 {
                     float const percentageCorrectionToApply = float( warpSection.GetNumWarpableFrames() ) / m_totalNumWarpableZFrames;
@@ -1026,7 +1044,7 @@ namespace EE::Animation::GraphNodes
 
             if ( !shouldUpdate && m_isTranslationAllowedZ )
             {
-                float const deltaDistanceZ = m_requestedWarpTarget.GetTranslation().m_z - previousRequestedTarget.GetTranslation().m_z;
+                float const deltaDistanceZ = ( m_requestedWarpTarget.GetTranslation().GetSplatZ() - previousRequestedTarget.GetTranslation().GetSplatZ() ).ToFloat();
                 shouldUpdate = deltaDistanceZ > pSettings->m_targetUpdateDistanceThreshold;
             }
 
@@ -1056,8 +1074,10 @@ namespace EE::Animation::GraphNodes
         }
     }
 
-    void TargetWarpNode::SampleWarpedRootMotion( GraphContext& context, GraphPoseNodeResult& result, bool wasWarpUpdatedThisFrame )
+    void TargetWarpNode::SampleWarpedRootMotion( GraphContext& context, GraphPoseNodeResult& result )
     {
+        bool const wasWarpUpdatedThisFrame = UpdateWarp( context );
+
         // If we failed to warp, just keep the original root motion delta
         if ( !m_warpedRootMotion.IsValid() )
         {
@@ -1110,23 +1130,27 @@ namespace EE::Animation::GraphNodes
     {
         MarkNodeActive( context );
 
-        // Calculate or update warp
-        //-------------------------------------------------------------------------
-
-        bool const wasWarpUpdatedThisFrame = UpdateWarp( context );
-
         // Update source node
         //-------------------------------------------------------------------------
 
-        GraphPoseNodeResult result = m_pClipReferenceNode->Update( context );
-        m_duration = m_pClipReferenceNode->GetDuration();
-        m_previousTime = m_pClipReferenceNode->GetPreviousTime();
-        m_currentTime = m_pClipReferenceNode->GetCurrentTime();
+        GraphPoseNodeResult result;
 
-        // Sample root motion
-        //-------------------------------------------------------------------------
+        if ( IsValid() )
+        {
+            result = m_pClipReferenceNode->Update( context );
+            m_duration = m_pClipReferenceNode->GetDuration();
+            m_previousTime = m_pClipReferenceNode->GetPreviousTime();
+            m_currentTime = m_pClipReferenceNode->GetCurrentTime();
 
-        SampleWarpedRootMotion( context, result, wasWarpUpdatedThisFrame );
+            SampleWarpedRootMotion( context, result );
+        }
+        else
+        {
+            result.m_sampledEventRange = context.GetEmptySampledEventRange();
+        }
+
+        EE_ASSERT( m_duration != 0.0f );
+
         return result;
     }
 
@@ -1134,23 +1158,27 @@ namespace EE::Animation::GraphNodes
     {
         MarkNodeActive( context );
 
-        // Calculate or update warp
-        //-------------------------------------------------------------------------
-
-        bool const wasWarpUpdatedThisFrame = UpdateWarp( context );
-
         // Update source node
         //-------------------------------------------------------------------------
 
-        GraphPoseNodeResult result = m_pClipReferenceNode->Update( context, updateRange );
-        m_duration = m_pClipReferenceNode->GetDuration();
-        m_previousTime = m_pClipReferenceNode->GetPreviousTime();
-        m_currentTime = m_pClipReferenceNode->GetCurrentTime();
+        GraphPoseNodeResult result;
 
-        // Sample root motion
-        //-------------------------------------------------------------------------
+        if ( IsValid() )
+        {
+            result = m_pClipReferenceNode->Update( context, updateRange );
+            m_duration = m_pClipReferenceNode->GetDuration();
+            m_previousTime = m_pClipReferenceNode->GetPreviousTime();
+            m_currentTime = m_pClipReferenceNode->GetCurrentTime();
 
-        SampleWarpedRootMotion( context, result, wasWarpUpdatedThisFrame );
+            SampleWarpedRootMotion( context, result );
+        }
+        else
+        {
+            result.m_sampledEventRange = context.GetEmptySampledEventRange();
+        }
+
+        EE_ASSERT( m_duration != 0.0f );
+
         return result;
     }
 

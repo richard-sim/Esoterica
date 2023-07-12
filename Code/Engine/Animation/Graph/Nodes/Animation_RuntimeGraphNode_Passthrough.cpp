@@ -46,7 +46,7 @@ namespace EE::Animation::GraphNodes
         else
         {
             m_previousTime = m_currentTime = 0.0f;
-            m_duration = 1.0f;
+            m_duration = 0;
         }
     }
 
@@ -73,7 +73,7 @@ namespace EE::Animation::GraphNodes
         }
         else
         {
-            result.m_sampledEventRange = SampledEventRange( context.m_sampledEventsBuffer.GetNumSampledEvents() );
+            result.m_sampledEventRange = context.GetEmptySampledEventRange();
         }
 
         return result;
@@ -96,8 +96,10 @@ namespace EE::Animation::GraphNodes
         }
         else
         {
-            result.m_sampledEventRange = SampledEventRange( context.m_sampledEventsBuffer.GetNumSampledEvents() );
+            result.m_sampledEventRange = context.GetEmptySampledEventRange();
         }
+
+        EE_ASSERT( m_duration != 0.0f );
 
         return result;
     }

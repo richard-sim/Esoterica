@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EngineTools/Core/Widgets/TreeListView.h"
-#include "EngineTools/Core/Helpers/CategoryTree.h"
+#include "EngineTools/Core/CategoryTree.h"
 #include "System/Resource/ResourceTypeID.h"
 
 //-------------------------------------------------------------------------
@@ -11,34 +11,35 @@ namespace EE
     class UpdateContext;
     class ToolsContext;
     class ResourceDescriptorCreator;
+    class ResourceID;
     namespace Resource{ class RawFileInspector; }
     namespace TypeSystem { class TypeInfo; }
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINETOOLS_API ResourceBrowser final: public TreeListView
+    class EE_ENGINETOOLS_API ResourceBrowser final
     {
     public:
 
         ResourceBrowser( ToolsContext& toolsContext );
         ~ResourceBrowser();
 
-        char const* const GetWindowName() { return "Resource Browser"; }
+        char const* GetWindowName() { return "Resource Browser"; }
 
         // Returns true if the browser is still open
         bool UpdateAndDraw( UpdateContext const& context );
 
-    private:
-
-        // Tree
+        // Commands
         //-------------------------------------------------------------------------
 
-        virtual void RebuildTreeUserFunction() override;
-        virtual void DrawItemContextMenu( TVector<TreeListViewItem*> const& selectedItemsWithContextMenus ) override;
-        void OnBrowserItemDoubleClicked( TreeListViewItem* pItem );
+        // Find, select and focus on a specified resource - returns true if successful
+        bool FindAndSelectResource( ResourceID const& resourceID );
 
-        // Update visual tree item visibility based on the user filter
+    private:
+
         void UpdateVisibility();
+        void DrawItemContextMenu( TVector<TreeListViewItem*> const& selectedItemsWithContextMenus );
+        void RebuildTreeView( TreeListViewItem* pRootItem );
 
         // UI
         //-------------------------------------------------------------------------
@@ -64,7 +65,8 @@ namespace EE
 
         CategoryTree<TypeSystem::TypeInfo const*>           m_categorizedDescriptorTypes;
         ResourceDescriptorCreator*                          m_pResourceDescriptorCreator = nullptr;
-        Resource::RawFileInspector*                         m_pRawResourceInspector = nullptr;
-        EventBindingID                                      m_onDoubleClickEventID;
+
+        TreeListView                                        m_treeview;
+        bool                                                m_rebuildTree = false;
     };
 }

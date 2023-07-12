@@ -2,16 +2,16 @@
 #include "EngineTools/RawAssets/RawAssetReader.h"
 #include "EngineTools/Render/ResourceDescriptors/ResourceDescriptor_RenderMesh.h"
 #include "EngineTools/Render/ResourceDescriptors/ResourceDescriptor_RenderTexture.h"
-#include "EngineTools/Physics/ResourceDescriptors/ResourceDescriptor_PhysicsMesh.h"
+#include "EngineTools/Physics/ResourceDescriptors/ResourceDescriptor_PhysicsCollisionMesh.h"
 #include "EngineTools/Animation/ResourceDescriptors/ResourceDescriptor_AnimationClip.h"
 #include "EngineTools/Animation/ResourceDescriptors/ResourceDescriptor_AnimationSkeleton.h"
 #include "Engine/Render/Mesh/StaticMesh.h"
 #include "Engine/Render/Mesh/SkeletalMesh.h"
 #include "Engine/Animation/AnimationSkeleton.h"
 #include "Engine/Animation/AnimationClip.h"
-#include "Engine/Physics/PhysicsMesh.h"
+#include "Engine/Physics/PhysicsCollisionMesh.h"
 #include "System/Imgui/ImguiX.h"
-#include "System/Math/MathStringHelpers.h"
+#include "System/Math/MathUtils.h"
 #include "System/FileSystem/FileSystem.h"
 
 //-------------------------------------------------------------------------
@@ -57,8 +57,7 @@ namespace EE::Resource
                 FbxMesh* pMesh = reinterpret_cast<FbxMesh*>( pGeometry );
 
                 auto& meshInfo = m_meshes.emplace_back();
-                StringID t( pMesh->GetNode()->GetNameWithNameSpacePrefix() );
-                meshInfo.m_nameID = StringID( pMesh->GetNode()->GetName() );
+                meshInfo.m_nameID = StringID( Fbx::GetNameWithoutNamespace( pMesh->GetNode() ) );
                 meshInfo.m_isSkinned = pMesh->GetDeformerCount( FbxDeformer::eSkin ) > 0;
             }
         }
@@ -123,7 +122,7 @@ namespace EE::Resource
         m_sceneContext.FindAllAnimStacks( stacks );
         for ( auto pAnimStack : stacks )
         {
-            auto pTakeInfo = m_sceneContext.m_pScene->GetTakeInfo( pAnimStack->GetNameWithoutNameSpacePrefix() );
+            auto pTakeInfo = m_sceneContext.m_pScene->GetTakeInfo( Fbx::GetNameWithoutNamespace( pAnimStack ) );
             if ( pTakeInfo != nullptr )
             {
                 auto& animInfo = m_animations.emplace_back();
@@ -192,10 +191,10 @@ namespace EE::Resource
             
                 ImGuiX::TextSeparator( "Physics Meshes", 10, ImGui::GetColumnWidth() );
 
-                bool const isCombinedPhysicsMeshSelected = ( m_selectedItemType == InfoType::PhysicsMesh ) && !m_selectedItemID.IsValid();
+                bool const isCombinedPhysicsMeshSelected = ( m_selectedItemType == InfoType::PhysicsCollision ) && !m_selectedItemID.IsValid();
                 if ( ImGui::Selectable( EE_ICON_HOME_GROUP" Combined Physics Mesh", isCombinedPhysicsMeshSelected, ImGuiSelectableFlags_DontClosePopups ) )
                 {
-                    m_selectedItemType = InfoType::PhysicsMesh;
+                    m_selectedItemType = InfoType::PhysicsCollision;
                     m_selectedItemID = StringID();
                     OnSwitchSelectedItem();
                 }
@@ -203,10 +202,10 @@ namespace EE::Resource
                 for ( auto const& meshInfo : m_meshes )
                 {
                     tmpString.sprintf( EE_ICON_CUBE" %s##PhysicsMesh", meshInfo.m_nameID.c_str() );
-                    bool isSelected = ( m_selectedItemType == InfoType::PhysicsMesh ) && meshInfo.m_nameID == m_selectedItemID;
+                    bool isSelected = ( m_selectedItemType == InfoType::PhysicsCollision ) && meshInfo.m_nameID == m_selectedItemID;
                     if ( ImGui::Selectable( tmpString.c_str(), isSelected, ImGuiSelectableFlags_DontClosePopups ) )
                     {
-                        m_selectedItemType = InfoType::PhysicsMesh;
+                        m_selectedItemType = InfoType::PhysicsCollision;
                         m_selectedItemID = meshInfo.m_nameID;
                         OnSwitchSelectedItem();
                     }
@@ -335,7 +334,7 @@ namespace EE::Resource
                 }
                 break;
 
-                case InfoType::PhysicsMesh:
+                case InfoType::PhysicsCollision:
                 {
                     ImGuiX::TextSeparator( "Create New Physics Mesh" );
                 }
@@ -360,7 +359,11 @@ namespace EE::Resource
 
             //-------------------------------------------------------------------------
 
-            m_propertyGrid.DrawGrid();
+            if ( ImGui::BeginChild( "Grid", ImGui::GetContentRegionAvail() - ImVec2( 0, 40 ) ) )
+            {
+                m_propertyGrid.DrawGrid();
+            }
+            ImGui::EndChild();
 
             //-------------------------------------------------------------------------
 
@@ -380,9 +383,9 @@ namespace EE::Resource
                     }
                     break;
 
-                    case InfoType::PhysicsMesh:
+                    case InfoType::PhysicsCollision:
                     {
-                        CreateNewDescriptor( Physics::PhysicsMesh::GetStaticResourceTypeID(), m_pDescriptor );
+                        CreateNewDescriptor( Physics::CollisionMesh::GetStaticResourceTypeID(), m_pDescriptor );
                     }
                     break;
 
@@ -419,16 +422,21 @@ namespace EE::Resource
             {
                 auto pDesc = EE::New<Render::StaticMeshResourceDescriptor>();
                 pDesc->m_meshPath = ResourcePath::FromFileSystemPath( m_rawResourceDirectory, m_filePath );
-                pDesc->m_meshName = m_selectedItemID.IsValid() ? m_selectedItemID.c_str() : "";
+
+                if ( m_selectedItemID.IsValid() )
+                {
+                    pDesc->m_meshesToInclude.emplace_back( m_selectedItemID.c_str() );
+                }
+
                 m_pDescriptor = pDesc;
             }
             break;
 
-            case InfoType::PhysicsMesh:
+            case InfoType::PhysicsCollision:
             {
-                auto pDesc = EE::New<Physics::PhysicsMeshResourceDescriptor>();
-                pDesc->m_meshPath = ResourcePath::FromFileSystemPath( m_rawResourceDirectory, m_filePath );
-                pDesc->m_meshName = m_selectedItemID.IsValid() ? m_selectedItemID.c_str() : "";
+                auto pDesc = EE::New<Physics::PhysicsCollisionMeshResourceDescriptor>();
+                pDesc->m_sourcePath = ResourcePath::FromFileSystemPath( m_rawResourceDirectory, m_filePath );
+                pDesc->m_sourceItemName = m_selectedItemID.IsValid() ? m_selectedItemID.c_str() : "";
                 m_pDescriptor = pDesc;
             }
             break;
@@ -437,7 +445,12 @@ namespace EE::Resource
             {
                 auto pDesc = EE::New<Render::SkeletalMeshResourceDescriptor>();
                 pDesc->m_meshPath = ResourcePath::FromFileSystemPath( m_rawResourceDirectory, m_filePath );
-                pDesc->m_meshName = m_selectedItemID.IsValid() ? m_selectedItemID.c_str() : "";
+
+                if ( m_selectedItemID.IsValid() )
+                {
+                    pDesc->m_meshesToInclude.emplace_back( m_selectedItemID.c_str() );
+                }
+
                 m_pDescriptor = pDesc;
             }
             break;

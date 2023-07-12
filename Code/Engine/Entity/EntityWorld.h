@@ -19,14 +19,6 @@ namespace EE
 
     //-------------------------------------------------------------------------
 
-    enum class EntityWorldType : uint8_t
-    {
-        Game,
-        Tools
-    };
-
-    //-------------------------------------------------------------------------
-
     class EE_ENGINE_API EntityWorld
     {
         friend class EntityDebugView;
@@ -38,6 +30,8 @@ namespace EE
         ~EntityWorld();
 
         inline EntityWorldID const& GetID() const { return m_worldID; }
+
+        inline EntityWorldType GetWorldType() const { return m_worldType; }
         inline bool IsGameWorld() const { return m_worldType == EntityWorldType::Game; }
 
         void Initialize( SystemRegistry const& systemsRegistry, TVector<TypeSystem::TypeInfo const*> worldSystemTypeInfos );
@@ -67,7 +61,7 @@ namespace EE
         // Systems
         //-------------------------------------------------------------------------
 
-        IEntityWorldSystem* GetWorldSystem( uint32_t worldSystemID ) const;
+        EntityWorldSystem* GetWorldSystem( uint32_t worldSystemID ) const;
 
         template<typename T>
         inline T* GetWorldSystem() const { return reinterpret_cast<T*>( GetWorldSystem( T::s_entitySystemID ) ); }
@@ -148,6 +142,12 @@ namespace EE
         // Get a specific map
         EntityModel::EntityMap* GetMap( EntityMapID const& mapID ) { return const_cast<EntityModel::EntityMap*>( const_cast<EntityWorld const*>( this )->GetMap( mapID ) ); }
 
+        // Get map for a given entity
+        EntityModel::EntityMap const* GetMapForEntity( Entity const* pEntity ) const;
+
+        // Get map for a given entity
+        EntityModel::EntityMap* GetMapForEntity( Entity const* pEntity ) { return const_cast<EntityModel::EntityMap*>( const_cast<EntityWorld const*>( this )->GetMapForEntity( pEntity ) ); }
+
         // Are we currently loading anything
         bool IsBusyLoading() const;
 
@@ -188,7 +188,14 @@ namespace EE
         //-------------------------------------------------------------------------
 
         #if EE_DEVELOPMENT_TOOLS
+        // This function will immediately shutdown and unload all components so that component properties can be edited.
+        void BeginComponentEdit( Entity* pEntity );
+
+        // End a bulk component edit operation, will request all components to be reloaded
+        void EndComponentEdit( Entity* pEntity );
+
         // This function will immediately shutdown and unload the specified component so that its properties can be edited
+        // Note:  do not call this multiple times in a row, if you need to modify multiple components on the same entity use the functions above
         void BeginComponentEdit( EntityComponent* pComponent );
 
         // End a component edit operation, will request the unloaded component to be reloaded
@@ -274,7 +281,7 @@ namespace EE
         Input::InputState                                                       m_inputState;
         EntityModel::LoadingContext                                             m_loadingContext;
         EntityModel::InitializationContext                                      m_initializationContext;
-        TVector<IEntityWorldSystem*>                                            m_worldSystems;
+        TVector<EntityWorldSystem*>                                             m_worldSystems;
         EntityWorldType                                                         m_worldType = EntityWorldType::Game;
         bool                                                                    m_initialized = false;
         bool                                                                    m_isSuspended = false;
@@ -285,7 +292,7 @@ namespace EE
 
         // Entities
         TVector<Entity*>                                                        m_entityUpdateList;
-        TVector<IEntityWorldSystem*>                                            m_systemUpdateLists[(int8_t) UpdateStage::NumStages];
+        TVector<EntityWorldSystem*>                                            m_systemUpdateLists[(int8_t) UpdateStage::NumStages];
 
         // Time Scaling + Pause
         float                                                                   m_timeScale = 1.0f; // <= 0 means that the world is paused

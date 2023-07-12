@@ -29,13 +29,6 @@ namespace EE::ImGuiX
 
     //-------------------------------------------------------------------------
 
-    ImColor const Style::s_gridBackgroundColor( 40, 40, 40, 200 );
-    ImColor const Style::s_gridLineColor( 200, 200, 200, 40 );
-    ImColor const Style::s_selectionBoxFillColor( 61, 133, 224, 150 );
-    ImColor const Style::s_selectionBoxOutlineColor( 61, 133, 224, 30 );
-
-    //-------------------------------------------------------------------------
-
     void Style::Apply()
     {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -64,7 +57,7 @@ namespace EE::ImGuiX
 
         colors[ImGuiCol_FrameBg] = s_colorGray8;
         colors[ImGuiCol_FrameBgHovered] = s_colorGray7;
-        colors[ImGuiCol_FrameBgActive] = s_colorGray6;
+        colors[ImGuiCol_FrameBgActive] = s_colorGray5;
 
         colors[ImGuiCol_Tab] = s_colorGray6;
         colors[ImGuiCol_TabActive] = s_colorGray4;
@@ -115,18 +108,21 @@ namespace EE::ImGuiX
         // Style
         //-------------------------------------------------------------------------
 
-        style.FramePadding = ImVec2( 4, 4 );
-        style.WindowPadding = ImVec2( 3, 3 );
+        style.FramePadding = ImVec2( 6, 6 );
+        style.WindowPadding = ImVec2( 8, 8 );
         style.ChildBorderSize = 0.0f;
         style.TabBorderSize = 1.0f;
-        style.GrabRounding = 2.0f;
-        style.GrabMinSize = 6.0f;
+        style.GrabRounding = 0.0f;
+        style.GrabMinSize = 8.0f;
         style.WindowRounding = 0.0f;
         style.WindowBorderSize = 0.0f;
         style.FrameRounding = 3.0f;
-        style.IndentSpacing = 8.0f;
-        style.ItemSpacing = ImVec2( 4, 4 );
+        style.IndentSpacing = 8;
+        style.ItemSpacing = ImVec2( 4, 6 );
         style.TabRounding = 6.0f;
+        style.ScrollbarSize = 20.0f;
+        style.ScrollbarRounding = 0.0f;
+        style.CellPadding = ImVec2( 4, 6 );
     }
 
     //-------------------------------------------------------------------------

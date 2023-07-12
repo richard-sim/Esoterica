@@ -22,10 +22,11 @@ namespace EE::Animation::GraphNodes
     // The state machine node shown in blend trees
     class StateMachineToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( StateMachineToolsNode );
+        EE_REFLECT_TYPE( StateMachineToolsNode );
 
     public:
 
+        StateMachineToolsNode();
         virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
 
         virtual char const* GetName() const override { return m_name.c_str(); }
@@ -55,6 +56,7 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_REGISTER String m_name = "SM";
+        EE_REFLECT( "IsToolsReadOnly" : true )
+        String m_name = "SM";
     };
 }

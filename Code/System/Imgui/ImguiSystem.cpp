@@ -6,6 +6,7 @@
 #include "System/Fonts/FontData_Lexend.h"
 #include "System/Fonts/FontData_MaterialDesign.h"
 #include "System/FileSystem/FileSystemUtils.h"
+#include "System/ThirdParty/implot/implot.h"
 
 //-------------------------------------------------------------------------
 
@@ -24,6 +25,7 @@ namespace EE::ImGuiX
         //-------------------------------------------------------------------------
 
         ImGui::CreateContext();
+        ImPlot::CreateContext();
 
         //-------------------------------------------------------------------------
 
@@ -35,6 +37,7 @@ namespace EE::ImGuiX
         if ( enableViewports )
         {
             io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+            io.ConfigViewportsNoDefaultParent = true;
         }
 
         // Set render device in the user data
@@ -76,6 +79,8 @@ namespace EE::ImGuiX
 
         ShutdownFonts();
         ShutdownPlatform();
+
+        ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }
 
@@ -118,17 +123,24 @@ namespace EE::ImGuiX
             io.Fonts->AddFontFromMemoryTTF( iconFontData.data(), (int32_t) iconFontData.size(), iconFontSize, &iconFontConfig, icons_ranges );
         };
 
-        CreateFont( fontData, 12, 14, Font::Tiny, "Tiny", ImVec2( 0, 2 ) );
-        CreateFont( boldFontData, 12, 14, Font::TinyBold, "Tiny Bold", ImVec2( 0, 2 ) );
+        constexpr float const DPIScale = 1.0f;
+        float const size12 = Math::Floor( 12 * DPIScale );
+        float const size14 = Math::Floor( 14 * DPIScale );
+        float const size16 = Math::Floor( 16 * DPIScale );
+        float const size18 = Math::Floor( 18 * DPIScale );
+        float const size24 = Math::Floor( 24 * DPIScale );
 
-        CreateFont( fontData, 14, 16, Font::Small, "Small", ImVec2( 0, 2 ) );
-        CreateFont( boldFontData, 14, 16, Font::SmallBold, "Small Bold", ImVec2( 0, 2 ) );
+        CreateFont( fontData, size12, size14, Font::Tiny, "Tiny", ImVec2( 0, 2 ) );
+        CreateFont( boldFontData, size12, size14, Font::TinyBold, "Tiny Bold", ImVec2( 0, 2 ) );
 
-        CreateFont( fontData, 16, 18, Font::Medium, "Medium", ImVec2( 0, 2 ) );
-        CreateFont( boldFontData, 16, 18, Font::MediumBold, "Medium Bold", ImVec2( 0, 2 ) );
+        CreateFont( fontData, size14, size16, Font::Small, "Small", ImVec2( 0, 2 ) );
+        CreateFont( boldFontData, size14, size16, Font::SmallBold, "Small Bold", ImVec2( 0, 2 ) );
 
-        CreateFont( fontData, 24, 24, Font::Large, "Large", ImVec2( 0, 2 ) );
-        CreateFont( boldFontData, 24, 24, Font::LargeBold, "Large Bold", ImVec2( 0, 2 ) );
+        CreateFont( fontData, size16, size18, Font::Medium, "Medium", ImVec2( 0, 2 ) );
+        CreateFont( boldFontData, size16, size18, Font::MediumBold, "Medium Bold", ImVec2( 0, 2 ) );
+
+        CreateFont( fontData, size24, size24, Font::Large, "Large", ImVec2( 0, 2 ) );
+        CreateFont( boldFontData, size24, size24, Font::LargeBold, "Large Bold", ImVec2( 0, 2 ) );
 
         // Build font atlas
         //-------------------------------------------------------------------------
@@ -161,9 +173,14 @@ namespace EE::ImGuiX
 
     void ImguiSystem::StartFrame( float deltaTime )
     {
+        // Style Test
+        Style::Apply();
+
+        //-------------------------------------------------------------------------
+
         ImGuiIO& io = ImGui::GetIO();
         io.DeltaTime = deltaTime;
-        PlatformUpdate();
+        PlatformNewFrame();
         ImGui::NewFrame();
     }
 

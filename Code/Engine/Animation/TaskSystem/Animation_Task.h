@@ -2,12 +2,17 @@
 
 #include "Animation_TaskPosePool.h"
 #include "System/Types/Color.h"
+#include "System/Utils/GlobalRegistryBase.h"
+#include "System/TypeSystem/ReflectedType.h"
+#include "System/Types/Function.h"
 
 //-------------------------------------------------------------------------
 
 namespace EE::Animation
 {
     class Task;
+    class BoneMaskPool;
+    class TaskSerializer;
 
     //-------------------------------------------------------------------------
 
@@ -28,14 +33,16 @@ namespace EE::Animation
 
     struct TaskContext
     {
-        TaskContext( PoseBufferPool& posePool )
+        TaskContext( PoseBufferPool& posePool, BoneMaskPool& boneMaskPool )
             : m_posePool( posePool )
+            , m_boneMaskPool( boneMaskPool )
         {}
 
         Transform                       m_worldTransform = Transform::Identity;
         Transform                       m_worldTransformInverse = Transform::Identity;
         TInlineVector<Task*, 2>         m_dependencies = { nullptr, nullptr };
         PoseBufferPool&                 m_posePool;
+        BoneMaskPool&                   m_boneMaskPool;
         float                           m_deltaTime = 0;
         TaskUpdateStage                 m_updateStage = TaskUpdateStage::Any;
         int8_t                          m_currentTaskIdx = InvalidIndex;
@@ -43,15 +50,16 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    class Task
+    class EE_ENGINE_API Task : public IReflectedType
     {
+        EE_REFLECT_TYPE( Task );
 
     public:
 
         Task( TaskSourceID sourceID, TaskUpdateStage updateStage = TaskUpdateStage::Any, TaskDependencies const& dependencies = TaskDependencies() );
         virtual ~Task() {}
         virtual void Execute( TaskContext const& context ) = 0;
-        virtual uint32_t GetTypeID() const { return 0; }
+        virtual uint32_t GetTaskTypeID() const { return 0; }
 
         inline int8_t GetResultBufferIndex() const { return m_bufferIdx; }
         inline bool IsComplete() const { return m_isComplete; }
@@ -66,6 +74,23 @@ namespace EE::Animation
 
         // Do we have a dependency on the physics simulation?
         inline bool	HasPhysicsDependency() const { return m_updateStage != TaskUpdateStage::Any; }
+
+        // Serialization
+        //-------------------------------------------------------------------------
+
+        // Can this task be serialized?
+        virtual bool AllowsSerialization() const { return false; }
+
+        // Serialize the task to a compressed format
+        // The base function should never be called!
+        virtual void Serialize( TaskSerializer& serializer ) const { EE_UNREACHABLE_CODE(); }
+
+        // Deserialize the task from a compressed format
+        // The base function should never be called!
+        virtual void Deserialize( TaskSerializer& serializer ) { EE_UNREACHABLE_CODE(); }
+
+        // Debug
+        //-------------------------------------------------------------------------
 
         #if EE_DEVELOPMENT_TOOLS
         virtual String GetDebugText() const { return String(); }
@@ -150,9 +175,6 @@ namespace EE::Animation
 
         TaskSourceID                    m_sourceID = InvalidIndex;
         TaskUpdateStage                 m_updateStage = TaskUpdateStage::Any;
-
-    private:
-
         int8_t                          m_bufferIdx = InvalidIndex;
         TaskUpdateStage                 m_actualUpdateStage = TaskUpdateStage::Any;
         bool                            m_isComplete = false;

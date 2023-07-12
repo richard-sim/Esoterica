@@ -15,11 +15,27 @@ namespace EE
     class GamePreviewer;
     namespace EntityModel { class EntityMapEditor; }
     namespace Render{ class RenderingSystem; }
+    namespace Resource { class RawFileInspector; }
 
     //-------------------------------------------------------------------------
 
     class EditorUI final : public ImGuiX::IDevelopmentToolsUI, public ToolsContext
     {
+        struct WorkspaceCreationRequest
+        {
+            enum Type
+            {
+                MapEditor,
+                GamePreview,
+                ResourceWorkspace
+            };
+
+        public:
+
+            ResourceID  m_resourceID;
+            Type        m_type = ResourceWorkspace;
+        };
+
     public:
 
         ~EditorUI();
@@ -37,13 +53,14 @@ namespace EE
         virtual void EndFrame( UpdateContext const& context ) override final;
         virtual void Update( UpdateContext const& context ) override final;
         virtual EntityWorldManager* GetWorldManager() const override final { return m_pWorldManager; }
-        virtual void TryOpenResource( ResourceID const& resourceID ) const override;
+        virtual bool TryOpenResource( ResourceID const& resourceID ) const override;
+        virtual bool TryOpenRawResource( FileSystem::Path const& resourcePath ) const override;
+        virtual bool TryFindInResourceBrowser( ResourceID const& resourceID ) const override;
 
         // Title bar
         //-------------------------------------------------------------------------
 
         void DrawTitleBarMenu( UpdateContext const& context );
-        void DrawTitleBarGamePreviewControls( UpdateContext const& context );
         void DrawTitleBarPerformanceStats( UpdateContext const& context );
 
         // Hot Reload
@@ -67,19 +84,25 @@ namespace EE
         void QueueDestroyWorkspace( Workspace* pWorkspace );
 
         // Tries to immediately create a workspace
-        bool TryCreateWorkspace( UpdateContext const& context, ResourceID const& resourceID );
+        bool TryCreateWorkspace( UpdateContext const& context, WorkspaceCreationRequest const& request );
 
         // Queues a workspace creation request till the next update
         void QueueCreateWorkspace( ResourceID const& resourceID );
 
-        // Draw a workspace
-        bool DrawWorkspaceWindow( UpdateContext const& context, Workspace* pWorkspace );
+        // Submit a workspace so we can retrieve/update its docking location
+        bool SubmitWorkspaceWindow( UpdateContext const& context, Workspace* pWorkspace, ImGuiID editorDockspaceID );
+
+        // Draw workspace child windows
+        void DrawWorkspaceContents( UpdateContext const& context, Workspace* pWorkspace );
 
         // Create a game preview workspace
         void CreateGamePreviewWorkspace( UpdateContext const& context );
 
         // Queues the preview workspace for destruction
         void DestroyGamePreviewWorkspace( UpdateContext const& context );
+
+        // Copy the layout from one workspace to the other
+        void WorkspaceLayoutCopy( Workspace* pSourceWorkspace );
 
         // Misc
         //-------------------------------------------------------------------------
@@ -101,7 +124,6 @@ namespace EE
         bool                                m_isResourceBrowserWindowOpen = true;
         bool                                m_isResourceLogWindowOpen = false;
         bool                                m_isResourceOverviewWindowOpen = false;
-        bool                                m_isPhysicsMaterialDatabaseWindowOpen = false;
         bool                                m_isImguiDemoWindowOpen = false;
         bool                                m_isUITestWindowOpen = false;
 
@@ -110,6 +132,7 @@ namespace EE
         ResourceBrowser*                    m_pResourceBrowser = nullptr;
         EventBindingID                      m_resourceDeletedEventID;
         float                               m_resourceBrowserViewWidth = 150;
+        Resource::RawFileInspector*         m_pRawResourceInspector = nullptr;
 
         // System Log
         SystemLogView                       m_systemLogView;
@@ -117,13 +140,14 @@ namespace EE
 
         // Workspaces
         TVector<Workspace*>                 m_workspaces;
-        TVector<ResourceID>                 m_workspaceCreationRequests;
+        TVector<WorkspaceCreationRequest>   m_workspaceCreationRequests;
         TVector<Workspace*>                 m_workspaceDestructionRequests;
+        Workspace*                          m_pLastActiveWorkspace = nullptr;
 
-        // Map Editor
+        // Map Editor and Game Preview
         EntityModel::EntityMapEditor*       m_pMapEditor = nullptr;
         GamePreviewer*                      m_pGamePreviewer = nullptr;
-        EventBindingID                      m_gamePreviewStartedEventBindingID;
-        EventBindingID                      m_gamePreviewStoppedEventBindingID;
+        EventBindingID                      m_gamePreviewStartRequestEventBindingID;
+        EventBindingID                      m_gamePreviewStopRequestEventBindingID;
     };
 }

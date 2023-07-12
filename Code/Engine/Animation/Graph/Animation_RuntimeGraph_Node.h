@@ -5,7 +5,7 @@
 #include "Animation_RuntimeGraph_Recording.h"
 #include "Engine/Animation/AnimationSyncTrack.h"
 #include "Engine/Animation/AnimationTarget.h"
-#include "System/TypeSystem/RegisteredType.h"
+#include "System/TypeSystem/ReflectedType.h"
 #include "System/Serialization/BinarySerialization.h"
 #include "System/Types/Color.h"
 #include "System/Time/Time.h"
@@ -21,18 +21,17 @@ namespace EE::Animation
     class AnimationClip;
     class GraphDataSet;
     class GraphContext;
-    class BoneMask;
+    struct BoneMaskTaskList;
 
     //-------------------------------------------------------------------------
 
-    enum class GraphValueType
+    enum class GraphValueType : uint8_t
     {
-        EE_REGISTER_ENUM
+        EE_REFLECT_ENUM
 
         Unknown = 0,
         Bool,
         ID,
-        Int,
         Float,
         Vector,
         Target,
@@ -46,6 +45,7 @@ namespace EE::Animation
     EE_ENGINE_API char const* GetNameForValueType( GraphValueType type );
     #endif
 
+
     //-------------------------------------------------------------------------
 
     class EE_ENGINE_API GraphNode
@@ -57,9 +57,9 @@ namespace EE::Animation
 
         // This is the base for each node's individual settings
         // The settings are all shared for all graph instances since they are immutable, the nodes themselves contain the actual graph state
-        struct EE_ENGINE_API Settings : public IRegisteredType
+        struct EE_ENGINE_API Settings : public IReflectedType
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
 
         public:
 
@@ -235,11 +235,10 @@ namespace EE::Animation
     template<typename T> struct ValueTypeValidation { static GraphValueType const Type = GraphValueType::Unknown; };
     template<> struct ValueTypeValidation<bool> { static GraphValueType const Type = GraphValueType::Bool; };
     template<> struct ValueTypeValidation<StringID> { static GraphValueType const Type = GraphValueType::ID; };
-    template<> struct ValueTypeValidation<int32_t> { static GraphValueType const Type = GraphValueType::Int; };
     template<> struct ValueTypeValidation<float> { static GraphValueType const Type = GraphValueType::Float; };
     template<> struct ValueTypeValidation<Vector> { static GraphValueType const Type = GraphValueType::Vector; };
     template<> struct ValueTypeValidation<Target> { static GraphValueType const Type = GraphValueType::Target; };
-    template<> struct ValueTypeValidation<BoneMask const*> { static GraphValueType const Type = GraphValueType::BoneMask; };
+    template<> struct ValueTypeValidation<BoneMaskTaskList const*> { static GraphValueType const Type = GraphValueType::BoneMask; };
 
     //-------------------------------------------------------------------------
 
@@ -281,13 +280,6 @@ namespace EE::Animation
     class EE_ENGINE_API IDValueNode : public ValueNode
     {
         virtual GraphValueType GetValueType() const override final { return GraphValueType::ID; }
-    };
-
-    //-------------------------------------------------------------------------
-
-    class EE_ENGINE_API IntValueNode : public ValueNode
-    {
-        virtual GraphValueType GetValueType() const override final { return GraphValueType::Int; }
     };
 
     //-------------------------------------------------------------------------

@@ -19,11 +19,27 @@ namespace EE::Animation
         operator=( eastl::move( rhs ) );
     }
 
+    Pose::Pose( Pose const& rhs )
+    {
+        EE_ASSERT( rhs.m_pSkeleton != nullptr );
+        operator=( rhs );
+    }
+
     Pose& Pose::operator=( Pose&& rhs )
     {
         m_pSkeleton = rhs.m_pSkeleton;
         m_localTransforms.swap( rhs.m_localTransforms );
         m_globalTransforms.swap( rhs.m_globalTransforms );
+        m_state = rhs.m_state;
+
+        return *this;
+    }
+
+    Pose& Pose::operator=( Pose const& rhs )
+    {
+        m_pSkeleton = rhs.m_pSkeleton;
+        m_localTransforms = rhs.m_localTransforms;
+        m_globalTransforms = rhs.m_globalTransforms;
         m_state = rhs.m_state;
 
         return *this;
@@ -83,6 +99,7 @@ namespace EE::Animation
     void Pose::SetToZeroPose( bool setGlobalPose )
     {
         auto const numBones = m_pSkeleton->GetNumBones();
+        m_localTransforms.clear();
         m_localTransforms.resize( numBones, Transform::Identity );
 
         if ( setGlobalPose )
@@ -160,7 +177,7 @@ namespace EE::Animation
     //-------------------------------------------------------------------------
 
     #if EE_DEVELOPMENT_TOOLS
-    void Pose::DrawDebug( Drawing::DrawContext& ctx, Transform const& worldTransform, Color color ) const
+    void Pose::DrawDebug( Drawing::DrawContext& ctx, Transform const& worldTransform, Color color, float lineThickness ) const
     {
         auto const& parentIndices = m_pSkeleton->GetParentBoneIndices();
 
@@ -192,11 +209,11 @@ namespace EE::Animation
                 auto const& parentTransform = worldTransforms[parentIdx];
                 auto const& boneTransform = worldTransforms[boneIdx];
 
-                ctx.DrawLine( boneTransform.GetTranslation().ToFloat3(), parentTransform.GetTranslation().ToFloat3(), color, 2.0f );
+                ctx.DrawLine( boneTransform.GetTranslation().ToFloat3(), parentTransform.GetTranslation().ToFloat3(), color, lineThickness );
                 ctx.DrawAxis( boneTransform, 0.03f, 3.0f );
             }
 
-            DrawRootBone( ctx, worldTransforms[0] );
+            Skeleton::DrawRootBone( ctx, worldTransforms[0] );
         }
     }
     #endif

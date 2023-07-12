@@ -12,9 +12,9 @@ namespace EE::Animation::GraphNodes
     // The result node for a state's layer settings
     class StateLayerDataToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( StateLayerDataToolsNode );
+        EE_REFLECT_TYPE( StateLayerDataToolsNode );
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        StateLayerDataToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Unknown; }
         virtual char const* GetTypeName() const override { return "State Layer Data"; }
@@ -28,23 +28,26 @@ namespace EE::Animation::GraphNodes
     class StateToolsNode final : public VisualGraph::SM::State
     {
         friend class StateMachineToolsNode;
-        EE_REGISTER_TYPE( StateToolsNode );
+        EE_REFLECT_TYPE( StateToolsNode );
 
     public:
 
-        struct TimedStateEvent : public IRegisteredType
+        struct TimedStateEvent : public IReflectedType
         {
-            EE_REGISTER_TYPE( TimedStateEvent );
+            EE_REFLECT_TYPE( TimedStateEvent );
 
-            EE_EXPOSE StringID                 m_ID;
-            EE_EXPOSE Seconds                  m_timeValue;
+            EE_REFLECT( "CustomEditor" : "AnimGraph_ID" );
+            StringID                 m_ID;
+
+            EE_REFLECT();
+            Seconds                  m_timeValue;
         };
 
     public:
 
         enum class StateType
         {
-            EE_REGISTER_ENUM
+            EE_REFLECT_ENUM
 
             OffState,
             BlendTreeState,
@@ -54,7 +57,7 @@ namespace EE::Animation::GraphNodes
     public:
 
         StateToolsNode() = default;
-        StateToolsNode( StateType type ) : m_type( type ) {}
+        StateToolsNode( StateType type );
 
         virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
 
@@ -65,6 +68,12 @@ namespace EE::Animation::GraphNodes
         inline bool IsOffState() const { return m_type == StateType::OffState; }
         inline bool IsBlendTreeState() const { return m_type == StateType::BlendTreeState; }
         inline bool IsStateMachineState() const { return m_type == StateType::StateMachineState; }
+
+        // Return any logic or event IDs entered into this node (things like event IDs, parameter ID values, etc...)
+        virtual void GetLogicAndEventIDs( TVector<StringID>& outIDs ) const;
+
+        // Rename any logic or event IDs entered into this node (things like event IDs, parameter ID values, etc...)
+        virtual void RenameLogicAndEventIDs( StringID oldID, StringID newID );
 
     private:
 
@@ -84,12 +93,40 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_REGISTER String                      m_name = "State";
-        EE_EXPOSE TVector<StringID>             m_entryEvents;
-        EE_EXPOSE TVector<StringID>             m_executeEvents;
-        EE_EXPOSE TVector<StringID>             m_exitEvents;
-        EE_EXPOSE TVector<TimedStateEvent>      m_timeRemainingEvents;
-        EE_EXPOSE TVector<TimedStateEvent>      m_timeElapsedEvents;
-        EE_REGISTER StateType                   m_type = StateType::BlendTreeState;
+        EE_REFLECT( "IsToolsReadOnly" : true );
+        String                          m_name = "State";
+
+        EE_REFLECT( "IsToolsReadOnly" : true );
+        StateType                       m_type = StateType::BlendTreeState;
+
+        //-------------------------------------------------------------------------
+
+        // These events are emitted in all cases (entry/execute/exit)
+        EE_REFLECT( "CustomEditor" : "AnimGraph_ID" );
+        TVector<StringID>               m_events;
+
+        //-------------------------------------------------------------------------
+
+        // Only emitted when entering the state
+        EE_REFLECT( "Category" : "Specific Events", "CustomEditor" : "AnimGraph_ID" );
+        TVector<StringID>               m_entryEvents;
+
+        // Only emitted when fully in (no transition occuring) the state
+        EE_REFLECT( "Category" : "Specific Events", "CustomEditor" : "AnimGraph_ID" );
+        TVector<StringID>               m_executeEvents;
+
+        // Only emitted when exiting the state
+        EE_REFLECT( "Category" : "Specific Events", "CustomEditor" : "AnimGraph_ID" );
+        TVector<StringID>               m_exitEvents;
+
+        //-------------------------------------------------------------------------
+
+        // Only emitted when a time remaining condition is met
+        EE_REFLECT( "Category" : "Timed Events" );
+        TVector<TimedStateEvent>        m_timeRemainingEvents;
+
+        // Only emitted when a time elapsed condition is met
+        EE_REFLECT( "Category" : "Timed Events" );
+        TVector<TimedStateEvent>        m_timeElapsedEvents;
     };
 }

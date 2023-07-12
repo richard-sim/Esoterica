@@ -6,7 +6,7 @@
 
 namespace EE::Timeline
 {
-    TrackItem::TrackItem( FloatRange const& inRange, IRegisteredType* pData )
+    TrackItem::TrackItem( FloatRange const& inRange, IReflectedType* pData )
         : m_pData( pData )
     {
         EE_ASSERT( m_pData != nullptr && inRange.IsSetAndValid() );
@@ -105,13 +105,13 @@ namespace EE::Timeline
         return false;
     }
 
-    void Track::ClearDirtyFlags()
+    void Track::ClearDirty()
     {
         m_isDirty = false;
 
         for ( auto pItem : m_items )
         {
-            pItem->ClearDirtyFlag();
+            pItem->ClearDirty();
         }
     }
 
@@ -205,6 +205,18 @@ namespace EE::Timeline
         ImVec2 const adjustedItemStartPos = ImVec2( itemStartPos ) + ImVec2( 0, itemMarginY );
         ImVec2 const adjustedItemEndPos = ImVec2( itemEndPos ) - ImVec2( 0, itemMarginY );
         ImRect const itemRect( adjustedItemStartPos, adjustedItemEndPos );
+
+        ImVec2 const mousePos = ImGui::GetMousePos();
+        bool const isHovered = itemRect.Contains( mousePos );
+
+        if ( isHovered )
+        {
+            InlineString tooltipText = GetItemTooltip( pItem );
+            if ( !tooltipText.empty() )
+            {
+                ImGui::SetTooltip( tooltipText.c_str() );
+            }
+        }
 
         //-------------------------------------------------------------------------
 

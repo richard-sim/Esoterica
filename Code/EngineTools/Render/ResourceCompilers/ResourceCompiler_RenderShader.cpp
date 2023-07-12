@@ -465,15 +465,15 @@ namespace EE::Render
 
         Serialization::BinaryOutputArchive archive;
 
-        if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
-        {
-            Resource::ResourceHeader hdr( compilerVersion, VertexShader::GetStaticResourceTypeID() );
-            archive << hdr << *static_cast<VertexShader*>( pShader.get() );
-        }
         if ( pShader->GetPipelineStage() == PipelineStage::Pixel )
         {
-            Resource::ResourceHeader hdr( compilerVersion, PixelShader::GetStaticResourceTypeID() );
-            archive << hdr << *static_cast<PixelShader*>( pShader.get() );
+            Resource::ResourceHeader hdr( s_version, PixelShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
+            archive << hdr << *static_cast<PixelShader*>( pShader );
+        }
+        if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
+        {
+            Resource::ResourceHeader hdr( s_version, PixelShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
+            archive << hdr << *static_cast<VertexShader*>( pShader );
         }
 
         if ( archive.WriteToFile( ctx.m_outputFilePath ) )

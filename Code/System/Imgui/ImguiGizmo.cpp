@@ -1,6 +1,6 @@
 #include "ImguiGizmo.h"
 #include "System/Imgui/ImguiX.h"
-#include "System/Math/MathHelpers.h"
+#include "System/Math/MathUtils.h"
 #include "EASTL/sort.h"
 
 //-------------------------------------------------------------------------
@@ -26,7 +26,7 @@ namespace EE::ImGuiX
 
             case ResultDeltaType::Scale:
             {
-                float newScale = transform.GetScale() + m_deltaPositionScale.m_x;
+                float newScale = transform.GetScale() + m_deltaPositionScale.GetX();
                 if ( Math::IsNearZero( newScale ) )
                 {
                     newScale = 0.01f;

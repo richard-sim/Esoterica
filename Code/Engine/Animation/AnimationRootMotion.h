@@ -4,7 +4,7 @@
 #include "System/Math/Transform.h"
 #include "System/Types/Arrays.h"
 #include "System/Types/Color.h"
-#include "System/TypeSystem/RegisteredType.h"
+#include "System/TypeSystem/ReflectedType.h"
 
 //-------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ namespace EE::Animation
 
         enum class SamplingMode : uint8_t
         {
-            EE_REGISTER_ENUM
+            EE_REFLECT_ENUM
 
             Delta = 0,  // Just returns the delta between the start and end time
             WorldSpace, // Will return a delta that attempts to move the character to the expected root motion position (assumes root motion transforms are in world space)
@@ -68,17 +68,17 @@ namespace EE::Animation
         // Get the rotation delta for this animation
         inline Quaternion const& GetRotationDelta() const { return m_totalDelta.GetRotation(); }
 
-        // Will return the heading (direction of movement for that given frame towards the next frame). If there is no movement (or no next frame) it will return the facing!
-        Vector GetIncomingHeadingDirection2DAtFrame( int32_t frameIdx ) const;
+        // Will return the direction of movement for that given frame towards the next frame. If there is no movement (or no next frame) it will return the facing!
+        Vector GetIncomingMovementDirection2DAtFrame( int32_t frameIdx ) const;
 
-        // Will return the heading (direction of movement for that given frame towards the next frame). If there is no movement (or no next frame) it will return the facing!
-        Quaternion GetIncomingHeadingOrientation2DAtFrame( int32_t frameIdx ) const;
+        // Will return the direction of movement for that given frame towards the next frame. If there is no movement (or no next frame) it will return the facing!
+        Quaternion GetIncomingMovementOrientation2DAtFrame( int32_t frameIdx ) const;
 
-        // Will return the heading (direction of movement for that given frame towards the next frame). If there is no movement (or no next frame) it will return the facing!
-        Vector GetOutgoingHeadingDirection2DAtFrame( int32_t frameIdx ) const;
+        // Will return the direction of movement for that given frame towards the next frame. If there is no movement (or no next frame) it will return the facing!
+        Vector GetOutgoingMovementDirection2DAtFrame( int32_t frameIdx ) const;
 
-        // Will return the heading (direction of movement for that given frame towards the next frame). If there is no movement (or no next frame) it will return the facing!
-        Quaternion GetOutgoingHeadingOrientation2DAtFrame( int32_t frameIdx ) const;
+        // Will return the direction of movement for that given frame towards the next frame. If there is no movement (or no next frame) it will return the facing!
+        Quaternion GetOutgoingMovementOrientation2DAtFrame( int32_t frameIdx ) const;
 
         //-------------------------------------------------------------------------
 

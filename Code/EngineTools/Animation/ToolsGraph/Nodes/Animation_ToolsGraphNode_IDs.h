@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class IDComparisonToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( IDComparisonToolsNode );
+        EE_REFLECT_TYPE( IDComparisonToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        IDComparisonToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "ID Comparison"; }
@@ -21,30 +21,38 @@ namespace EE::Animation::GraphNodes
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
 
         virtual void DrawInfoText( VisualGraph::DrawContext const& ctx ) override;
+        virtual void GetLogicAndEventIDs( TVector<StringID>& outIDs ) const override;
+        virtual void RenameLogicAndEventIDs( StringID oldID, StringID newID ) override;
 
     private:
 
-        EE_EXPOSE IDComparisonNode::Comparison     m_comparison = IDComparisonNode::Comparison::Matches;
-        EE_EXPOSE TVector<StringID>                m_IDs;
+        EE_REFLECT();
+        IDComparisonNode::Comparison     m_comparison = IDComparisonNode::Comparison::Matches;
+
+        EE_REFLECT( "CustomEditor" : "AnimGraph_ID" );
+        TVector<StringID>                m_IDs;
     };
 
     //-------------------------------------------------------------------------
 
     class IDToFloatToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( IDToFloatToolsNode );
+        EE_REFLECT_TYPE( IDToFloatToolsNode );
 
-        struct Mapping : public IRegisteredType
+        struct Mapping : public IReflectedType
         {
-            EE_REGISTER_TYPE( Mapping );
+            EE_REFLECT_TYPE( Mapping );
 
-            EE_EXPOSE StringID    m_ID;
-            EE_EXPOSE float       m_value;
+            EE_REFLECT( "CustomEditor" : "AnimGraph_ID" );
+            StringID    m_ID;
+
+            EE_REFLECT();
+            float       m_value;
         };
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        IDToFloatToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "ID to Float"; }
@@ -52,6 +60,8 @@ namespace EE::Animation::GraphNodes
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
         virtual void DrawInfoText( VisualGraph::DrawContext const& ctx ) override;
+        virtual void GetLogicAndEventIDs( TVector<StringID>& outIDs ) const override;
+        virtual void RenameLogicAndEventIDs( StringID oldID, StringID newID ) override;
 
     private:
 
@@ -59,7 +69,10 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE float                            m_defaultValue = 0.0f;
-        EE_EXPOSE TVector<Mapping>                 m_mappings;
+        EE_REFLECT();
+        float                            m_defaultValue = 0.0f;
+
+        EE_REFLECT();
+        TVector<Mapping>                 m_mappings;
     };
 }

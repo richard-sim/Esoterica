@@ -2,18 +2,18 @@
 
 #include "EngineTools/_Module/API.h"
 #include "System/Serialization/TypeSerialization.h"
-#include "System/TypeSystem/RegisteredType.h"
+#include "System/TypeSystem/ReflectedType.h"
 #include "System/Resource/ResourceID.h"
 #include "System/Types/Function.h"
-#include "System/Log.h"
+
 
 //-------------------------------------------------------------------------
 
 namespace EE::Resource
 {
-    struct EE_ENGINETOOLS_API ResourceDescriptor : public IRegisteredType
+    struct EE_ENGINETOOLS_API ResourceDescriptor : public IReflectedType
     {
-        EE_REGISTER_TYPE( ResourceDescriptor );
+        EE_REFLECT_TYPE( ResourceDescriptor );
 
     public:
 

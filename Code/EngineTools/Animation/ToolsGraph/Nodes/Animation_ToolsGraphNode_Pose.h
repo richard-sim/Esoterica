@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class ZeroPoseToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ZeroPoseToolsNode );
+        EE_REFLECT_TYPE( ZeroPoseToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ZeroPoseToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Pose; }
         virtual char const* GetTypeName() const override { return "Zero Pose"; }
@@ -25,11 +25,11 @@ namespace EE::Animation::GraphNodes
 
     class ReferencePoseToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ReferencePoseToolsNode );
+        EE_REFLECT_TYPE( ReferencePoseToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ReferencePoseToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Pose; }
         virtual char const* GetTypeName() const override { return "Reference Pose"; }
@@ -42,25 +42,35 @@ namespace EE::Animation::GraphNodes
 
     class AnimationPoseToolsNode final : public DataSlotToolsNode
     {
-        EE_REGISTER_TYPE( AnimationPoseToolsNode );
+        EE_REFLECT_TYPE( AnimationPoseToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        AnimationPoseToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Pose; }
         virtual char const* GetTypeName() const override { return "Animation Pose"; }
         virtual char const* GetCategory() const override { return "Animation/Poses"; }
         virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree ); }
         virtual int16_t Compile( GraphCompilationContext& context ) const override;
+        virtual bool DrawPinControls( VisualGraph::UserContext* pUserContext, VisualGraph::Flow::Pin const& pin ) override;
 
-        virtual char const* const GetDefaultSlotName() const override { return "Pose"; }
+        virtual char const* GetDefaultSlotName() const override { return "Pose"; }
         virtual ResourceTypeID GetSlotResourceTypeID() const override { return AnimationClip::GetStaticResourceTypeID(); }
         virtual bool IsDragAndDropTargetForResourceType( ResourceTypeID typeID ) const override { return false; }
 
     private:
 
         // Use this to remap an input value into a valid 0~1 range.
-        EE_EXPOSE FloatRange   m_inputTimeRemapRange = FloatRange( 0, 1 );
+        EE_REFLECT();
+        FloatRange              m_inputTimeRemapRange;
+
+        // User specified fixed time
+        EE_REFLECT();
+        float                   m_fixedTimeValue = 0.0f;
+
+        // Whether the input is in frames or percentage
+        EE_REFLECT();
+        bool                    m_useFramesAsInput = false;
     };
 }

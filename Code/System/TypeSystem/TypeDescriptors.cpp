@@ -1,7 +1,7 @@
 #include "TypeDescriptors.h"
 #include "TypeRegistry.h"
 #include "System/Math/Math.h"
-#include "System/Log.h"
+
 
 //-------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ namespace EE::TypeSystem
                 // Calculate the address of the resolved property
                 if ( pFoundPropertyInfo->IsArrayProperty() )
                 {
-                    resolvedPathElement.m_pAddress = pResolvedTypeInfo->GetArrayElementDataPtr( reinterpret_cast<IRegisteredType*>( pResolvedTypeInstance ), path[i].m_propertyID, path[i].m_arrayElementIdx );
+                    resolvedPathElement.m_pAddress = pResolvedTypeInfo->GetArrayElementDataPtr( reinterpret_cast<IReflectedType*>( pResolvedTypeInstance ), path[i].m_propertyID.ToUint(), path[i].m_arrayElementIdx);
                 }
                 else // Structure/Type
                 {
@@ -85,7 +85,7 @@ namespace EE::TypeSystem
     {
         struct TypeDescriber
         {
-            static void DescribeType( TypeRegistry const& typeRegistry, TypeDescriptor& typeDesc, TypeID typeID, IRegisteredType const* pTypeInstance, PropertyPath& path, bool shouldSetPropertyStringValues )
+            static void DescribeType( TypeRegistry const& typeRegistry, TypeDescriptor& typeDesc, TypeID typeID, IReflectedType const* pTypeInstance, PropertyPath& path, bool shouldSetPropertyStringValues )
             {
                 EE_ASSERT( !IsCoreType( typeID ) );
                 auto const pTypeInfo = typeRegistry.GetTypeInfo( typeID );
@@ -98,10 +98,10 @@ namespace EE::TypeSystem
                     if ( propInfo.IsArrayProperty() )
                     {
                         size_t const elementByteSize = propInfo.m_arrayElementSize;
-                        size_t const numArrayElements = propInfo.IsStaticArrayProperty() ? propInfo.m_arraySize : pTypeInfo->GetArraySize( pTypeInstance, propInfo.m_ID );
+                        size_t const numArrayElements = propInfo.IsStaticArrayProperty() ? propInfo.m_arraySize : pTypeInfo->GetArraySize( pTypeInstance, propInfo.m_ID.ToUint() );
                         if ( numArrayElements > 0 )
                         {
-                            uint8_t const* pArrayElementAddress = pTypeInfo->GetArrayElementDataPtr( const_cast<IRegisteredType*>( pTypeInstance ), propInfo.m_ID, 0 );
+                            uint8_t const* pArrayElementAddress = pTypeInfo->GetArrayElementDataPtr( const_cast<IReflectedType*>( pTypeInstance ), propInfo.m_ID.ToUint(), 0 );
 
                             // Write array elements
                             for ( auto i = 0u; i < numArrayElements; i++ )
@@ -123,12 +123,12 @@ namespace EE::TypeSystem
                 }
             }
 
-            static void DescribeProperty( TypeRegistry const& typeRegistry, TypeDescriptor& typeDesc, TypeInfo const* pParentTypeInfo, IRegisteredType const* pParentInstance, PropertyInfo const& propertyInfo, bool shouldSetPropertyStringValues, void const* pPropertyInstance, PropertyPath& path, int32_t arrayElementIdx = InvalidIndex )
+            static void DescribeProperty( TypeRegistry const& typeRegistry, TypeDescriptor& typeDesc, TypeInfo const* pParentTypeInfo, IReflectedType const* pParentInstance, PropertyInfo const& propertyInfo, bool shouldSetPropertyStringValues, void const* pPropertyInstance, PropertyPath& path, int32_t arrayElementIdx = InvalidIndex )
             {
                 if ( IsCoreType( propertyInfo.m_typeID ) || propertyInfo.IsEnumProperty() )
                 {
                     // Only describe non-default properties
-                    if ( !pParentTypeInfo->IsPropertyValueSetToDefault( pParentInstance, propertyInfo.m_ID, arrayElementIdx ) )
+                    if ( !pParentTypeInfo->IsPropertyValueSetToDefault( pParentInstance, propertyInfo.m_ID.ToUint(), arrayElementIdx ) )
                     {
                         PropertyDescriptor& propertyDesc = typeDesc.m_properties.emplace_back( PropertyDescriptor() );
                         propertyDesc.m_path = path;
@@ -144,7 +144,7 @@ namespace EE::TypeSystem
                 }
                 else
                 {
-                    DescribeType( typeRegistry, typeDesc, propertyInfo.m_typeID, (IRegisteredType*) pPropertyInstance, path, shouldSetPropertyStringValues );
+                    DescribeType( typeRegistry, typeDesc, propertyInfo.m_typeID, (IReflectedType*) pPropertyInstance, path, shouldSetPropertyStringValues );
                 }
             }
         };
@@ -152,13 +152,13 @@ namespace EE::TypeSystem
 
     //-------------------------------------------------------------------------
 
-    TypeDescriptor::TypeDescriptor( TypeRegistry const& typeRegistry, IRegisteredType* pTypeInstance, bool shouldSetPropertyStringValues )
+    TypeDescriptor::TypeDescriptor( TypeRegistry const& typeRegistry, IReflectedType* pTypeInstance, bool shouldSetPropertyStringValues )
     {
         EE_ASSERT( pTypeInstance != nullptr );
         DescribeTypeInstance( typeRegistry, pTypeInstance, shouldSetPropertyStringValues );
     }
 
-    void TypeDescriptor::DescribeTypeInstance( TypeRegistry const& typeRegistry, IRegisteredType const* pTypeInstance, bool shouldSetPropertyStringValues )
+    void TypeDescriptor::DescribeTypeInstance( TypeRegistry const& typeRegistry, IReflectedType const* pTypeInstance, bool shouldSetPropertyStringValues )
     {
         // Reset descriptor
         m_typeID = pTypeInstance->GetTypeID();

@@ -4,7 +4,7 @@
 #include "System/Render/RenderCoreResources.h"
 #include "System/IniFile.h"
 #include "System/Profiling.h"
-#include "System/Log.h"
+
 
 #ifdef _WIN32
 #include "System/Render/Platform/Windows/TextureLoader_Win32.h"

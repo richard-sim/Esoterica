@@ -9,7 +9,7 @@ namespace EE::Navmesh
 {
     class NavmeshCompiler : public Resource::Compiler
     {
-        EE_REGISTER_TYPE( NavmeshCompiler );
+        EE_REFLECT_TYPE( NavmeshCompiler );
 
     public:
 
@@ -19,6 +19,6 @@ namespace EE::Navmesh
 
     private:
 
-        Resource::CompilationResult GenerateNavmesh( Resource::CompileContext const& ctx ) const;
+        Resource::CompilationResult GenerateNavmesh( Resource::CompileContext const& ctx, bool updatePregeneratedNavmesh ) const;
     };
 }

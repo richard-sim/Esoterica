@@ -1,11 +1,13 @@
 #include "Workspace_MapEditor.h"
 #include "EngineTools/Navmesh/NavmeshGeneratorDialog.h"
 #include "EngineTools/ThirdParty/pfd/portable-file-dialogs.h"
-#include "EngineTools/Core/Helpers/CommonDialogs.h"
+#include "EngineTools/Core/CommonDialogs.h"
 #include "EngineTools/Entity/EntitySerializationTools.h"
 #include "Engine/Entity/EntitySerialization.h"
 #include "Engine/Entity/EntityWorld.h"
 #include "Engine/Navmesh/Components/Component_Navmesh.h"
+#include "Engine/Navmesh/DebugViews/DebugView_Navmesh.h"
+#include "Engine/Navmesh/Systems/WorldSystem_Navmesh.h"
 #include "System/FileSystem/FileSystem.h"
 
 //-------------------------------------------------------------------------
@@ -103,7 +105,7 @@ namespace EE::EntityModel
     {
         if ( mapToLoad.GetResourceID() != m_loadedMap )
         {
-            m_outliner.ClearSelection();
+           // m_outliner.ClearSelection();
 
             // Should we save the current map before unloading?
             if ( IsDirty() )
@@ -127,7 +129,7 @@ namespace EE::EntityModel
             SetDisplayName( m_loadedMap.GetResourcePath().GetFileNameWithoutExtension() );
 
             // Reset widget
-            m_entityStructureEditor.SetEntityToEdit( nullptr );
+          //  m_entityStructureEditor.SetEntityToEdit( nullptr );
             m_undoStack.Reset();
         }
     }
@@ -188,12 +190,17 @@ namespace EE::EntityModel
 
     //-------------------------------------------------------------------------
 
-    void EntityMapEditor::DrawWorkspaceToolbarItems( UpdateContext const& context )
+    void EntityMapEditor::DrawMenu( UpdateContext const& context )
     {
-        ImGuiX::VerticalSeparator();
+        if ( ImGui::MenuItem( EE_ICON_FILE"##NewMap" ) )
+        {
+            CreateNewMap();
+        }
+        ImGuiX::ItemTooltip( "New" );
 
-        //-------------------------------------------------------------------------
-        // Tools Menu
+        EntityEditorWorkspace::DrawMenu( context );
+
+        // Tools
         //-------------------------------------------------------------------------
 
         ImGui::BeginDisabled( !HasLoadedMap() );
@@ -202,7 +209,7 @@ namespace EE::EntityModel
             // Navmesh
             //-------------------------------------------------------------------------
 
-            ImGuiX::TextSeparator( "Navmesh" );
+            ImGuiX::TextSeparator( EE_ICON_WALK" Navmesh" );
             
             auto const& navmeshComponents = m_pWorld->GetAllRegisteredComponentsOfType<Navmesh::NavmeshComponent>();
             bool const hasNavmeshComponent = !navmeshComponents.empty();
@@ -230,11 +237,119 @@ namespace EE::EntityModel
             ImGui::EndMenu();
         }
         ImGui::EndDisabled();
+
+        // Visualizations
+        //-------------------------------------------------------------------------
+
+        if ( ImGui::BeginMenu( EE_ICON_MONITOR_EYE" Visualize" ) )
+        {
+            ImGuiX::TextSeparator( EE_ICON_MATH_COMPASS" Physics" );
+
+            //auto pPhysicsWorldSystem = m_pWorld->GetWorldSystem<Physics::PhysicsWorldSystem>();
+            bool isDebugEnabled = false;// pPhysicsWorldSystem->IsDebugDrawingEnabled();
+            if ( ImGui::MenuItem( "Show Physics Collision", nullptr, &isDebugEnabled ) )
+            {
+                //pPhysicsWorldSystem->SetDebugDrawingEnabled( isDebugEnabled );
+            }
+
+            //-------------------------------------------------------------------------
+
+            ImGuiX::TextSeparator( EE_ICON_WALK" Navmesh" );
+
+            auto pNavmeshWorldSystem = m_pWorld->GetWorldSystem<Navmesh::NavmeshWorldSystem>();
+            Navmesh::NavmeshDebugView::DrawNavmeshRuntimeSettings( pNavmeshWorldSystem );
+
+            //-------------------------------------------------------------------------
+
+            ImGuiX::TextSeparator( EE_ICON_CUBE_OUTLINE" Volumes" );
+
+            for ( auto pVolumeTypeInfo : m_volumeTypes )
+            {
+                bool isVisualized = VectorContains( m_visualizedVolumeTypes, pVolumeTypeInfo );
+                if ( ImGui::MenuItem( pVolumeTypeInfo->GetFriendlyTypeName(), nullptr, isVisualized ) )
+                {
+                    if ( isVisualized )
+                    {
+                        m_visualizedVolumeTypes.erase_first( pVolumeTypeInfo );
+                    }
+                    else
+                    {
+                        m_visualizedVolumeTypes.emplace_back( pVolumeTypeInfo );
+                    }
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
+        // Help
+        //-------------------------------------------------------------------------
+
+        if ( ImGui::BeginMenu( EE_ICON_HELP_CIRCLE_OUTLINE" Help" ) )
+        {
+            auto DrawHelpRow = []( char const* pLabel, char const* pHotkey )
+            {
+                ImGui::TableNextRow();
+
+                ImGui::TableNextColumn();
+                {
+                    ImGuiX::ScopedFont const sf( ImGuiX::Font::Small );
+                    ImGui::Text( pLabel );
+                }
+
+                ImGui::TableNextColumn();
+                {
+                    ImGuiX::ScopedFont const sf( ImGuiX::Font::SmallBold );
+                    ImGui::Text( pHotkey );
+                }
+            };
+
+            //-------------------------------------------------------------------------
+
+            if ( ImGui::BeginTable( "HelpTable", 2 ) )
+            {
+                DrawHelpRow( "Switch Gizmo Mode", "Spacebar" );
+                DrawHelpRow( "Multi Select", "Ctrl/Shift + Left Click" );
+                DrawHelpRow( "Directly Select Component", "Alt + Left Click" );
+                DrawHelpRow( "Duplicate Selected Entities", "Alt + translate" );
+
+                ImGui::EndTable();
+            }
+
+            ImGui::EndMenu();
+        }
     }
 
-    void EntityMapEditor::Update( UpdateContext const& context, ImGuiWindowClass* pWindowClass, bool isFocused )
+    void EntityMapEditor::DrawViewportToolbar( UpdateContext const& context, Render::Viewport const* pViewport )
     {
-        EntityEditorWorkspace::Update( context, pWindowClass, isFocused );
+        EntityEditorWorkspace::DrawViewportToolbar( context, pViewport );
+
+        ImGui::SameLine();
+
+        //-------------------------------------------------------------------------
+
+        ImGuiX::ScopedFont const sf( ImGuiX::Font::MediumBold );
+        constexpr float const buttonWidth = 120;
+
+        if ( !m_isGamePreviewRunning )
+        {
+            if ( ImGuiX::IconButton( EE_ICON_PLAY, "Play Map", ImGuiX::ImColors::Lime, ImVec2( buttonWidth, 0 ) ) )
+            {
+                m_requestStartGamePreview.Execute( context );
+            }
+        }
+        else
+        {
+            if ( ImGuiX::IconButton( EE_ICON_STOP, "Stop Playing", ImGuiX::ImColors::Red, ImVec2( buttonWidth, 0 ) ) )
+            {
+                m_requestStopGamePreview.Execute( context );
+            }
+        }
+    }
+
+    void EntityMapEditor::Update( UpdateContext const& context, bool isFocused )
+    {
+        EntityEditorWorkspace::Update( context, isFocused );
 
         if ( m_pNavmeshGeneratorDialog != nullptr )
         {

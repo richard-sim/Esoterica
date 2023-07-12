@@ -1,6 +1,6 @@
 #include "DebugView_Player.h"
 #include "Game/Player/Systems/EntitySystem_PlayerController.h"
-#include "Game/Player/Physics/PlayerPhysicsController.h"
+#include "Engine/Physics/Components/Component_PhysicsCharacter.h"
 #include "Engine/Entity/EntityWorld.h"
 #include "Engine/Entity/EntitySystem.h"
 #include "Engine/Entity/EntityWorldUpdateContext.h"
@@ -13,6 +13,7 @@
 #include "Game/Player/StateMachine/Actions/PlayerAction_Interact.h"
 #include "Game/Player/Components/Component_MainPlayer.h"
 #include "Engine/Camera/Systems/WorldSystem_CameraManager.h"
+#include "Engine/Animation/Components/Component_AnimationGraph.h"
 
 //-------------------------------------------------------------------------
 
@@ -41,8 +42,8 @@ namespace EE::Player
         EE_ASSERT( m_pWorld != nullptr );
 
         // HACK
-        m_isActionDebugWindowOpen = true;
-        m_isCharacterControllerDebugWindowOpen = true;
+        //m_isActionDebugWindowOpen = true;
+        //m_isCharacterControllerDebugWindowOpen = true;
 
         PlayerController* pPlayerController = nullptr;
         if ( m_isActionDebugWindowOpen || m_isCharacterControllerDebugWindowOpen )
@@ -92,7 +93,7 @@ namespace EE::Player
                 ImGui::SetNextWindowBgAlpha( 0.9f );
                 if ( ImGui::Begin( "Player Character Controller", &m_isCharacterControllerDebugWindowOpen ) )
                 {
-                    auto pCharacterController = pPlayerController->m_actionContext.m_pCharacterController;
+                    auto pCharacterController = pPlayerController->m_actionContext.m_pCharacterComponent;
                     if ( pCharacterController != nullptr )
                     {
                         pCharacterController->DrawDebugUI();
@@ -140,6 +141,8 @@ namespace EE::Player
             m_isCharacterControllerDebugWindowOpen = true;
         }
     }
+
+    //-------------------------------------------------------------------------
 
     // Called within the context of a large overlay window allowing you to draw helpers and widgets over a viewport
     void PlayerDebugView::DrawOverlayElements( EntityWorldUpdateContext const& context )

@@ -1,9 +1,114 @@
 #include "Animation_TaskSystem.h"
 #include "Tasks/Animation_Task_DefaultPose.h"
 #include "Engine/Animation/AnimationBlender.h"
-#include "System/Log.h"
+
 #include "System/Drawing/DebugDrawing.h"
 #include "System/Profiling.h"
+#include "System/TypeSystem/TypeRegistry.h"
+
+//-------------------------------------------------------------------------
+
+#if EE_DEVELOPMENT_TOOLS
+namespace EE::Animation
+{
+    namespace
+    {
+        struct TaskOffsetData
+        {
+            void CalculateRelativeOffsets()
+            {
+                int32_t const numChildren = (int32_t) m_children.size();
+                if ( numChildren == 0 )
+                {
+                    m_width = 1;
+                }
+                else if ( numChildren == 1 )
+                {
+                    m_children[0]->CalculateRelativeOffsets();
+                    m_children[0]->m_relativeOffset = Float2( 0.0f, -1.0f );
+                    m_width = m_children[0]->m_width;
+                }
+                else // multiple children
+                {
+                    m_width = 0.0f;
+
+                    for ( int32_t i = 0; i < numChildren; i++ )
+                    {
+                        m_children[i]->CalculateRelativeOffsets();
+                        m_width += m_children[i]->m_width;
+                    }
+
+                    float startOffset = -( m_width / 2 );
+                    for ( int32_t i = 0; i < numChildren; i++ )
+                    {
+                        float halfWidth = m_children[i]->m_width / 2;
+                        m_children[i]->m_relativeOffset = Float2( startOffset + halfWidth, -1.0f );
+                        startOffset += m_children[i]->m_width;
+                    }
+                }
+            }
+
+            void CalculateAbsoluteOffsets( Float2 const& parentOffset )
+            {
+                m_offset = parentOffset + m_relativeOffset;
+
+                int32_t const numChildren = (int32_t) m_children.size();
+                for ( int32_t i = 0; i < numChildren; i++ )
+                {
+                    m_children[i]->CalculateAbsoluteOffsets( m_offset );
+                }
+            }
+
+        public:
+
+            Task*                           m_pTask = nullptr;
+            Float2                          m_relativeOffset;
+            Float2                          m_offset;
+            float                           m_width = 0;
+            TVector<TaskOffsetData*>        m_children;
+        };
+
+        
+
+        void CalculateTaskOffsets( TVector<Task*> const& tasks, Transform const& worldTransform, TInlineVector<Transform, 16>& taskTransforms )
+        {
+            int32_t const numTasks = (int32_t) tasks.size();
+            TInlineVector<TaskOffsetData, 16> taskOffsets;
+            taskOffsets.resize( numTasks );
+
+            for ( int32_t i = 0; i < numTasks; i++ )
+            {
+                auto pTask = tasks[i];
+                taskOffsets[i].m_pTask = pTask;
+
+                int32_t const numDependencies = pTask->GetNumDependencies();
+                for ( int32_t j = 0; j < numDependencies; j++ )
+                {
+                    taskOffsets[i].m_children.emplace_back( &taskOffsets[pTask->GetDependencyIndices()[j]] );
+                }
+            }
+
+            //-------------------------------------------------------------------------
+
+            taskOffsets.back().CalculateRelativeOffsets();
+            taskOffsets.back().CalculateAbsoluteOffsets( Float2::Zero );
+
+            //-------------------------------------------------------------------------
+
+            Vector const offsetVectorX = worldTransform.GetAxisX() * 2.0f;
+            Vector const offsetVectorY = worldTransform.GetAxisY().GetNegated() * 1.5f;
+
+            taskTransforms.resize( numTasks, worldTransform );
+
+            for ( int32_t i = numTasks - 1; i >= 0; i-- )
+            {
+                Vector const offset = ( offsetVectorX * taskOffsets[i].m_offset.m_x ) + ( offsetVectorY * taskOffsets[i].m_offset.m_y );
+                taskTransforms[i].AddTranslation( offset );
+            }
+        }
+    }
+}
+#endif
 
 //-------------------------------------------------------------------------
 
@@ -11,7 +116,8 @@ namespace EE::Animation
 {
     TaskSystem::TaskSystem( Skeleton const* pSkeleton )
         : m_posePool( pSkeleton )
-        , m_taskContext( m_posePool )
+        , m_boneMaskPool( pSkeleton )
+        , m_taskContext( m_posePool, m_boneMaskPool )
         , m_finalPose( pSkeleton )
     {
         EE_ASSERT( pSkeleton != nullptr );
@@ -85,6 +191,10 @@ namespace EE::Animation
     void TaskSystem::UpdatePrePhysics( float deltaTime, Transform const& worldTransform, Transform const& worldTransformInverse )
     {
         EE_PROFILE_SCOPE_ANIMATION( "Anim Pre-Physics Tasks" );
+
+        #if EE_DEVELOPMENT_TOOLS
+        m_boneMaskPool.PerformValidation();
+        #endif
 
         m_taskContext.m_currentTaskIdx = InvalidIndex;
         m_taskContext.m_deltaTime = deltaTime;
@@ -224,42 +334,103 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
+    void TaskSystem::EnableSerialization( TypeSystem::TypeRegistry const& typeRegistry )
+    {
+        m_taskTypeRemapTable = typeRegistry.GetAllDerivedTypes( Task::GetStaticTypeID(), false, false, true );
+        m_maxBitsForTaskTypeID = Math::GetMostSignificantBit( (uint32_t) m_taskTypeRemapTable.size() ) + 1;
+        EE_ASSERT( m_maxBitsForTaskTypeID <= 8 );
+
+        m_serializationEnabled = true;
+    }
+
+    void TaskSystem::DisableSerialization()
+    {
+        m_taskTypeRemapTable.clear();
+        m_maxBitsForTaskTypeID = 0;
+        m_serializationEnabled = false;
+    }
+
+    bool TaskSystem::SerializeTasks( TInlineVector<ResourceLUT const*, 10> const& LUTs, Blob& outSerializedData ) const
+    {
+        auto FindTaskTypeID = [this] ( TypeSystem::TypeID typeID )
+        {
+            uint8_t const numTaskTypes = (uint8_t) m_taskTypeRemapTable.size();
+            for ( uint8_t i = 0; i < numTaskTypes; i++ )
+            {
+                if ( m_taskTypeRemapTable[i]->m_ID == typeID )
+                {
+                    return i;
+                }
+            }
+
+            return uint8_t( 0xFF );
+        };
+
+        //-------------------------------------------------------------------------
+
+        EE_ASSERT( m_serializationEnabled );
+        EE_ASSERT( !m_needsUpdate );
+
+        uint8_t const numTasks = (uint8_t) m_tasks.size();
+        TaskSerializer serializer( GetSkeleton(), LUTs, numTasks );
+
+        // Serialize task types
+        for ( auto pTask : m_tasks )
+        {
+            EE_ASSERT( pTask->IsComplete() );
+            uint8_t serializedTypeID = FindTaskTypeID( pTask->GetTypeID() );
+            EE_ASSERT( serializedTypeID != 0xFF );
+            serializer.WriteUInt( serializedTypeID, m_maxBitsForTaskTypeID );
+        }
+
+        // Serialize task data
+        for ( auto pTask : m_tasks )
+        {
+            if ( !pTask->AllowsSerialization() )
+            {
+                return false;
+            }
+
+            pTask->Serialize( serializer );
+        }
+
+        serializer.GetWrittenData( outSerializedData );
+
+        return true;
+    }
+
+    void TaskSystem::DeserializeTasks( TInlineVector<ResourceLUT const*, 10> const& LUTs, Blob const& inSerializedData )
+    {
+        EE_ASSERT( m_serializationEnabled );
+        EE_ASSERT( m_tasks.empty() );
+        EE_ASSERT( !m_needsUpdate );
+
+        TaskSerializer serializer( GetSkeleton(), LUTs, inSerializedData );
+        uint8_t const numTasks = serializer.GetNumSerializedTasks();
+
+        // Create tasks
+        for ( uint8_t i = 0; i < numTasks; i++ )
+        {
+            uint8_t const taskTypeID = (uint8_t) serializer.ReadUInt( m_maxBitsForTaskTypeID );
+            Task* pTask = Cast<Task>( m_taskTypeRemapTable[taskTypeID]->CreateType() );
+            EE_ASSERT( pTask->AllowsSerialization() );
+            m_tasks.emplace_back( pTask );
+        }
+
+        // Deserialize Tasks
+        for ( auto pTask : m_tasks )
+        {
+            pTask->Deserialize( serializer );
+        }
+    }
+
+    //-------------------------------------------------------------------------
+
     #if EE_DEVELOPMENT_TOOLS
     void TaskSystem::SetDebugMode( TaskSystemDebugMode mode )
     {
         m_debugMode = mode;
         m_posePool.EnableRecording( m_debugMode != TaskSystemDebugMode::Off );
-    }
-
-    void TaskSystem::CalculateTaskOffset( TaskIndex taskIdx, Float2 const& currentOffset, TInlineVector<Float2, 16>& offsets )
-    {
-        EE_ASSERT( taskIdx >= 0 && taskIdx < m_tasks.size() );
-        auto pTask = m_tasks[taskIdx];
-        offsets[taskIdx] = currentOffset;
-        
-        int32_t const numDependencies = pTask->GetNumDependencies();
-        if ( numDependencies == 0 )
-        {
-            // Do nothing
-        }
-        else if ( numDependencies == 1 )
-        {
-            Float2 childOffset = currentOffset;
-            childOffset += Float2( 0, -1 );
-            CalculateTaskOffset( pTask->GetDependencyIndices()[0], childOffset, offsets );
-        }
-        else // multiple dependencies
-        {
-            Float2 childOffset = currentOffset;
-            childOffset += Float2( 0, -1 );
-
-            float const childTaskStartOffset = -( numDependencies - 1.0f ) / 2.0f;
-            for ( int32_t i = 0; i < numDependencies; i++ )
-            {
-                childOffset.m_x = currentOffset.m_x + childTaskStartOffset + i;
-                CalculateTaskOffset( pTask->GetDependencyIndices()[i], childOffset, offsets );
-            }
-        }
     }
 
     void TaskSystem::DrawDebug( Drawing::DrawContext& drawingContext )
@@ -291,21 +462,8 @@ namespace EE::Animation
         // Calculate task tree offsets
         //-------------------------------------------------------------------------
 
-        TInlineVector<Float2, 16> taskTreeOffsets;
-        taskTreeOffsets.resize( m_tasks.size(), Float2::Zero );
-        CalculateTaskOffset( (TaskIndex) m_tasks.size() - 1, Float2::Zero, taskTreeOffsets );
-
-        Vector const offsetVectorX = m_taskContext.m_worldTransform.GetAxisX().GetNegated() * 2.0f;
-        Vector const offsetVectorY = m_taskContext.m_worldTransform.GetAxisY().GetNegated() * 1.5f;
-
         TInlineVector<Transform, 16> taskTransforms;
-        taskTransforms.resize( m_tasks.size(), m_taskContext.m_worldTransform );
-
-        for ( int8_t i = (int8_t) m_tasks.size() - 1; i >= 0; i-- )
-        {
-            Vector const offset = ( offsetVectorX * taskTreeOffsets[i].m_x ) + ( offsetVectorY * taskTreeOffsets[i].m_y );
-            taskTransforms[i].SetTranslation( m_taskContext.m_worldTransform.GetTranslation() + offset );
-        }
+        CalculateTaskOffsets( m_tasks, m_taskContext.m_worldTransform, taskTransforms );
 
         // Draw tree
         //-------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 #include "ResourceInfo.h"
 #include "EnumInfo.h"
 #include "TypeInfo.h"
-#include "System/Log.h"
+
 #include "DefaultTypeInfos.h"
 #include "EASTL/sort.h"
 
@@ -13,12 +13,12 @@ namespace EE::TypeSystem
 {
     TypeRegistry::TypeRegistry()
     {
-        TTypeInfo<IRegisteredType>::RegisterType( *this );
+        TTypeInfo<IReflectedType>::RegisterType( *this );
     }
 
     TypeRegistry::~TypeRegistry()
     {
-        TTypeInfo<IRegisteredType>::UnregisterType( *this );
+        TTypeInfo<IReflectedType>::UnregisterType( *this );
         EE_ASSERT( m_registeredEnums.empty() && m_registeredTypes.empty() && m_registeredResourceTypes.empty() );
     }
 
@@ -107,22 +107,6 @@ namespace EE::TypeSystem
         return pTypeInfo->IsDerivedFrom( parentTypeID );
     }
 
-    TVector<TypeInfo const*> TypeRegistry::GetAllTypesWithMatchingMetadata( TBitFlags<TypeInfoMetaData> metadataFlags ) const
-    {
-        TVector<TypeInfo const*> matchingTypes;
-
-        for ( auto const& typeInfoPair : m_registeredTypes )
-        {
-            if ( typeInfoPair.second->m_metadata == metadataFlags )
-            {
-                matchingTypes.emplace_back( typeInfoPair.second );
-            }
-        }
-
-        return matchingTypes;
-    }
-
-
     TVector<TypeInfo const*> TypeRegistry::GetAllTypes( bool includeAbstractTypes, bool sortAlphabetically ) const
     {
         TVector<TypeInfo const*> types;
@@ -193,26 +177,16 @@ namespace EE::TypeSystem
         return matchingTypes;
     }
 
-    TInlineVector<EE::TypeSystem::TypeID, 5> TypeRegistry::GetAllCastableTypes( IRegisteredType const* pType ) const
+    TInlineVector<EE::TypeSystem::TypeID, 5> TypeRegistry::GetAllCastableTypes( IReflectedType const* pType ) const
     {
-        struct Helper
-        {
-            static void RecursivelyFindAllParents( TypeInfo const* pTypeInfo, TInlineVector<EE::TypeSystem::TypeID, 5>& outParentTypeIDs )
-            {
-                outParentTypeIDs.emplace_back( pTypeInfo->m_ID );
-
-                for ( auto pParentTypeInfo : pTypeInfo->m_parentTypes )
-                {
-                    RecursivelyFindAllParents( pParentTypeInfo, outParentTypeIDs );
-                }
-            }
-        };
-
-        //-------------------------------------------------------------------------
-
         EE_ASSERT( pType != nullptr );
         TInlineVector<EE::TypeSystem::TypeID, 5> parentTypeIDs;
-        Helper::RecursivelyFindAllParents( pType->GetTypeInfo(), parentTypeIDs );
+        auto pParentTypeInfo = pType->GetTypeInfo()->m_pParentTypeInfo;
+        while ( pParentTypeInfo != nullptr )
+        {
+            parentTypeIDs.emplace_back( pParentTypeInfo->m_ID );
+            pParentTypeInfo = pParentTypeInfo->m_pParentTypeInfo;
+        }
         return parentTypeIDs;
     }
 

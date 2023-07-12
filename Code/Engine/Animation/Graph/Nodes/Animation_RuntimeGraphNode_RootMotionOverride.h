@@ -14,21 +14,21 @@ namespace EE::Animation::GraphNodes
         // What elements of the root motion do we wish to override
         enum class OverrideFlags : uint8_t
         {
-            AllowHeadingX,
-            AllowHeadingY,
-            AllowHeadingZ,
+            AllowMoveX,
+            AllowMoveY,
+            AllowMoveZ,
             AllowFacingPitch,
             ListenForEvents,
         };
 
         struct EE_ENGINE_API Settings final : public PassthroughNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
-            EE_SERIALIZE_GRAPHNODESETTINGS( PassthroughNode::Settings, m_desiredHeadingVelocityNodeIdx, m_desiredFacingDirectionNodeIdx, m_linearVelocityLimitNodeIdx, m_angularVelocityLimitNodeIdx, m_maxLinearVelocity, m_maxAngularVelocity, m_overrideFlags );
+            EE_REFLECT_TYPE( Settings );
+            EE_SERIALIZE_GRAPHNODESETTINGS( PassthroughNode::Settings, m_desiredMovingVelocityNodeIdx, m_desiredFacingDirectionNodeIdx, m_linearVelocityLimitNodeIdx, m_angularVelocityLimitNodeIdx, m_maxLinearVelocity, m_maxAngularVelocity, m_overrideFlags );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
 
-            int16_t                             m_desiredHeadingVelocityNodeIdx = InvalidIndex;
+            int16_t                             m_desiredMovingVelocityNodeIdx = InvalidIndex;
             int16_t                             m_desiredFacingDirectionNodeIdx = InvalidIndex;
             int16_t                             m_linearVelocityLimitNodeIdx = InvalidIndex;
             int16_t                             m_angularVelocityLimitNodeIdx = InvalidIndex;
@@ -52,7 +52,7 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        VectorValueNode*                        m_pDesiredHeadingVelocityNode = nullptr;
+        VectorValueNode*                        m_pDesiredMovingVelocityNode = nullptr;
         VectorValueNode*                        m_pDesiredFacingDirectionNode = nullptr;
         FloatValueNode*                         m_pLinearVelocityLimitNode = nullptr;
         FloatValueNode*                         m_pAngularVelocityLimitNode = nullptr;

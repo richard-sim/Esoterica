@@ -12,11 +12,12 @@ namespace EE::CPP
 
     static void GenerateCreationMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual IRegisteredType* CreateType() const override final\n";
+        file << "            virtual IReflectedType* CreateType() const override final\n";
         file << "            {\n";
         if ( !type.IsAbstract() )
         {
-            file << "                return EE::New<" << type.m_namespace.c_str() << type.m_name.c_str() << ">();\n";
+            file << "                auto pMemory = EE::Alloc( sizeof( " << type.m_namespace.c_str() << type.m_name.c_str() << " ), alignof( " << type.m_namespace.c_str() << type.m_name.c_str() << " ) );\n";
+            file << "                return new ( pMemory ) " << type.m_namespace.c_str() << type.m_name.c_str() << "();\n";
         }
         else
         {
@@ -28,7 +29,7 @@ namespace EE::CPP
 
     static void GenerateInPlaceCreationMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void CreateTypeInPlace( IRegisteredType* pAllocatedMemory ) const override final\n";
+        file << "            virtual void CreateTypeInPlace( IReflectedType* pAllocatedMemory ) const override final\n";
         file << "            {\n";
         if ( !type.IsAbstract() )
         {
@@ -48,7 +49,7 @@ namespace EE::CPP
 
     static void GenerateArrayAccessorMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual uint8_t* GetArrayElementDataPtr( IRegisteredType* pType, uint32_t arrayID, size_t arrayIdx ) const override final\n";
+        file << "            virtual uint8_t* GetArrayElementDataPtr( IReflectedType* pType, uint32_t arrayID, size_t arrayIdx ) const override final\n";
         file << "            {\n";
 
         if ( type.HasArrayProperties() )
@@ -110,12 +111,13 @@ namespace EE::CPP
 
     static void GenerateArraySizeMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual size_t GetArraySize( IRegisteredType const* pTypeInstance, uint32_t arrayID ) const override final\n";
+        file << "            virtual size_t GetArraySize( IReflectedType const* pTypeInstance, uint32_t arrayID ) const override final\n";
         file << "            {\n";
 
         if ( type.HasArrayProperties() )
         {
-            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << " const*>( pTypeInstance );\n\n";
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << " const*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr );\n\n";
 
             for ( auto& propertyDesc : type.m_properties )
             {
@@ -204,12 +206,13 @@ namespace EE::CPP
 
     static void GenerateArrayClearMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void ClearArray( IRegisteredType* pTypeInstance, uint32_t arrayID ) const override final\n";
+        file << "            virtual void ClearArray( IReflectedType* pTypeInstance, uint32_t arrayID ) const override final\n";
         file << "            {\n";
 
         if ( type.HasDynamicArrayProperties() )
         {
-            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n\n";
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr );\n\n";
 
             for ( auto& propertyDesc : type.m_properties )
             {
@@ -243,12 +246,13 @@ namespace EE::CPP
 
     static void GenerateAddArrayElementMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void AddArrayElement( IRegisteredType* pTypeInstance, uint32_t arrayID ) const override final\n";
+        file << "            virtual void AddArrayElement( IReflectedType* pTypeInstance, uint32_t arrayID ) const override final\n";
         file << "            {\n";
 
         if ( type.HasDynamicArrayProperties() )
         {
-            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n\n";
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr );\n\n";
 
             for ( auto& propertyDesc : type.m_properties )
             {
@@ -280,14 +284,15 @@ namespace EE::CPP
         file << "            }\n\n";
     }
 
-    static void GenerateRemoveArrayElementMethod( std::stringstream& file, ReflectedType const& type )
+    static void GenerateInsertArrayElementMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void RemoveArrayElement( IRegisteredType* pTypeInstance, uint32_t arrayID, size_t arrayIdx ) const override final\n";
+        file << "            virtual void InsertArrayElement( IReflectedType* pTypeInstance, uint32_t arrayID, size_t insertionIdx ) const override final\n";
         file << "            {\n";
 
         if ( type.HasDynamicArrayProperties() )
         {
-            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n\n";
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr );\n\n";
 
             for ( auto& propertyDesc : type.m_properties )
             {
@@ -300,7 +305,89 @@ namespace EE::CPP
 
                     file << "                if ( arrayID == " << propertyDesc.m_propertyID << " )\n";
                     file << "                {\n";
-                    file << "                    pActualType->" << propertyDesc.m_name.c_str() << ".erase( pActualType->" << propertyDesc.m_name.c_str() << ".begin() + arrayIdx );\n";
+                    file << "                    pActualType->" << propertyDesc.m_name.c_str() << ".emplace( pActualType->" << propertyDesc.m_name.c_str() << ".begin() + insertionIdx );\n";
+                    file << "                    return;\n";
+                    file << "                }\n";
+
+                    if ( propertyDesc.m_isDevOnly )
+                    {
+                        file << "                #endif\n";
+                    }
+
+                    file << "\n";
+                }
+            }
+        }
+
+        file << "                // We should never get here since we are asking for a ptr to an invalid property\n";
+        file << "                EE_UNREACHABLE_CODE();\n";
+        file << "            }\n\n";
+    }
+
+    static void GenerateMoveArrayElementMethod( std::stringstream& file, ReflectedType const& type )
+    {
+        file << "            virtual void MoveArrayElement( IReflectedType* pTypeInstance, uint32_t arrayID, size_t originalElementIdx, size_t newElementIdx ) const override final\n";
+        file << "            {\n";
+
+        if ( type.HasDynamicArrayProperties() )
+        {
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr );\n\n";
+
+            for ( auto& propertyDesc : type.m_properties )
+            {
+                if ( propertyDesc.IsDynamicArrayProperty() )
+                {
+                    if ( propertyDesc.m_isDevOnly )
+                    {
+                        file << "                #if EE_DEVELOPMENT_TOOLS\n";
+                    }
+
+                    file << "                if ( arrayID == " << propertyDesc.m_propertyID << " )\n";
+                    file << "                {\n";
+                    file << "                    auto const originalElement = pActualType->" << propertyDesc.m_name.c_str() << "[originalElementIdx];\n";
+                    file << "                    pActualType->" << propertyDesc.m_name.c_str() << ".erase( pActualType->" << propertyDesc.m_name.c_str() << ".begin() + originalElementIdx );\n";
+                    file << "                    pActualType->" << propertyDesc.m_name.c_str() << ".insert( pActualType->" << propertyDesc.m_name.c_str() << ".begin() + newElementIdx, originalElement );\n";
+                    file << "                    return;\n";
+                    file << "                }\n";
+
+                    if ( propertyDesc.m_isDevOnly )
+                    {
+                        file << "                #endif\n";
+                    }
+
+                    file << "\n";
+                }
+            }
+        }
+
+        file << "                // We should never get here since we are asking for a ptr to an invalid property\n";
+        file << "                EE_UNREACHABLE_CODE();\n";
+        file << "            }\n\n";
+    }
+
+    static void GenerateRemoveArrayElementMethod( std::stringstream& file, ReflectedType const& type )
+    {
+        file << "            virtual void RemoveArrayElement( IReflectedType* pTypeInstance, uint32_t arrayID, size_t elementIdx ) const override final\n";
+        file << "            {\n";
+
+        if ( type.HasDynamicArrayProperties() )
+        {
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr );\n\n";
+
+            for ( auto& propertyDesc : type.m_properties )
+            {
+                if ( propertyDesc.IsDynamicArrayProperty() )
+                {
+                    if ( propertyDesc.m_isDevOnly )
+                    {
+                        file << "                #if EE_DEVELOPMENT_TOOLS\n";
+                    }
+
+                    file << "                if ( arrayID == " << propertyDesc.m_propertyID << " )\n";
+                    file << "                {\n";
+                    file << "                    pActualType->" << propertyDesc.m_name.c_str() << ".erase( pActualType->" << propertyDesc.m_name.c_str() << ".begin() + elementIdx );\n";
                     file << "                    return;\n";
                     file << "                }\n";
 
@@ -325,7 +412,7 @@ namespace EE::CPP
 
     static void GenerateAreAllPropertiesEqualMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual bool AreAllPropertyValuesEqual( IRegisteredType const* pTypeInstance, IRegisteredType const* pOtherTypeInstance ) const override final\n";
+        file << "            virtual bool AreAllPropertyValuesEqual( IReflectedType const* pTypeInstance, IReflectedType const* pOtherTypeInstance ) const override final\n";
         file << "            {\n";
 
         if ( type.HasProperties() )
@@ -358,7 +445,7 @@ namespace EE::CPP
 
     static void GenerateIsPropertyEqualMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual bool IsPropertyValueEqual( IRegisteredType const* pTypeInstance, IRegisteredType const* pOtherTypeInstance, uint32_t propertyID, int32_t arrayIdx = InvalidIndex ) const override final\n";
+        file << "            virtual bool IsPropertyValueEqual( IReflectedType const* pTypeInstance, IReflectedType const* pOtherTypeInstance, uint32_t propertyID, int32_t arrayIdx = InvalidIndex ) const override final\n";
         file << "            {\n";
 
         if ( type.HasProperties() )
@@ -491,13 +578,14 @@ namespace EE::CPP
 
     static void GenerateSetToDefaultValueMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void ResetToDefault( IRegisteredType* pTypeInstance, uint32_t propertyID ) const override final\n";
+        file << "            virtual void ResetToDefault( IReflectedType* pTypeInstance, uint32_t propertyID ) const override final\n";
         file << "            {\n";
 
         if ( type.HasProperties() )
         {
             file << "                auto pDefaultType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << " const*>( m_pDefaultInstance );\n";
-            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n\n";
+            file << "                auto pActualType = reinterpret_cast<" << type.m_namespace.c_str() << type.m_name.c_str() << "*>( pTypeInstance );\n";
+            file << "                EE_ASSERT( pActualType != nullptr && pDefaultType != nullptr );\n\n";
 
             for ( auto& propertyDesc : type.m_properties )
             {
@@ -540,7 +628,7 @@ namespace EE::CPP
 
     static void GenerateExpectedResourceTypeMethod( std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual ResourceTypeID GetExpectedResourceTypeForProperty( IRegisteredType* pType, uint32_t propertyID ) const override final\n";
+        file << "            virtual ResourceTypeID GetExpectedResourceTypeForProperty( IReflectedType* pType, uint32_t propertyID ) const override final\n";
         file << "            {\n";
 
         if ( type.HasResourcePtrProperties() )
@@ -590,7 +678,7 @@ namespace EE::CPP
 
     static void GenerateLoadResourcesMethod( ReflectionDatabase const& database, std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void LoadResources( Resource::ResourceSystem* pResourceSystem, Resource::ResourceRequesterID const& requesterID, IRegisteredType* pType ) const override final\n";
+        file << "            virtual void LoadResources( Resource::ResourceSystem* pResourceSystem, Resource::ResourceRequesterID const& requesterID, IReflectedType* pType ) const override final\n";
         file << "            {\n";
 
         if ( type.HasResourcePtrOrStructProperties() )
@@ -675,7 +763,7 @@ namespace EE::CPP
 
     static void GenerateUnloadResourcesMethod( ReflectionDatabase const& database, std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void UnloadResources( Resource::ResourceSystem* pResourceSystem, Resource::ResourceRequesterID const& requesterID, IRegisteredType* pType ) const override final\n";
+        file << "            virtual void UnloadResources( Resource::ResourceSystem* pResourceSystem, Resource::ResourceRequesterID const& requesterID, IReflectedType* pType ) const override final\n";
         file << "            {\n";
 
         if ( type.HasResourcePtrOrStructProperties() )
@@ -760,7 +848,7 @@ namespace EE::CPP
 
     static void GenerateResourceLoadingStatusMethod( ReflectionDatabase const& database, std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual LoadingStatus GetResourceLoadingStatus( IRegisteredType* pType ) const override final\n";
+        file << "            virtual LoadingStatus GetResourceLoadingStatus( IReflectedType* pType ) const override final\n";
         file << "            {\n";
         file << "                LoadingStatus status = LoadingStatus::Loaded;\n";
 
@@ -885,7 +973,7 @@ namespace EE::CPP
 
     static void GenerateResourceUnloadingStatusMethod( ReflectionDatabase const& database, std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual LoadingStatus GetResourceUnloadingStatus( IRegisteredType* pType ) const override final\n";
+        file << "            virtual LoadingStatus GetResourceUnloadingStatus( IReflectedType* pType ) const override final\n";
         file << "            {\n";
 
         if ( type.HasResourcePtrOrStructProperties() )
@@ -1002,7 +1090,7 @@ namespace EE::CPP
 
     static void GenerateGetReferencedResourceMethod( ReflectionDatabase const& database, std::stringstream& file, ReflectedType const& type )
     {
-        file << "            virtual void GetReferencedResources( IRegisteredType* pType, TVector<ResourceID>& outReferencedResources ) const override final\n";
+        file << "            virtual void GetReferencedResources( IReflectedType* pType, TVector<ResourceID>& outReferencedResources ) const override final\n";
         file << "            {\n";
 
         if ( type.HasResourcePtrOrStructProperties() )
@@ -1186,11 +1274,12 @@ namespace EE::CPP
         // Create default type instance
         if ( type.IsAbstract() )
         {
-            file << "                IRegisteredType* pDefaultTypeInstance = nullptr;\n";
+            file << "                IReflectedType* pDefaultTypeInstance = nullptr;\n";
         }
         else
         {
-            file << "                IRegisteredType* pDefaultTypeInstance = EE::New<" << type.m_namespace.c_str() << type.m_name.c_str() << ">();\n";
+            file << "                auto pMemory = EE::Alloc( sizeof( " << type.m_namespace.c_str() << type.m_name.c_str() << " ), alignof( " << type.m_namespace.c_str() << type.m_name.c_str() << " ) );\n";
+            file << "                IReflectedType* pDefaultTypeInstance = new ( pMemory ) " << type.m_namespace.c_str() << type.m_name.c_str() << "();\n";
         }
 
         file << "                " << type.m_namespace.c_str() << type.m_name.c_str() << "::s_pTypeInfo = EE::New<TTypeInfo<" << type.m_namespace.c_str() << type.m_name.c_str() << ">>( pDefaultTypeInstance );\n";
@@ -1207,17 +1296,20 @@ namespace EE::CPP
         // Destroy default type instance
         if ( !type.IsAbstract() )
         {
-            file << "                EE::Delete( const_cast<IRegisteredType*&>( " << type.m_namespace.c_str() << type.m_name.c_str() << "::s_pTypeInfo->m_pDefaultInstance ) );\n";
+            file << "                EE::Delete( const_cast<IReflectedType*&>( " << type.m_namespace.c_str() << type.m_name.c_str() << "::s_pTypeInfo->m_pDefaultInstance ) );\n";
         }
 
         file << "                EE::Delete( " << type.m_namespace.c_str() << type.m_name.c_str() << "::s_pTypeInfo );\n";
         file << "            }\n\n";
     }
 
-    static void GenerateTypeInfoConstructor( std::stringstream& file, ReflectedType const& type, TVector<ReflectedType> const& parentDescs )
+    static void GenerateTypeInfoConstructor( std::stringstream& file, ReflectedType const& type, ReflectedType const& parentType )
     {
-        auto GeneratePropertyRegistrationCode = [&file, type] ( ReflectedProperty const& prop )
+        // The pass by value here is intentional!
+        auto GeneratePropertyRegistrationCode = [&file, type] ( ReflectedProperty prop )
         {
+            prop.ParseMetaData();
+
             String const templateSpecializationString = prop.m_templateArgTypeName.empty() ? String() : "<" + prop.m_templateArgTypeName + ">";
 
             file << "\n";
@@ -1230,7 +1322,7 @@ namespace EE::CPP
 
             file << "                propertyInfo.m_ID = StringID( \"" << prop.m_name.c_str() << "\" );\n";
             file << "                propertyInfo.m_typeID = TypeSystem::TypeID( \"" << prop.m_typeName.c_str() << "\" );\n";
-            file << "                propertyInfo.m_parentTypeID = " << type.m_ID << ";\n";
+            file << "                propertyInfo.m_parentTypeID = " << type.m_ID.ToUint() << ";\n";
             file << "                propertyInfo.m_templateArgumentTypeID = TypeSystem::TypeID( \"" << prop.m_templateArgTypeName.c_str() << "\" );\n\n";
 
             // Create dev tools info
@@ -1245,6 +1337,28 @@ namespace EE::CPP
             if ( prop.m_isDevOnly )
             {
                 file << "                propertyInfo.m_isForDevelopmentUseOnly = true;\n";
+            }
+            else
+            {
+                file << "                propertyInfo.m_isForDevelopmentUseOnly = false;\n";
+            }
+
+            if ( prop.m_isToolsReadOnly )
+            {
+                file << "                propertyInfo.m_isToolsReadOnly = true;\n";
+            }
+            else
+            {
+                file << "                propertyInfo.m_isToolsReadOnly = false;\n";
+            }
+
+            if ( prop.m_customEditorID.IsValid() )
+            {
+                file << "                propertyInfo.m_customEditorID = StringID( \"" << prop.m_customEditorID.c_str() << "\" );\n";
+            }
+            else
+            {
+                file << "                propertyInfo.m_customEditorID = StringID();\n";
             }
 
             file << "                #endif\n\n";
@@ -1292,7 +1406,7 @@ namespace EE::CPP
 
         //-------------------------------------------------------------------------
 
-        file << "            TTypeInfo( IRegisteredType const* pDefaultInstance )\n";
+        file << "            TTypeInfo( IReflectedType const* pDefaultInstance )\n";
         file << "            {\n";
 
         // Create type info
@@ -1306,7 +1420,7 @@ namespace EE::CPP
         // Add type metadata
         if ( type.IsAbstract() )
         {
-            file << "                m_metadata.SetFlag( TypeInfoMetaData::Abstract );\n";
+            file << "                m_isAbstract = true;\n";
         }
 
         file << "\n";
@@ -1323,20 +1437,10 @@ namespace EE::CPP
 
         file << "                #endif\n\n";
 
-        // Add hierarchy info
-        if ( !type.m_parents.empty() )
-        {
-            file << "                // Parent types\n";
-            file << "                //-------------------------------------------------------------------------\n\n";
-            file << "                TypeSystem::TypeInfo const* pParentType = nullptr;\n\n";
-
-            for ( auto& parent : parentDescs )
-            {
-                file << "                pParentType = " << parent.m_namespace.c_str() << parent.m_name.c_str() << "::s_pTypeInfo;\n";
-                file << "                EE_ASSERT( pParentType != nullptr );\n";
-                file << "                m_parentTypes.push_back( pParentType );\n";
-            }
-        }
+        // Add parent info
+        file << "                // Parent types\n";
+        file << "                //-------------------------------------------------------------------------\n\n";
+        file << "                m_pParentTypeInfo = " << parentType.m_namespace.c_str() << parentType.m_name.c_str() << "::s_pTypeInfo;\n";
 
         // Add properties
         if ( type.HasProperties() )
@@ -1365,7 +1469,7 @@ namespace EE::CPP
     // File generation
     //-------------------------------------------------------------------------
 
-    static void GenerateTypeInfoFile( std::stringstream& file, ReflectionDatabase const& database, String const& exportMacro, ReflectedType const& type, TVector<ReflectedType> const& parentDescs )
+    static void GenerateTypeInfoFile( std::stringstream& file, ReflectionDatabase const& database, String const& exportMacro, ReflectedType const& type, ReflectedType const& parentType )
     {
         // Dev Flag
         if ( type.m_isDevOnly )
@@ -1393,7 +1497,7 @@ namespace EE::CPP
         file << "        class " << exportMacro.c_str() << " TTypeInfo<" << type.m_namespace.c_str() << type.m_name.c_str() << "> final : public TypeInfo\n";
         file << "        {\n";
 
-        file << "           static " << type.m_namespace.c_str() << type.m_name.c_str() <<" const* s_pDefaultInstance_" << type.m_ID.GetID() << ";\n\n";
+        file << "           static " << type.m_namespace.c_str() << type.m_name.c_str() <<" const* s_pDefaultInstance_" << type.m_ID.ToUint() << ";\n\n";
 
         file << "        public:\n\n";
 
@@ -1402,7 +1506,7 @@ namespace EE::CPP
 
         file << "        public:\n\n";
 
-        GenerateTypeInfoConstructor( file, type, parentDescs );
+        GenerateTypeInfoConstructor( file, type, parentType );
         GenerateCreationMethod( file, type );
         GenerateInPlaceCreationMethod( file, type );
         GenerateLoadResourcesMethod( database, file, type );
@@ -1416,6 +1520,8 @@ namespace EE::CPP
         GenerateArrayElementSizeMethod( file, type );
         GenerateArrayClearMethod( file, type );
         GenerateAddArrayElementMethod( file, type );
+        GenerateInsertArrayElementMethod( file, type );
+        GenerateMoveArrayElementMethod( file, type );
         GenerateRemoveArrayElementMethod( file, type );
         GenerateAreAllPropertiesEqualMethod( file, type );
         GenerateIsPropertyEqualMethod( file, type );
@@ -1423,7 +1529,7 @@ namespace EE::CPP
 
         file << "        };\n\n";
 
-        file << "        " << type.m_namespace.c_str() << type.m_name.c_str() << " const*" << " TTypeInfo<" << type.m_namespace.c_str() << type.m_name.c_str() << ">::s_pDefaultInstance_" << type.m_ID.GetID() << " = nullptr; \n";
+        file << "        " << type.m_namespace.c_str() << type.m_name.c_str() << " const*" << " TTypeInfo<" << type.m_namespace.c_str() << type.m_name.c_str() << ">::s_pDefaultInstance_" << type.m_ID.ToUint() << " = nullptr; \n";
 
         file << "    }\n";
 
@@ -1456,9 +1562,9 @@ namespace EE::CPP
 
     namespace TypeGenerator
     {
-        void Generate( ReflectionDatabase const& database, std::stringstream& codeFile, String const& exportMacro, ReflectedType const& type, TVector<ReflectedType> const& parentDescs )
+        void Generate( ReflectionDatabase const& database, std::stringstream& codeFile, String const& exportMacro, ReflectedType const& type, ReflectedType const& parentType )
         {
-            GenerateTypeInfoFile( codeFile, database, exportMacro, type, parentDescs );
+            GenerateTypeInfoFile( codeFile, database, exportMacro, type, parentType );
         }
     }
 }

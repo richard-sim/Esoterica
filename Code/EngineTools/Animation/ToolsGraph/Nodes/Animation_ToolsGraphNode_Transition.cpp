@@ -6,13 +6,13 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void TransitionToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    TransitionToolsNode::TransitionToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
-
         CreateInputPin( "Condition", GraphValueType::Bool );
         CreateInputPin( "Duration Override", GraphValueType::Float );
         CreateInputPin( "Sync Event Override", GraphValueType::Float );
+        CreateInputPin( "Start Bone Mask", GraphValueType::BoneMask );
     }
 
     void TransitionToolsNode::SetName( String const& newName )
@@ -110,6 +110,11 @@ namespace EE::Animation::GraphNodes
         }
     }
 
+    ImColor TransitionToolsNode::GetTitleBarColor() const
+    {
+        return m_canBeForced ? ImGuiX::ImColors::Salmon : FlowToolsNode::GetTitleBarColor();
+    }
+
     //-------------------------------------------------------------------------
 
     void TransitionConduitToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
@@ -123,39 +128,48 @@ namespace EE::Animation::GraphNodes
         return !GetSecondaryGraph()->FindAllNodesOfType<TransitionToolsNode>().empty();
     }
 
-    ImColor TransitionConduitToolsNode::GetNodeBorderColor( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext, VisualGraph::NodeVisualState visualState ) const
+    ImColor TransitionConduitToolsNode::GetColor( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext, VisualGraph::NodeVisualState visualState ) const
     {
         // Is this an blocked transition
         if ( visualState == VisualGraph::NodeVisualState::None && !HasTransitions() )
         {
-            return VisualGraph::VisualSettings::s_connectionColorInvalid;
+            return s_connectionColorInvalid;
         }
 
         // Is this transition active?
         auto pGraphNodeContext = static_cast<ToolsGraphUserContext*>( pUserContext );
-        if ( pGraphNodeContext->HasDebugData() )
+        if ( pGraphNodeContext->HasDebugData() && isAnyChildActive )
         {
-            bool isActive = false;
-            auto childTransitions = GetSecondaryGraph()->FindAllNodesOfType<TransitionToolsNode>();
+            return s_connectionColorValid;
+        }
 
+        //-------------------------------------------------------------------------
+
+        return VisualGraph::SM::TransitionConduit::GetColor( ctx, pUserContext, visualState );
+    }
+
+    void TransitionConduitToolsNode::PreDrawUpdate( VisualGraph::UserContext* pUserContext )
+    {
+        isAnyChildActive = false;
+        m_transitionProgress = 0.0f;
+
+        //-------------------------------------------------------------------------
+
+        auto pGraphNodeContext = static_cast<ToolsGraphUserContext*>( pUserContext );
+        bool const isPreviewing = pGraphNodeContext->HasDebugData();
+        if ( isPreviewing )
+        {
+            auto childTransitions = GetSecondaryGraph()->FindAllNodesOfType<TransitionToolsNode>();
             for ( auto pTransition : childTransitions )
             {
                 auto const runtimeNodeIdx = pGraphNodeContext->GetRuntimeGraphNodeIndex( pTransition->GetID() );
                 if ( runtimeNodeIdx != InvalidIndex && pGraphNodeContext->IsNodeActive( runtimeNodeIdx ) )
                 {
-                    isActive = true;
+                    m_transitionProgress = Percentage( Math::Max( pGraphNodeContext->GetTransitionProgress( runtimeNodeIdx ), 0.001f ) );
+                    isAnyChildActive = true;
                     break;
                 }
             }
-
-            if ( isActive )
-            {
-                return VisualGraph::VisualSettings::s_connectionColorValid;
-            }
         }
-
-        //-------------------------------------------------------------------------
-
-        return VisualGraph::SM::TransitionConduit::GetNodeBorderColor( ctx, pUserContext, visualState );
     }
 }

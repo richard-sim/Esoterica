@@ -2,11 +2,11 @@
 #include "Application_Win32.h"
 #include "System/IniFile.h"
 #include "System/Imgui/Platform/ImguiPlatform_Win32.h"
-#include "System/Platform/PlatformHelpers_Win32.h"
+#include "System/Platform/PlatformUtils_Win32.h"
 #include "System/FileSystem/FileSystemPath.h"
 #include "System/FileSystem/FileSystemUtils.h"
 #include "System/Math/Rectangle.h"
-#include "System/Log.h"
+#include "System/Logging/LoggingSystem.h"
 
 #include <dwmapi.h>
 #include <windowsx.h>
@@ -105,6 +105,12 @@ namespace EE
         EE_ASSERT( ( m_windowRect.right - m_windowRect.left ) > 0 );
         EE_ASSERT( ( m_windowRect.bottom - m_windowRect.top ) > 0 );
 
+        // Set DPI awareness
+        //-------------------------------------------------------------------------
+
+        SetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 );
+
+        // Get window icon
         //-------------------------------------------------------------------------
 
         m_windowIcon = LoadIcon( m_pInstance, MAKEINTRESOURCE( m_applicationIconResourceID ) );
@@ -224,15 +230,14 @@ namespace EE
 
                     if ( IsWindowMaximized( m_windowHandle ) )
                     {
-                        auto pMonitor = ::MonitorFromWindow( m_windowHandle, MONITOR_DEFAULTTONEAREST );
+                        auto pMonitor = ::MonitorFromRect( &params.rgrc[0], MONITOR_DEFAULTTONEAREST );
                         if ( pMonitor )
                         {
                             MONITORINFO monitorInfo{};
                             monitorInfo.cbSize = sizeof( monitorInfo );
                             if ( ::GetMonitorInfoW( pMonitor, &monitorInfo ) )
                             {
-                                // When maximized, make the client area fill just the monitor (without task bar) rect,
-                                // not the whole window rect which extends beyond the monitor.
+                                // When maximized, make the client area fill just the monitor (without task bar) rect and not the whole window rect which extends beyond the monitor.
                                 params.rgrc[0] = monitorInfo.rcWork;
                                 params.rgrc[0].left--; // For some reason maximizing, offsets the window one pixel to the right?!
                                 params.rgrc[0].right--; // For some reason maximizing, offsets the window one pixel to the right?!
@@ -242,16 +247,16 @@ namespace EE
                     else // Offset the hit-test borders by the system border metric to replicate Windows10+ resize behavior
                     {
                         int32_t const borderWidth = ::GetSystemMetrics( SM_CXFRAME ) + ::GetSystemMetrics( SM_CXPADDEDBORDER );
-                        params.rgrc[0].left = params.rgrc[0].left + borderWidth;
-                        params.rgrc[0].top = params.rgrc[0].top + 0;
-                        params.rgrc[0].right = params.rgrc[0].right - borderWidth;
-                        params.rgrc[0].bottom = params.rgrc[0].bottom - borderWidth;
+                        params.rgrc[0].left += borderWidth;
+                        params.rgrc[0].top = params.rgrc[0].top;
+                        params.rgrc[0].right -= borderWidth;
+                        params.rgrc[0].bottom -= borderWidth;
                     }
 
                     return 0;
                 }
-                break;
             }
+            break;
 
             // Set window min size!
             case WM_GETMINMAXINFO:
@@ -270,8 +275,8 @@ namespace EE
                 {
                     return BorderlessWindowHitTest( POINT{ GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) } );
                 }
-                break;
             }
+            break;
 
             case WM_NCACTIVATE:
             {
@@ -281,8 +286,8 @@ namespace EE
                     // in "basic" theme, where no aero shadow is present.
                     return 1;
                 }
-                break;
             }
+            break;
 
             //-------------------------------------------------------------------------
 
@@ -323,9 +328,9 @@ namespace EE
             case WM_CLOSE:
             case WM_QUIT:
             {
-                if ( OnExitRequest() )
+                if ( OnUserExitRequest() )
                 {
-                    m_applicationRequestedExit = true;
+                    RequestApplicationExit();
                 }
                 else
                 {
@@ -340,7 +345,7 @@ namespace EE
             {
                 ProcessWindowDestructionMessage();
                 PostQuitMessage( 0 );
-                m_applicationRequestedExit = true;
+                RequestApplicationExit();
             }
             break;
         }
@@ -517,6 +522,9 @@ namespace EE
 
     int32_t Win32Application::Run( int32_t argc, char** argv )
     {
+        FileSystem::Path const logFilePath = FileSystem::GetCurrentProcessPath() + m_applicationNameNoWhitespace + "Log.txt";
+        Log::System::SetLogFilePath( logFilePath );
+
         // Read Settings
         //-------------------------------------------------------------------------
 
@@ -584,8 +592,7 @@ namespace EE
         bool const shutdownResult = Shutdown();
         m_initialized = false;
 
-        FileSystem::Path const LogFilePath = FileSystem::GetCurrentProcessPath() + m_applicationNameNoWhitespace + "Log.txt";
-        Log::SaveToFile( LogFilePath );
+        Log::System::SaveToFile();
 
         //-------------------------------------------------------------------------
 

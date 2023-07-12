@@ -2,19 +2,20 @@
 
 #include "ResourceDescriptor.h"
 #include "System/Resource/ResourceHeader.h"
-#include "System/TypeSystem/RegisteredType.h"
-#include "System/Log.h"
+#include "System/TypeSystem/ReflectedType.h"
+
 #include "System/Types/Function.h"
 
 //-------------------------------------------------------------------------
 
 namespace EE::Resource
 {
-    enum class CompilationResult
+    enum class CompilationResult : int32_t
     {
         Failure = -1,
-        Success = 0,
-        SuccessWithWarnings = 1,
+        SuccessUpToDate = 0,
+        Success = 1,
+        SuccessWithWarnings = 2,
     };
 
     //-------------------------------------------------------------------------
@@ -31,19 +32,22 @@ namespace EE::Resource
     public:
 
         Platform::Target const                          m_platform = Platform::Target::PC;
+        FileSystem::Path const                          m_rawResourceDirectoryPath;
         FileSystem::Path const                          m_compiledResourceDirectoryPath;
         bool                                            m_isCompilingForPackagedBuild = false;
 
         ResourceID const                                m_resourceID;
         FileSystem::Path const                          m_inputFilePath;
         FileSystem::Path const                          m_outputFilePath;
+
+        uint64_t                                        m_sourceResourceHash = 0; // The combined hash of the source resource and its dependencies
     };
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINETOOLS_API Compiler : public IRegisteredType
+    class EE_ENGINETOOLS_API Compiler : public IReflectedType
     {
-        EE_REGISTER_TYPE( Compiler );
+        EE_REFLECT_TYPE( Compiler );
 
     public:
 
@@ -78,6 +82,10 @@ namespace EE::Resource
         CompilationResult CompilationSucceededWithWarnings( CompileContext const& ctx ) const;
         CompilationResult CompilationFailed( CompileContext const& ctx ) const;
 
+        // Utilities
+        //-------------------------------------------------------------------------
+
+        // Converts a resource path to a file path
         inline bool ConvertResourcePathToFilePath( ResourcePath const& resourcePath, FileSystem::Path& filePath ) const
         {
             if ( resourcePath.IsValid() )
@@ -90,6 +98,66 @@ namespace EE::Resource
                 Error( "ResourceCompiler", "Invalid data path encountered: '%s'", resourcePath.c_str() );
                 return false;
             }
+        }
+
+        // Try to load a resource descriptor from a resource path
+        // Optional: returns the json document read for the descriptor if you need to read additional data from it
+        template<typename T>
+        bool TryLoadResourceDescriptor( FileSystem::Path const& descriptorFilePath, T& outDescriptor, rapidjson::Document* pOutOptionalDescriptorDocument = nullptr ) const
+        {
+            if ( !descriptorFilePath.IsValid() )
+            {
+                Error( "Invalid descriptor file path provided!" );
+                return false;
+            }
+
+            if ( !FileSystem::Exists( descriptorFilePath ) )
+            {
+                Error( "Descriptor file doesnt exist: %s", descriptorFilePath.c_str() );
+                return false;
+            }
+
+            Serialization::TypeArchiveReader typeReader( *m_pTypeRegistry );
+            if ( !typeReader.ReadFromFile( descriptorFilePath.c_str() ) )
+            {
+                Error( "Failed to read resource descriptor file: %s", descriptorFilePath.c_str() );
+                return false;
+            }
+
+            if ( !typeReader.ReadType( &outDescriptor ) )
+            {
+                Error( "Failed to read resource descriptor from file: %s", descriptorFilePath.c_str() );
+                return false;
+            }
+
+            // Make a copy of the json document to read further data from
+            if ( pOutOptionalDescriptorDocument != nullptr )
+            {
+                pOutOptionalDescriptorDocument->CopyFrom( typeReader.GetDocument(), pOutOptionalDescriptorDocument->GetAllocator(), true );
+            }
+
+            return true;
+        }
+        
+        // Try to load a resource descriptor from a resource path
+        // Optional: returns the json document read for the descriptor if you need to read additional data from it
+        template<typename T>
+        bool TryLoadResourceDescriptor( ResourcePath const& descriptorResourcePath, T& outDescriptor, rapidjson::Document* pOutOptionalDescriptorDocument = nullptr ) const
+        {
+            if ( !descriptorResourcePath.IsValid() )
+            {
+                Error( "Invalid descriptor resource path provided!" );
+                return false;
+            }
+
+            FileSystem::Path descriptorFilePath;
+            if ( !ConvertResourcePathToFilePath( descriptorResourcePath, descriptorFilePath ) )
+            {
+                Error( "Invalid descriptor resource path: %s", descriptorResourcePath.c_str() );
+                return false;
+            }
+
+            return TryLoadResourceDescriptor( descriptorFilePath, outDescriptor, pOutOptionalDescriptorDocument );
         }
 
     protected:

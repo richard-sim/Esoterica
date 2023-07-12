@@ -7,9 +7,9 @@
 #include "System/TypeSystem/TypeRegistry.h"
 #include "System/FileSystem/FileSystemUtils.h"
 #include "System/Profiling.h"
-#include "System/Platform/PlatformHelpers_Win32.h"
+#include "System/Platform/PlatformUtils_Win32.h"
 #include <eastl/sort.h>
-#include "EngineTools/Core/Helpers/CommonDialogs.h"
+#include "EngineTools/Core/CommonDialogs.h"
 #include "EngineTools/Resource/ResourceDatabase.h"
 
 //-------------------------------------------------------------------------
@@ -28,8 +28,9 @@ namespace EE
 
     public:
 
-        ResourceBrowserTreeItem( Resource::ResourceDatabase::DirectoryEntry const* pDirectoryEntry )
-            : TreeListViewItem()
+        ResourceBrowserTreeItem( TreeListViewItem* pParent, ToolsContext& toolsContext, Resource::ResourceDatabase::DirectoryEntry const* pDirectoryEntry )
+            : TreeListViewItem( pParent )
+            , m_toolsContext( toolsContext )
             , m_nameID( pDirectoryEntry->m_filePath.GetDirectoryName() )
             , m_path( pDirectoryEntry->m_filePath )
             , m_resourcePath( pDirectoryEntry->m_resourcePath )
@@ -42,20 +43,21 @@ namespace EE
 
             for ( auto const& childDirectory : pDirectoryEntry->m_directories )
             {
-                CreateChild<ResourceBrowserTreeItem>( &childDirectory );
+                CreateChild<ResourceBrowserTreeItem>( m_toolsContext, &childDirectory );
             }
 
             //-------------------------------------------------------------------------
 
             for ( auto pChildFile : pDirectoryEntry->m_files )
             {
-                CreateChild<ResourceBrowserTreeItem>( pChildFile );
+                CreateChild<ResourceBrowserTreeItem>( m_toolsContext, pChildFile );
             }
 
         }
 
-        ResourceBrowserTreeItem( Resource::ResourceDatabase::FileEntry const* pFileEntry )
-            : TreeListViewItem()
+        ResourceBrowserTreeItem( TreeListViewItem* pParent, ToolsContext& toolsContext, Resource::ResourceDatabase::FileEntry const* pFileEntry )
+            : TreeListViewItem( pParent )
+            , m_toolsContext( toolsContext )
             , m_nameID( pFileEntry->m_filePath.GetFilename() )
             , m_path( pFileEntry->m_filePath )
             , m_resourcePath( pFileEntry->m_resourceID.GetResourcePath() )
@@ -118,8 +120,45 @@ namespace EE
             return m_resourceTypeID == T::GetStaticResourceTypeID();
         }
 
+        // Signals
+        //-------------------------------------------------------------------------
+
+        bool OnUserActivate()
+        {
+            if ( IsDirectory() )
+            {
+                if ( IsExpanded() )
+                {
+                    SetExpanded( false );
+                }
+                else
+                {
+                    SetExpanded( true );
+                }
+
+                return true;
+            }
+            else // Files
+            {
+                if ( IsResourceFile() )
+                {
+                    m_toolsContext.TryOpenResource( GetResourceID() );
+                }
+                else // Try create file inspector
+                {
+                    m_toolsContext.TryOpenRawResource( m_path );
+                }
+            }
+
+            return false;
+        }
+
+        virtual bool OnDoubleClick() override { return OnUserActivate(); }
+        virtual bool OnEnterPressed() override { return OnUserActivate(); }
+
     protected:
 
+        ToolsContext&                           m_toolsContext;
         StringID                                m_nameID;
         FileSystem::Path                        m_path;
         ResourcePath                            m_resourcePath;
@@ -136,10 +175,9 @@ namespace EE
         : m_toolsContext( toolsContext )
         , m_dataDirectoryPathDepth( m_toolsContext.GetRawResourceDirectory().GetPathDepth() )
     {
-        m_expandItemsOnlyViaArrow = true;
+        m_treeview.SetFlag( TreeListView::ExpandItemsOnlyViaArrow, true );
 
-        m_onDoubleClickEventID = OnItemDoubleClicked().Bind( [this] ( TreeListViewItem* pItem ) { OnBrowserItemDoubleClicked( pItem ); } );
-        m_resourceDatabaseUpdateEventBindingID = toolsContext.m_pResourceDatabase->OnDatabaseUpdated().Bind( [this] () { RebuildTree(); } );
+        m_resourceDatabaseUpdateEventBindingID = toolsContext.m_pResourceDatabase->OnDatabaseUpdated().Bind( [this] () { m_rebuildTree = true; } );
 
         // Create descriptor category tree
         //-------------------------------------------------------------------------
@@ -171,37 +209,45 @@ namespace EE
 
     ResourceBrowser::~ResourceBrowser()
     {
-        OnItemDoubleClicked().Unbind( m_onDoubleClickEventID );
         m_toolsContext.m_pResourceDatabase->OnDatabaseUpdated().Unbind( m_resourceDatabaseUpdateEventBindingID );
 
         EE::Delete( m_pResourceDescriptorCreator );
-        EE::Delete( m_pRawResourceInspector );
     }
 
     //-------------------------------------------------------------------------
 
     bool ResourceBrowser::UpdateAndDraw( UpdateContext const& context )
     {
+        TreeListViewContext treeViewContext;
+        treeViewContext.m_rebuildTreeFunction = [this] ( TreeListViewItem* pRootItem ) { RebuildTreeView( pRootItem ); };
+        treeViewContext.m_drawItemContextMenuFunction = [this] ( TVector<TreeListViewItem*> const& selectedItemsWithContextMenus ) { DrawItemContextMenu( selectedItemsWithContextMenus ); };
+
+        if ( m_rebuildTree )
+        {
+            m_treeview.RebuildTree( treeViewContext, true );
+            m_rebuildTree = false;
+        }
+
+        //-------------------------------------------------------------------------
+
         bool isOpen = true;
-        bool isFocused = false;
         if ( ImGui::Begin( GetWindowName(), &isOpen) )
         {
             if ( m_toolsContext.m_pResourceDatabase->IsRebuilding() )
             {
-                ImGui::Indent();
-                ImGuiX::DrawSpinner( "SP" );
-                ImGui::SameLine( 0, 10 );
-                ImGui::Text( "Resource DB building..." );
-                ImGui::Unindent();
+                ImGui::Text( "Resource DB building: " );
+                ImGui::SameLine();
+                ImGui::ProgressBar( m_toolsContext.m_pResourceDatabase->GetRebuildProgress() );
             }
             else
             {
                 DrawCreationControls( context );
                 DrawFilterOptions( context );
-                TreeListView::UpdateAndDraw();
-            }
 
-            isFocused = ImGui::IsWindowFocused( ImGuiFocusedFlags_ChildWindows );
+                //-------------------------------------------------------------------------
+
+                m_treeview.UpdateAndDraw( treeViewContext );
+            }
         }
         ImGui::End();
 
@@ -211,55 +257,30 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
-        if ( isFocused )
-        {
-            if ( ImGui::IsKeyReleased( ImGuiKey_Enter ) )
-            {
-                auto const& selection = GetSelection();
-                if ( selection.size() == 1 )
-                {
-                    auto pResourceItem = static_cast<ResourceBrowserTreeItem*>( selection[0] );
-                    if ( pResourceItem->IsResourceFile() )
-                    {
-                        m_toolsContext.TryOpenResource( pResourceItem->GetResourceID() );
-                    }
-                    else if ( pResourceItem->IsFile() )
-                    {
-                        if ( Resource::RawFileInspectorFactory::CanCreateInspector( pResourceItem->GetFilePath() ) )
-                        {
-                            m_pRawResourceInspector = Resource::RawFileInspectorFactory::TryCreateInspector( &m_toolsContext, pResourceItem->GetFilePath() );
-                        }
-                    }
-                }
-            }
-        }
-
-        //-------------------------------------------------------------------------
-
         return isOpen;
     }
 
     //-------------------------------------------------------------------------
 
-    void ResourceBrowser::RebuildTreeUserFunction()
+    void ResourceBrowser::RebuildTreeView( TreeListViewItem* pRootItem )
     {
         EE_ASSERT( !m_toolsContext.m_pResourceDatabase->IsRebuilding() );
-        auto pDataDirectory = m_toolsContext.m_pResourceDatabase->GetDataDirectory();
+        auto pDataDirectory = m_toolsContext.m_pResourceDatabase->GetRawResourceDirectoryEntry();
 
         //-------------------------------------------------------------------------
 
-        m_rootItem.DestroyChildren();
+        pRootItem->DestroyChildren();
 
         for ( auto const& childDirectory : pDataDirectory->m_directories )
         {
-            m_rootItem.CreateChild<ResourceBrowserTreeItem>( &childDirectory );
+            pRootItem->CreateChild<ResourceBrowserTreeItem>( m_toolsContext, &childDirectory );
         }
 
         //-------------------------------------------------------------------------
 
         for ( auto pChildFile : pDataDirectory->m_files )
         {
-            m_rootItem.CreateChild<ResourceBrowserTreeItem>( pChildFile );
+            pRootItem->CreateChild<ResourceBrowserTreeItem>( m_toolsContext, pChildFile );
         }
 
         //-------------------------------------------------------------------------
@@ -305,12 +326,12 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
-        UpdateItemVisibility( VisibilityFunc );
+        m_treeview.UpdateItemVisibility( VisibilityFunc );
     }
 
     void ResourceBrowser::DrawItemContextMenu( TVector<TreeListViewItem*> const& selectedItemsWithContextMenus )
     {
-        auto pResourceItem = (ResourceBrowserTreeItem*) GetSelection()[0];
+        auto pResourceItem = (ResourceBrowserTreeItem*) selectedItemsWithContextMenus[0];
 
         //-------------------------------------------------------------------------
 
@@ -357,36 +378,21 @@ namespace EE
         }
     }
 
-    void ResourceBrowser::OnBrowserItemDoubleClicked( TreeListViewItem* pItem )
+    //-------------------------------------------------------------------------
+
+    bool ResourceBrowser::FindAndSelectResource( ResourceID const& resourceID )
     {
-        auto pResourceFileItem = static_cast<ResourceBrowserTreeItem*>( pItem );
-        if ( pResourceFileItem->IsDirectory() )
+        EE_ASSERT( resourceID.IsValid() );
+
+        auto pFoundItem = m_treeview.FindItem( resourceID.GetPathID() );
+        if ( pFoundItem == nullptr )
         {
-            if ( pResourceFileItem->IsExpanded() )
-            {
-                pResourceFileItem->SetExpanded( false );
-                RefreshVisualState();
-            }
-            else
-            {
-                pResourceFileItem->SetExpanded( true );
-                RefreshVisualState();
-            }
+            return false;
         }
-        else // Files
-        {
-            if ( pResourceFileItem->IsResourceFile() )
-            {
-                m_toolsContext.TryOpenResource( pResourceFileItem->GetResourceID() );
-            }
-            else // Try create file inspector
-            {
-                if ( Resource::RawFileInspectorFactory::CanCreateInspector( pResourceFileItem->GetFilePath() ) )
-                {
-                    m_pRawResourceInspector = Resource::RawFileInspectorFactory::TryCreateInspector( &m_toolsContext, pResourceFileItem->GetFilePath() );
-                }
-            }
-        }
+
+        m_treeview.SetSelection( pFoundItem );
+        m_treeview.SetViewToSelection();
+        return true;
     }
 
     //-------------------------------------------------------------------------
@@ -407,9 +413,9 @@ namespace EE
 
             if ( ImGui::Button( "Ok", ImVec2( 143, 0 ) ) )
             {
-                auto pResourceItem = (ResourceBrowserTreeItem*) GetSelection()[0];
+                auto pResourceItem = (ResourceBrowserTreeItem*) m_treeview.GetSelection()[0];
                 FileSystem::Path const fileToDelete = pResourceItem->GetFilePath();
-                ClearSelection();
+                m_treeview.ClearSelection();
                 FileSystem::EraseFile( fileToDelete );
                 ImGui::CloseCurrentPopup();
             }
@@ -432,16 +438,6 @@ namespace EE
             if ( !m_pResourceDescriptorCreator->Draw() )
             {
                 EE::Delete( m_pResourceDescriptorCreator );
-            }
-        }
-
-        //-------------------------------------------------------------------------
-
-        if ( m_pRawResourceInspector != nullptr )
-        {
-            if ( !m_pRawResourceInspector->DrawDialog() )
-            {
-                EE::Delete( m_pRawResourceInspector );
             }
         }
     }
@@ -480,14 +476,7 @@ namespace EE
                 }
                 else
                 {
-                    if ( Resource::RawFileInspectorFactory::CanCreateInspector( selectedFilePath ) )
-                    {
-                        m_pRawResourceInspector = Resource::RawFileInspectorFactory::TryCreateInspector( &m_toolsContext, selectedFilePath );
-                    }
-                    else
-                    {
-                        pfd::message( "Import Error", "File type is not importable!", pfd::choice::ok, pfd::icon::error );
-                    }
+                    m_toolsContext.TryOpenRawResource( selectedFilePath );
                 }
             }
         }
@@ -497,7 +486,7 @@ namespace EE
     {
         EE_PROFILE_FUNCTION();
 
-        constexpr static float const buttonWidth = 26;
+        constexpr static float const buttonWidth = 30;
         bool shouldUpdateVisibility = false;
 
         // Text Filter
@@ -515,27 +504,27 @@ namespace EE
                 }
             };
 
-            ForEachItem( SetExpansion );
+            m_treeview.ForEachItem( SetExpansion );
         }
 
         // Type Filter + Controls
         //-------------------------------------------------------------------------
 
         float const availableWidth = ImGui::GetContentRegionAvail().x;
-        float const filterWidth = availableWidth - ( buttonWidth * 2 ) - ( ImGui::GetStyle().ItemSpacing.x * 2 );
+        float const filterWidth = availableWidth - ( 2 * ( buttonWidth + ImGui::GetStyle().ItemSpacing.x ) );
         shouldUpdateVisibility |= DrawResourceTypeFilterMenu( filterWidth );
 
         ImGui::SameLine();
-        if ( ImGui::Button( EE_ICON_PLUS "##Expand All", ImVec2( buttonWidth, 0 ) ) )
+        if ( ImGui::Button( EE_ICON_EXPAND_ALL "##Expand All", ImVec2( buttonWidth, 0 ) ) )
         {
-            ForEachItem( [] ( TreeListViewItem* pItem ) { pItem->SetExpanded( true ); } );
+            m_treeview.ForEachItem( [] ( TreeListViewItem* pItem ) { pItem->SetExpanded( true ); } );
         }
         ImGuiX::ItemTooltip( "Expand All" );
 
         ImGui::SameLine();
-        if ( ImGui::Button( EE_ICON_MINUS "##Collapse ALL", ImVec2( buttonWidth, 0 ) ) )
+        if ( ImGui::Button( EE_ICON_COLLAPSE_ALL "##Collapse ALL", ImVec2( buttonWidth, 0 ) ) )
         {
-            ForEachItem( [] ( TreeListViewItem* pItem ) { pItem->SetExpanded( false ); } );
+            m_treeview.ForEachItem( [] ( TreeListViewItem* pItem ) { pItem->SetExpanded( false ); } );
         }
         ImGuiX::ItemTooltip( "Collapse All" );
 

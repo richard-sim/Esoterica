@@ -291,7 +291,7 @@ namespace EE::Render
             for ( int i = 1; i < platformIO.Viewports.Size; i++ )
             {
                 ImGuiViewport* pViewport = platformIO.Viewports[i];
-                if ( pViewport->Flags & ImGuiViewportFlags_Minimized )
+                if ( pViewport->Flags & ImGuiViewportFlags_IsMinimized )
                 {
                     continue;
                 }
@@ -419,6 +419,10 @@ namespace EE::Render
 
                     // Bind texture
                     ViewSRVHandle const* pSRV = reinterpret_cast<ViewSRVHandle const*>( pCmd->TextureId );
+                    if( pSRV == nullptr )
+                    { 
+                        continue;
+                    }
                     renderContext.SetShaderResource( PipelineStage::Pixel, 0, *pSRV );
 
                     // Draw

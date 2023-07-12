@@ -189,9 +189,10 @@ namespace EE::Timeline
         {
             case ViewUpdateMode::ShowFullTimeRange:
             {
-                float const timeRangeLength = m_timeRange.GetLength();
+                float const timeRangeLength = m_timeRange.GetLength() + 1;
                 m_pixelsPerFrame = Math::Max( 1.0f, Math::Floor( trackAreaWidth / timeRangeLength ) );
                 m_viewRange = m_timeRange;
+                m_viewRange.m_end += 1;
                 m_viewUpdateMode = ViewUpdateMode::None;
             }
             break;
@@ -389,7 +390,7 @@ namespace EE::Timeline
             // Options
             //-------------------------------------------------------------------------
 
-            ImGuiX::VerticalSeparator( ImVec2( 9, -1 ) );
+            ImGuiX::SameLineSeparator( 9 );
 
             if ( ImGuiX::ColoredButton( ImVec4( 0, 0, 0, 0 ), m_isFrameSnappingEnabled ? ImGuiX::Style::s_colorText : ImGuiX::Style::s_colorTextDisabled, EE_ICON_CURSOR_DEFAULT_CLICK"##Snap", buttonSize ) )
             {
@@ -755,7 +756,7 @@ namespace EE::Timeline
                 //-------------------------------------------------------------------------
 
                 pDrawList->AddLine( ImVec2( fullTrackAreaRect.GetTL().x, trackEndY ), ImVec2( fullTrackAreaRect.GetBR().x, trackEndY ), g_trackSeparatorColor );
-                ImGui::SetCursorPosY( ImGui::GetCursorPosY() + 1 );
+                ImGui::Dummy( ImVec2( fullTrackAreaRect.GetWidth(), 1 ) );
                 trackStartY = trackEndY + 1;
             }
             ImGui::PopID();

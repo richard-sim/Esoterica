@@ -10,7 +10,7 @@
 #include "System/Resource/ResourcePtr.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/Serialization/BinarySerialization.h"
-#include "System/Math/MathHelpers.h"
+#include "System/Math/MathUtils.h"
 #include <eastl/sort.h>
 
 //-------------------------------------------------------------------------
@@ -33,77 +33,19 @@ namespace EE::Animation
 
     Resource::CompilationResult AnimationClipCompiler::Compile( Resource::CompileContext const& ctx ) const
     {
+        // Read descriptor
+        rapidjson::Document descriptorDocument;
         AnimationClipResourceDescriptor resourceDescriptor;
-
-        Serialization::TypeArchiveReader typeReader( *m_pTypeRegistry );
-        if ( !typeReader.ReadFromFile( ctx.m_inputFilePath ) )
+        if ( !TryLoadResourceDescriptor( ctx.m_inputFilePath, resourceDescriptor, &descriptorDocument ) )
         {
-            return Error( "Failed to read resource descriptor file: %s", ctx.m_inputFilePath.c_str() );
-        }
-
-        if ( !typeReader.ReadType( &resourceDescriptor ) )
-        {
-            return Error( "Failed to read resource descriptor from input file: %s", ctx.m_inputFilePath.c_str() );
-        }
-
-        FileSystem::Path animationFilePath;
-        if ( !ConvertResourcePathToFilePath( resourceDescriptor.m_animationPath, animationFilePath ) )
-        {
-            return Error( "Invalid animation data path: %s", resourceDescriptor.m_animationPath.c_str() );
-        }
-
-        if ( !FileSystem::Exists( animationFilePath ) )
-        {
-            return Error( "Invalid animation file path: %s", animationFilePath.ToString().c_str() );
-        }
-
-        // Read Skeleton Data
-        //-------------------------------------------------------------------------
-
-        // Convert the skeleton resource path to a physical file path
-        if ( !resourceDescriptor.m_skeleton.GetResourceID().IsValid() )
-        {
-            return Error( "Invalid skeleton resource ID" );
-        }
-
-        ResourcePath const& skeletonPath = resourceDescriptor.m_skeleton.GetResourcePath();
-        FileSystem::Path skeletonDescriptorFilePath;
-        if ( !ConvertResourcePathToFilePath( skeletonPath, skeletonDescriptorFilePath ) )
-        {
-            return Error( "Invalid skeleton data path: %s", skeletonPath.c_str() );
-        }
-
-        if ( !FileSystem::Exists( skeletonDescriptorFilePath ) )
-        {
-            return Error( "Invalid skeleton descriptor file path: %s", skeletonDescriptorFilePath.ToString().c_str() );
-        }
-
-        SkeletonResourceDescriptor skeletonResourceDescriptor;
-        if ( !Resource::ResourceDescriptor::TryReadFromFile( *m_pTypeRegistry, skeletonDescriptorFilePath, skeletonResourceDescriptor ) )
-        {
-            return Error( "Failed to read skeleton resource descriptor from input file: %s", ctx.m_inputFilePath.c_str() );
-        }
-
-        FileSystem::Path skeletonFilePath;
-        if ( !ConvertResourcePathToFilePath( skeletonResourceDescriptor.m_skeletonPath, skeletonFilePath ) )
-        {
-            return Error( "Invalid skeleton FBX data path: %s", skeletonResourceDescriptor.m_skeletonPath.GetString().c_str() );
-        }
-
-        RawAssets::ReaderContext readerCtx = { [this]( char const* pString ) { Warning( pString ); }, [this] ( char const* pString ) { Error( pString ); } };
-        auto pRawSkeleton = RawAssets::ReadSkeleton( readerCtx, skeletonFilePath, skeletonResourceDescriptor.m_skeletonRootBoneName );
-        if ( pRawSkeleton == nullptr || !pRawSkeleton->IsValid() )
-        {
-            return Error( "Failed to read skeleton file: %s", skeletonFilePath.ToString().c_str() );
+            return Resource::CompilationResult::Failure;
         }
 
         // Read animation data
-        //-------------------------------------------------------------------------
-
-        TUniquePtr<RawAssets::RawAnimation> pRawAnimation = RawAssets::ReadAnimation( readerCtx, animationFilePath, *pRawSkeleton, resourceDescriptor.m_animationName );
-        if ( pRawAnimation == nullptr )
+        TUniquePtr<RawAssets::RawAnimation> pRawAnimation = nullptr;
+        if ( !ReadRawAnimation( ctx, resourceDescriptor, pRawAnimation ) )
         {
-            return Error( "Failed to read animation from source file" );
+            return Resource::CompilationResult::Failure;
         }
 
         // Validate frame limit
@@ -114,17 +56,12 @@ namespace EE::Animation
                 return Error( "Having a frame limit range on a single frame animation doesnt make sense!" );
             }
 
-            resourceDescriptor.m_limitFrameRange.m_begin = Math::Clamp( resourceDescriptor.m_limitFrameRange.m_begin, 0, (int32_t) pRawAnimation->GetNumFrames() );
-            resourceDescriptor.m_limitFrameRange.m_end = Math::Clamp( resourceDescriptor.m_limitFrameRange.m_end + 1, 0, (int32_t) pRawAnimation->GetNumFrames() ); // Inclusive range so we need to increment the index
+            resourceDescriptor.m_limitFrameRange.m_begin = Math::Clamp( resourceDescriptor.m_limitFrameRange.m_begin, 0, (int32_t) pRawAnimation->GetNumFrames() - 1 );
+            resourceDescriptor.m_limitFrameRange.m_end = Math::Clamp( resourceDescriptor.m_limitFrameRange.m_end, 0, (int32_t) pRawAnimation->GetNumFrames() - 1 ); // Inclusive range so we need to increment the index
 
             if ( !resourceDescriptor.m_limitFrameRange.IsValid() )
             {
                 return Error( "Invalid frame limit range set!" );
-            }
-
-            if ( resourceDescriptor.m_limitFrameRange.GetLength() == 0 )
-            {
-                return Error( "Zero frame limit range set!" );
             }
         }
 
@@ -138,9 +75,12 @@ namespace EE::Animation
         }
 
         // Additive generation
-        if ( resourceDescriptor.m_generateTestAdditive )
+        if ( resourceDescriptor.m_additiveType != AnimationClipResourceDescriptor::AdditiveType::None )
         {
-            pRawAnimation->GenerateAdditiveData();
+            if ( !MakeAdditive( ctx, resourceDescriptor, *pRawAnimation ) )
+            {
+                return Resource::CompilationResult::Failure;
+            }
         }
 
         // Reflect raw animation data into runtime format
@@ -148,14 +88,13 @@ namespace EE::Animation
 
         AnimationClip animData;
         animData.m_skeleton = resourceDescriptor.m_skeleton;
-
         TransferAndCompressAnimationData( *pRawAnimation, animData, resourceDescriptor.m_limitFrameRange );
 
         // Handle events
         //-------------------------------------------------------------------------
 
         AnimationClipEventData eventData;
-        if ( !ReadEventsData( ctx, typeReader.GetDocument(), *pRawAnimation, eventData ) )
+        if ( !ReadEventsData( ctx, descriptorDocument, *pRawAnimation, eventData ) )
         {
             return CompilationFailed( ctx );
         }
@@ -163,7 +102,7 @@ namespace EE::Animation
         // Serialize animation data
         //-------------------------------------------------------------------------
 
-        Resource::ResourceHeader hdr( s_version, AnimationClip::GetStaticResourceTypeID() );
+        Resource::ResourceHeader hdr( s_version, AnimationClip::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
         hdr.AddInstallDependency( resourceDescriptor.m_skeleton.GetResourceID() );
 
         Serialization::BinaryOutputArchive archive;
@@ -189,6 +128,106 @@ namespace EE::Animation
     }
 
     //-------------------------------------------------------------------------
+
+    bool AnimationClipCompiler::ReadRawAnimation( Resource::CompileContext const& ctx, AnimationClipResourceDescriptor const& resourceDescriptor, TUniquePtr<RawAssets::RawAnimation>& pOutAnimation ) const
+    {
+        EE_ASSERT( pOutAnimation == nullptr );
+
+        // Read Skeleton Data
+        //-------------------------------------------------------------------------
+
+        SkeletonResourceDescriptor skeletonResourceDescriptor;
+        if ( !TryLoadResourceDescriptor( resourceDescriptor.m_skeleton.GetResourcePath(), skeletonResourceDescriptor ) )
+        {
+            Error( "Failed to load skeleton descriptor!" );
+            return false;
+        }
+
+        FileSystem::Path skeletonFilePath;
+        if ( !ConvertResourcePathToFilePath( skeletonResourceDescriptor.m_skeletonPath, skeletonFilePath ) )
+        {
+            Error( "Invalid skeleton FBX data path: %s", skeletonResourceDescriptor.m_skeletonPath.GetString().c_str() );
+            return false;
+        }
+
+        RawAssets::ReaderContext readerCtx = { [this]( char const* pString ) { Warning( pString ); }, [this] ( char const* pString ) { Error( pString ); } };
+        auto pRawSkeleton = RawAssets::ReadSkeleton( readerCtx, skeletonFilePath, skeletonResourceDescriptor.m_skeletonRootBoneName );
+        if ( pRawSkeleton == nullptr || !pRawSkeleton->IsValid() )
+        {
+            Error( "Failed to read skeleton file: %s", skeletonFilePath.ToString().c_str() );
+            return false;
+        }
+
+        // Read animation data
+        //-------------------------------------------------------------------------
+
+        FileSystem::Path animationFilePath;
+        if ( !ConvertResourcePathToFilePath( resourceDescriptor.m_animationPath, animationFilePath ) )
+        {
+            Error( "Invalid animation data path: %s", resourceDescriptor.m_animationPath.c_str() );
+            return false;
+        }
+
+        if ( !FileSystem::Exists( animationFilePath ) )
+        {
+            Error( "Invalid animation file path: %s", animationFilePath.ToString().c_str() );
+            return false;
+        }
+
+        pOutAnimation = RawAssets::ReadAnimation( readerCtx, animationFilePath, *pRawSkeleton, resourceDescriptor.m_animationName );
+        if ( pOutAnimation == nullptr )
+        {
+            Error( "Failed to read animation from source file" );
+            return false;
+        }
+
+        //-------------------------------------------------------------------------
+
+        return true;
+    }
+
+    bool AnimationClipCompiler::MakeAdditive( Resource::CompileContext const& ctx, AnimationClipResourceDescriptor const& resourceDescriptor, RawAssets::RawAnimation& rawAnimData ) const
+    {
+        EE_ASSERT( resourceDescriptor.m_additiveType != AnimationClipResourceDescriptor::AdditiveType::None );
+
+        if ( resourceDescriptor.m_additiveType == AnimationClipResourceDescriptor::AdditiveType::RelativeToSkeleton )
+        {
+            rawAnimData.MakeAdditiveRelativeToSkeleton();
+        }
+        else if ( resourceDescriptor.m_additiveType == AnimationClipResourceDescriptor::AdditiveType::RelativeToFrame )
+        {
+            int32_t const baseFrameIdx = Math::Clamp( (int32_t) resourceDescriptor.m_additiveBaseFrameIndex, 0, rawAnimData.GetNumFrames() - 1 );
+            rawAnimData.MakeAdditiveRelativeToFrame( baseFrameIdx );
+        }
+        else if ( resourceDescriptor.m_additiveType == AnimationClipResourceDescriptor::AdditiveType::RelativeToAnimationClip )
+        {
+            AnimationClipResourceDescriptor baseAnimResourceDescriptor;
+            if ( !TryLoadResourceDescriptor( resourceDescriptor.m_additiveBaseAnimation.GetResourcePath(), baseAnimResourceDescriptor ) )
+            {
+                Error( "Failed to load base animation descriptor!" );
+                return false;
+            }
+
+            if ( baseAnimResourceDescriptor.m_skeleton != resourceDescriptor.m_skeleton )
+            {
+                Error( "Base additive animation skeleton does not match animation! Expected: %s, instead got: %s", resourceDescriptor.m_skeleton.GetResourcePath().c_str(), baseAnimResourceDescriptor.m_skeleton.GetResourcePath().c_str() );
+                return false;
+            }
+
+            TUniquePtr<RawAssets::RawAnimation> pBaseRawAnimation = nullptr;
+            if ( !ReadRawAnimation( ctx, baseAnimResourceDescriptor, pBaseRawAnimation ) )
+            {
+                Error( "Failed to load base animation data!" );
+                return false;
+            }
+
+            rawAnimData.MakeAdditiveRelativeToAnimation( *pBaseRawAnimation.get() );
+        }
+
+        //-------------------------------------------------------------------------
+
+        return true;
+    }
 
     bool AnimationClipCompiler::RegenerateRootMotion( AnimationClipResourceDescriptor const& resourceDescriptor, RawAssets::RawAnimation* pRawAnimation ) const
     {
@@ -225,8 +264,8 @@ namespace EE::Animation
 
         // Get the Z value for the root on the first frame, use this as the starting point for the root motion track
         auto& rootMotion = pRawAnimation->GetRootMotion();
-        float const flatZ = rootMotion.front().GetTranslation().m_z;
-        float const offsetZ = ( rootMotion.front().GetTranslation() - sourceBoneTrackData.m_globalTransforms[0].GetTranslation() ).m_z;
+        float const flatZ = rootMotion.front().GetTranslation().GetZ();
+        float const offsetZ = ( rootMotion.front().GetTranslation() - sourceBoneTrackData.m_globalTransforms[0].GetTranslation() ).GetZ();
 
         int32_t const numFrames = pRawAnimation->GetNumFrames();
         for ( auto i = 0; i < numFrames; i++ )
@@ -244,11 +283,11 @@ namespace EE::Animation
             Vector translation = rootMotionTransform.GetTranslation();
             if ( resourceDescriptor.m_rootMotionGenerationRestrictToHorizontalPlane )
             {
-                translation.m_z = flatZ;
+                translation.SetZ( flatZ );
             }
             else
             {
-                translation.m_z += offsetZ;
+                translation += Vector( 0, 0, offsetZ, 0 );
             }
 
             // Set root position
@@ -272,18 +311,23 @@ namespace EE::Animation
 
         // Calculate frame limits
         //-------------------------------------------------------------------------
+        // The limit range is an inclusive range that specifies the exact start and frame index to include
 
         int32_t frameIdxStart = 0;
         int32_t frameIdxEnd = numOriginalFrames;
 
         if ( limitRange.IsSetAndValid() )
         {
-            frameIdxStart = limitRange.m_begin;
-            frameIdxEnd = limitRange.m_end;
-            EE_ASSERT( frameIdxEnd < numOriginalFrames );
+            if( limitRange.m_end >= numOriginalFrames )
+            {
+                Warning( "Frame range limit exceed available frames, clamping to end of animation!" );
+            }
+
+            frameIdxStart = Math::Max( limitRange.m_begin, 0 );
+            frameIdxEnd = Math::Min( limitRange.m_end + 1, numOriginalFrames );
         }
 
-        animClip.m_numFrames = frameIdxEnd - frameIdxStart;
+        animClip.m_numFrames = ( frameIdxEnd == frameIdxStart ) ? 1 : frameIdxEnd - frameIdxStart;
 
         // Transfer basic animation data
         //-------------------------------------------------------------------------
@@ -308,14 +352,20 @@ namespace EE::Animation
         // Calculate root motion extra data
         //-------------------------------------------------------------------------
 
-        float totalDistance = 0.0f;
-        float totalRotation = 0.0f;
-
-        for ( int32_t i = frameIdxStart; i < frameIdxEnd; i++ )
+        if ( animClip.IsSingleFrameAnimation() )
         {
-            // Track deltas
-            if ( i > 0 )
+            animClip.m_rootMotion.m_totalDelta = Transform::Identity;
+            animClip.m_rootMotion.m_averageLinearVelocity = 0.0f;
+            animClip.m_rootMotion.m_averageAngularVelocity = 0.0f;
+        }
+        else
+        {
+            float totalDistance = 0.0f;
+            float totalRotation = 0.0f;
+
+            for ( uint32_t i = 1u; i < animClip.m_numFrames; i++ )
             {
+                // Track deltas
                 Transform const deltaRoot = Transform::DeltaNoScale( animClip.m_rootMotion.m_transforms[i - 1], animClip.m_rootMotion.m_transforms[i] );
                 totalDistance += deltaRoot.GetTranslation().GetLength3();
 
@@ -327,11 +377,11 @@ namespace EE::Animation
                     totalRotation += Math::Abs( (float) deltaAngle );
                 }
             }
-        }
 
-        animClip.m_rootMotion.m_totalDelta = Transform::DeltaNoScale( animClip.m_rootMotion.m_transforms.front(), animClip.m_rootMotion.m_transforms.back() );
-        animClip.m_rootMotion.m_averageLinearVelocity = totalDistance / animClip.GetDuration();
-        animClip.m_rootMotion.m_averageAngularVelocity = totalRotation / animClip.GetDuration();
+            animClip.m_rootMotion.m_totalDelta = Transform::DeltaNoScale( animClip.m_rootMotion.m_transforms.front(), animClip.m_rootMotion.m_transforms.back() );
+            animClip.m_rootMotion.m_averageLinearVelocity = totalDistance / animClip.GetDuration();
+            animClip.m_rootMotion.m_averageAngularVelocity = totalRotation / animClip.GetDuration();
+        }
 
         // Compress raw data
         //-------------------------------------------------------------------------
@@ -379,9 +429,9 @@ namespace EE::Animation
                 Transform const& rawBoneTransform = rawTrackData[boneIdx].m_localTransforms[0];
                 Vector const& translation = rawBoneTransform.GetTranslation();
 
-                trackSettings.m_translationRangeX = { translation.m_x, defaultQuantizationRangeLength };
-                trackSettings.m_translationRangeY = { translation.m_y, defaultQuantizationRangeLength };
-                trackSettings.m_translationRangeZ = { translation.m_z, defaultQuantizationRangeLength };
+                trackSettings.m_translationRangeX = { translation.GetX(), defaultQuantizationRangeLength };
+                trackSettings.m_translationRangeY = { translation.GetY(), defaultQuantizationRangeLength };
+                trackSettings.m_translationRangeZ = { translation.GetZ(), defaultQuantizationRangeLength };
                 trackSettings.m_isTranslationStatic = true;
             }
             else
@@ -398,9 +448,9 @@ namespace EE::Animation
                 Transform const& rawBoneTransform = rawTrackData[boneIdx].m_localTransforms[0];
                 Vector const& translation = rawBoneTransform.GetTranslation();
 
-                uint16_t const m_x = Quantization::EncodeFloat( translation.m_x, trackSettings.m_translationRangeX.m_rangeStart, trackSettings.m_translationRangeX.m_rangeLength );
-                uint16_t const m_y = Quantization::EncodeFloat( translation.m_y, trackSettings.m_translationRangeY.m_rangeStart, trackSettings.m_translationRangeY.m_rangeLength );
-                uint16_t const m_z = Quantization::EncodeFloat( translation.m_z, trackSettings.m_translationRangeZ.m_rangeStart, trackSettings.m_translationRangeZ.m_rangeLength );
+                uint16_t const m_x = Quantization::EncodeFloat( translation.GetX(), trackSettings.m_translationRangeX.m_rangeStart, trackSettings.m_translationRangeX.m_rangeLength );
+                uint16_t const m_y = Quantization::EncodeFloat( translation.GetY(), trackSettings.m_translationRangeY.m_rangeStart, trackSettings.m_translationRangeY.m_rangeLength );
+                uint16_t const m_z = Quantization::EncodeFloat( translation.GetZ(), trackSettings.m_translationRangeZ.m_rangeStart, trackSettings.m_translationRangeZ.m_rangeLength );
 
                 animClip.m_compressedPoseData.push_back( m_x );
                 animClip.m_compressedPoseData.push_back( m_y );
@@ -413,9 +463,9 @@ namespace EE::Animation
                     Transform const& rawBoneTransform = rawTrackData[boneIdx].m_localTransforms[frameIdx];
                     Vector const& translation = rawBoneTransform.GetTranslation();
 
-                    uint16_t const m_x = Quantization::EncodeFloat( translation.m_x, trackSettings.m_translationRangeX.m_rangeStart, trackSettings.m_translationRangeX.m_rangeLength );
-                    uint16_t const m_y = Quantization::EncodeFloat( translation.m_y, trackSettings.m_translationRangeY.m_rangeStart, trackSettings.m_translationRangeY.m_rangeLength );
-                    uint16_t const m_z = Quantization::EncodeFloat( translation.m_z, trackSettings.m_translationRangeZ.m_rangeStart, trackSettings.m_translationRangeZ.m_rangeLength );
+                    uint16_t const m_x = Quantization::EncodeFloat( translation.GetX(), trackSettings.m_translationRangeX.m_rangeStart, trackSettings.m_translationRangeX.m_rangeLength );
+                    uint16_t const m_y = Quantization::EncodeFloat( translation.GetY(), trackSettings.m_translationRangeY.m_rangeStart, trackSettings.m_translationRangeY.m_rangeLength );
+                    uint16_t const m_z = Quantization::EncodeFloat( translation.GetZ(), trackSettings.m_translationRangeZ.m_rangeStart, trackSettings.m_translationRangeZ.m_rangeLength );
 
                     animClip.m_compressedPoseData.push_back( m_x );
                     animClip.m_compressedPoseData.push_back( m_y );
@@ -667,7 +717,7 @@ namespace EE::Animation
         {
             for ( auto const pItem : pTrack->GetItems() )
             {
-                IRegisteredType* pEventInstance = pItem->GetData();
+                IReflectedType* pEventInstance = pItem->GetData();
                 pEventInstance->GetTypeInfo()->GetReferencedResources( pEventInstance, outReferencedResources );
             }
         }

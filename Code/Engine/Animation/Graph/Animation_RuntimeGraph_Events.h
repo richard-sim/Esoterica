@@ -5,6 +5,7 @@
 #include "System/Types/StringID.h"
 #include "System/Types/BitFlags.h"
 #include "System/Types/Arrays.h"
+#include "System/TypeSystem/ReflectedType.h"
 
 //-------------------------------------------------------------------------
 
@@ -14,13 +15,39 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    enum class StateEventType
+    enum class StateEventType : uint8_t
     {
-        Entry,             // Is this a state transition in event
+        Entry = 0,         // Is this a state transition in event
         FullyInState,      // Is this a "fully in state" event
         Exit,              // Is this a state transition out event
         Timed,             // Timed event coming from a state
     };
+
+    // Use this enum when performing event type comparisons
+    enum class StateEventTypeCondition : uint8_t
+    {
+        EE_REFLECT_ENUM
+
+        Entry = 0,         // Is this a state transition in event
+        FullyInState,      // Is this a "fully in state" event
+        Exit,              // Is this a state transition out event
+        Timed,             // Timed event coming from a state
+        Any                // Any kind of state event
+    };
+
+    #if EE_DEVELOPMENT_TOOLS
+    EE_ENGINE_API char const* GetNameForStateEventType( StateEventType type );
+    #endif
+
+    EE_FORCE_INLINE bool DoesStateEventTypesMatchCondition( StateEventTypeCondition condition, StateEventType eventType )
+    {
+        if ( condition == StateEventTypeCondition::Any ) 
+        {
+            return true;
+        }
+
+        return (uint8_t) condition == (uint8_t) eventType;
+    }
 
     //-------------------------------------------------------------------------
     // A sampled event from the graph
@@ -108,7 +135,7 @@ namespace EE::Animation
         //-------------------------------------------------------------------------
 
         inline StringID GetStateEventID() const { EE_ASSERT( IsStateEvent() ); return m_stateData.m_ID; }
-        inline StateEventType GetEventType() const { EE_ASSERT( IsStateEvent() ); return m_stateData.m_type; }
+        inline StateEventType GetStateEventType() const { EE_ASSERT( IsStateEvent() ); return m_stateData.m_type; }
 
         inline bool IsEntryEvent() const { EE_ASSERT( IsStateEvent() ); return m_stateData.m_type == StateEventType::Entry; }
         inline bool IsFullyInStateEvent() const { EE_ASSERT( IsStateEvent() ); return m_stateData.m_type == StateEventType::FullyInState; }
@@ -210,6 +237,17 @@ namespace EE::Animation
             for ( int16_t i = range.m_startIdx; i < range.m_endIdx; i++ )
             {
                 m_sampledEvents[i].m_isIgnored = true;
+            }
+        }
+
+        // Mark all events in the range as ignored and clear their weights
+        inline void MarkEventsAsIgnoredAndClearWeights( SampledEventRange range )
+        {
+            EE_ASSERT( IsValidRange( range ) );
+            for ( int16_t i = range.m_startIdx; i < range.m_endIdx; i++ )
+            {
+                m_sampledEvents[i].m_isIgnored = true;
+                m_sampledEvents[i].m_weight = 0.0f;
             }
         }
 

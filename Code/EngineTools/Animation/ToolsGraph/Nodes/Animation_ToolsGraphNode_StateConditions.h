@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class StateCompletedConditionToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( StateCompletedConditionToolsNode );
+        EE_REFLECT_TYPE( StateCompletedConditionToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        StateCompletedConditionToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "State Completed"; }
@@ -25,11 +25,11 @@ namespace EE::Animation::GraphNodes
 
     class TimeConditionToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( TimeConditionToolsNode );
+        EE_REFLECT_TYPE( TimeConditionToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        TimeConditionToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "Time Condition"; }
@@ -40,8 +40,8 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE float                                    m_comparand = 0.0f;
-        EE_EXPOSE TimeConditionNode::ComparisonType        m_type = TimeConditionNode::ComparisonType::ElapsedTime;
-        EE_EXPOSE TimeConditionNode::Operator              m_operator = TimeConditionNode::Operator::LessThan;
+        EE_REFLECT() float                                    m_comparand = 0.0f;
+        EE_REFLECT() TimeConditionNode::ComparisonType        m_type = TimeConditionNode::ComparisonType::ElapsedTime;
+        EE_REFLECT() TimeConditionNode::Operator              m_operator = TimeConditionNode::Operator::LessThan;
     };
 }

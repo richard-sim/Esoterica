@@ -73,7 +73,15 @@ namespace EE::Animation
 
         //-------------------------------------------------------------------------
 
+        void ResetRecordedPositions();
+
+        //-------------------------------------------------------------------------
+
         inline bool HasRecordedActions() const { return !m_recordedActions.empty(); }
+
+        int32_t GetCurrentActionIndexMarker() const { return (int32_t) m_recordedActions.size(); }
+
+        void RollbackToActionIndexMarker( int32_t const marker );
 
         EE_FORCE_INLINE int16_t GetLastActionIndex() const { return (int16_t) m_recordedActions.size() - 1; }
 
@@ -81,7 +89,7 @@ namespace EE::Animation
         {
             EE_ASSERT( nodeIdx != InvalidIndex );
             int16_t const idx = (int16_t) m_recordedActions.size();
-            m_recordedActions.emplace_back( nodeIdx, ActionType::Sample, rootMotionDelta);
+            m_recordedActions.emplace_back( nodeIdx, ActionType::Sample, rootMotionDelta );
             return idx;
         }
 

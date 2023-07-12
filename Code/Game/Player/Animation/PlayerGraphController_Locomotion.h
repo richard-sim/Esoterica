@@ -1,6 +1,5 @@
 #pragma once
 #include "Engine/Animation/Graph/Animation_RuntimeGraph_Controller.h"
-#include "Engine/Animation/Events/AnimationEvent_Transition.h"
 
 //-------------------------------------------------------------------------
 
@@ -34,13 +33,11 @@ namespace EE::Player
 
         void RequestIdle();
         void RequestTurnOnSpot( Vector const& directionWS );
-        void RequestStart( Vector const& headingVelocityWS );
-        void RequestMove( Seconds const deltaTime, Vector const& headingVelocityWS, Vector const& facingDirectionWS );
+        void RequestStart( Vector const& movementVelocityWS );
+        void RequestMove( Seconds const deltaTime, Vector const& movementVelocityWS, Vector const& facingDirectionWS );
         void RequestPlantedTurn( Vector const& directionWS );
         void RequestStop( Transform const& target );
 
-        // Set movement parameters - facing direction will be converted to 2D
-        void SetLocomotionDesires( Seconds const deltaTime, Vector const& headingVelocityWS, Vector const& facingDirectionWS );
         void SetCrouch( bool isCrouch );
         void SetSliding( bool isSliding );
 
@@ -51,10 +48,7 @@ namespace EE::Player
         inline bool IsMoving() const { return m_graphState == States::Move; }
         inline bool IsPlantingAndTurning() const { return m_graphState == States::PlantedTurn; }
         inline bool IsStopping() const { return m_graphState == States::Stop; }
-        inline bool IsAnyTransitionAllowed() const { return IsTransitionFullyAllowed() || IsTransitionConditionallyAllowed(); }
-        inline bool IsTransitionFullyAllowed() const { return m_isTransitionMarker == Animation::TransitionMarker::AllowTransition; }
-        inline bool IsTransitionConditionallyAllowed() const { return m_isTransitionMarker == Animation::TransitionMarker::ConditionallyAllowTransition; }
-
+        
     private:
 
         virtual void PostGraphUpdate( Seconds deltaTime ) override;
@@ -65,10 +59,9 @@ namespace EE::Player
         ControlParameter<bool>                              m_isCrouchParam = ControlParameter<bool>( "Locomotion_IsCrouched" );
         ControlParameter<bool>                              m_isSlidingParam = ControlParameter<bool>( "Locomotion_IsSliding" );
         ControlParameter<float>                             m_speedParam = ControlParameter<float>( "Locomotion_Speed" );
-        ControlParameter<Vector>                            m_headingParam = ControlParameter<Vector>( "Locomotion_Heading" );
+        ControlParameter<Vector>                            m_movementVelocityParam = ControlParameter<Vector>( "Locomotion_MovementVelocity" );
         ControlParameter<Vector>                            m_facingParam = ControlParameter<Vector>( "Locomotion_Facing" );
 
         States                                              m_graphState = States::Unknown;
-        Animation::TransitionMarker                         m_isTransitionMarker = Animation::TransitionMarker::BlockTransition;
     };
 }

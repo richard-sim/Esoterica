@@ -20,6 +20,11 @@ namespace EE::VisualGraph
 
     //-------------------------------------------------------------------------
 
+    Color const BaseNode::s_genericNodeSeparatorColor = Color( 100, 100, 100 );
+    Color const BaseNode::s_genericNodeInternalRegionDefaultColor = Color( 60, 60, 60 );
+
+    //-------------------------------------------------------------------------
+
     BaseNode::~BaseNode()
     {
         EE_ASSERT( m_pParentGraph == nullptr );
@@ -103,7 +108,7 @@ namespace EE::VisualGraph
         return pRootGraph;
     }
 
-    String BaseNode::GetPathFromRoot() const
+    String BaseNode::GetStringPathFromRoot() const
     {
         TVector<BaseNode const*> path;
         TraverseHierarchy( this, path );
@@ -123,6 +128,22 @@ namespace EE::VisualGraph
         return pathString;
     }
 
+    TVector<UUID> BaseNode::GetIDPathFromRoot() const
+    {
+        TVector<BaseNode const*> path;
+        TraverseHierarchy( this, path );
+
+        //-------------------------------------------------------------------------
+
+        TVector<UUID> pathFromRoot;
+        for ( auto iter = path.rbegin(); iter != path.rend(); ++iter )
+        {
+            pathFromRoot.emplace_back( ( *iter )->GetID() );
+        }
+
+        return pathFromRoot;
+    }
+
     void BaseNode::Serialize( TypeSystem::TypeRegistry const& typeRegistry, Serialization::JsonValue const& nodeObjectValue )
     {
         EE_ASSERT( nodeObjectValue.IsObject() );
@@ -132,6 +153,12 @@ namespace EE::VisualGraph
         // Note serialization is not symmetric for the nodes, since the node creation also deserializes registered values
 
         //-------------------------------------------------------------------------
+
+
+        if ( GetID() == UUID( "7ab864a5-2267-a142-8121-fce7b7f3e560" ) )
+        {
+            EE_HALT();
+        }
 
         EE::Delete( m_pChildGraph );
 
@@ -206,14 +233,20 @@ namespace EE::VisualGraph
 
     void BaseNode::BeginModification()
     {
-        // Gets forwarded to the parent graph since all nodes have parent graph
-        m_pParentGraph->BeginModification();
+        // Parent graphs should only be null during construction
+        if ( m_pParentGraph )
+        {
+            m_pParentGraph->BeginModification();
+        }
     }
 
     void BaseNode::EndModification()
     {
-        // Gets forwarded to the parent graph since all nodes have parent graph
-        m_pParentGraph->EndModification();
+        // Parent graphs should only be null during construction
+        if ( m_pParentGraph )
+        {
+            m_pParentGraph->EndModification();
+        }
     }
 
     void BaseNode::SetCanvasPosition( Float2 const& newPosition )
@@ -248,15 +281,15 @@ namespace EE::VisualGraph
     {
         if ( visualState == NodeVisualState::Active )
         {
-            return VisualSettings::s_genericActiveColor;
+            return s_defaultActiveColor;
         }
         else if ( visualState == NodeVisualState::Hovered )
         {
-            return VisualSettings::s_genericHoverColor;
+            return s_defaultHoveredColor;
         }
         else if ( visualState == NodeVisualState::Selected )
         {
-            return VisualSettings::s_genericSelectionColor;
+            return s_defaultSelectedColor;
         }
         else
         {
@@ -293,11 +326,12 @@ namespace EE::VisualGraph
 
     void BaseNode::DrawInternalSeparator( DrawContext const& ctx, Color color, float preMarginY, float postMarginY ) const
     {
-        float const separatorWidth = GetWidth() == 0 ? VisualSettings::s_minimumNodeWidth : GetWidth();
+        constexpr static float const minimumNodeWidth = 30;
+        float const separatorWidth = GetWidth() == 0 ? minimumNodeWidth : GetWidth();
         ImGui::SetCursorPosY( ImGui::GetCursorPosY() + preMarginY );
         ImVec2 const cursorScreenPos = ctx.WindowToScreenPosition( ImGui::GetCursorPos() );
         ctx.m_pDrawList->AddLine( cursorScreenPos, cursorScreenPos + ImVec2( separatorWidth, 0 ), ImGuiX::ToIm( color ) );
-        ImGui::SetCursorPosY( ImGui::GetCursorPosY() + postMarginY );
+        ImGui::SetCursorPosY( ImGui::GetCursorPosY() + postMarginY + 1 );
     }
 
     void BaseNode::BeginDrawInternalRegion( DrawContext const& ctx, Color color, float preMarginY, float postMarginY ) const
@@ -310,22 +344,23 @@ namespace EE::VisualGraph
         m_internalRegionMargins[1] = postMarginY;
         m_regionStarted = true;
 
-        ImGui::SetCursorPosY( ImGui::GetCursorPosY() + preMarginY );
+        ImGui::SetCursorPosY( ImGui::GetCursorPosY() + preMarginY + ImGui::GetStyle().ItemSpacing.y );
     }
 
     void BaseNode::EndDrawInternalRegion( DrawContext const& ctx ) const
     {
         EE_ASSERT( m_regionStarted );
 
-        ImVec2 const rectMin = ctx.WindowToScreenPosition( ImVec2( ImGui::GetCursorPosX() - VisualSettings::s_internalRegionPadding, m_internalRegionStartY + m_internalRegionMargins[0] ));
-        ImVec2 const rectMax = rectMin + ImVec2( GetWidth() + ( VisualSettings::s_internalRegionPadding * 2 ), ImGui::GetCursorPosY() - m_internalRegionStartY + VisualSettings::s_internalRegionPadding - m_internalRegionMargins[0] - 1 );
+        ImVec2 const& framePadding = ImGui::GetStyle().FramePadding;
+        ImVec2 const rectMin = ctx.WindowToScreenPosition( ImVec2( ImGui::GetCursorPosX() - framePadding.x, m_internalRegionStartY + m_internalRegionMargins[0] ));
+        ImVec2 const rectMax = rectMin + ImVec2( GetWidth() + ( framePadding.x * 2 ), ImGui::GetCursorPosY() - m_internalRegionStartY + framePadding.y - m_internalRegionMargins[0] - 1 );
         
         int32_t const previousChannel = ctx.m_pDrawList->_Splitter._Current;
         ctx.SetDrawChannel( (uint8_t) DrawChannel::ContentBackground );
         ctx.m_pDrawList->AddRectFilled( rectMin, rectMax, ImGuiX::ToIm( m_internalRegionColor ), 3.0f );
         ctx.m_pDrawList->ChannelsSetCurrent( previousChannel );
 
-        ImGui::SetCursorPosY( ImGui::GetCursorPosY() + VisualSettings::s_internalRegionPadding + m_internalRegionMargins[1] );
+        ImGui::Dummy( ImVec2( GetWidth(), framePadding.y + m_internalRegionMargins[1] ) );
 
         m_internalRegionStartY = -1.0f;
         m_internalRegionMargins[0] = m_internalRegionMargins[1] = 0.0f;
@@ -334,8 +369,8 @@ namespace EE::VisualGraph
 
     //-------------------------------------------------------------------------
 
-    TEvent<BaseGraph*> BaseGraph::s_onEndModification;
-    TEvent<BaseGraph*> BaseGraph::s_onBeginModification;
+    TEvent<BaseGraph*> BaseGraph::s_onEndRootGraphModification;
+    TEvent<BaseGraph*> BaseGraph::s_onBeginRootGraphModification;
 
     //-------------------------------------------------------------------------
 
@@ -382,9 +417,9 @@ namespace EE::VisualGraph
 
         if ( pRootGraph->m_beginModificationCallCount == 0 )
         {
-            if ( s_onBeginModification.HasBoundUsers() )
+            if ( s_onBeginRootGraphModification.HasBoundUsers() )
             {
-                s_onBeginModification.Execute( pRootGraph );
+                s_onBeginRootGraphModification.Execute( pRootGraph );
             }
         }
         pRootGraph->m_beginModificationCallCount++;
@@ -399,9 +434,9 @@ namespace EE::VisualGraph
 
         if ( pRootGraph->m_beginModificationCallCount == 0 )
         {
-            if ( s_onEndModification.HasBoundUsers() )
+            if ( s_onEndRootGraphModification.HasBoundUsers() )
             {
-                s_onEndModification.Execute( pRootGraph );
+                s_onEndRootGraphModification.Execute( pRootGraph );
             }
         }
     }
@@ -599,6 +634,54 @@ namespace EE::VisualGraph
         //-------------------------------------------------------------------------
 
         writer.EndObject();
+    }
+
+    String BaseGraph::GetStringPathFromRoot() const
+    {
+        String pathString;
+        if ( IsRootGraph() )
+        {
+            return pathString;
+        }
+
+        //-------------------------------------------------------------------------
+
+        TVector<BaseNode const*> path;
+        TraverseHierarchy( GetParentNode(), path );
+
+        //-------------------------------------------------------------------------
+
+        for ( auto iter = path.rbegin(); iter != path.rend(); ++iter )
+        {
+            pathString += ( *iter )->GetName();
+            if ( iter != ( path.rend() - 1 ) )
+            {
+                pathString += "/";
+            }
+        }
+
+        return pathString;
+    }
+
+    TVector<UUID> BaseGraph::GetIDPathFromRoot() const
+    {
+        TVector<UUID> pathFromRoot;
+        if ( IsRootGraph() )
+        {
+            return pathFromRoot;
+        }
+
+        TVector<BaseNode const*> path;
+        TraverseHierarchy( GetParentNode(), path );
+
+        //-------------------------------------------------------------------------
+
+        for ( auto iter = path.rbegin(); iter != path.rend(); ++iter )
+        {
+            pathFromRoot.emplace_back( ( *iter )->GetID() );
+        }
+
+        return pathFromRoot;
     }
 
     UUID BaseGraph::RegenerateIDs( THashMap<UUID, UUID>& IDMapping )

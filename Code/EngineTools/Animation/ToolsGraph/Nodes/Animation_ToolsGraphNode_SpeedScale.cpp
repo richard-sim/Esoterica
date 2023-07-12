@@ -6,9 +6,9 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void SpeedScaleToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    SpeedScaleToolsNode::SpeedScaleToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Pose, true );
         CreateInputPin( "Input", GraphValueType::Pose );
         CreateInputPin( "Scale", GraphValueType::Float );
@@ -62,17 +62,75 @@ namespace EE::Animation::GraphNodes
 
             //-------------------------------------------------------------------------
 
-            pSettings->m_scaleLimits = m_scaleLimits;
-            pSettings->m_blendInTime = m_blendTime;
+            pSettings->m_blendInTime = m_blendInTime;
         }
         return pSettings->m_nodeIdx;
     }
 
     //-------------------------------------------------------------------------
 
-    void VelocityBasedSpeedScaleToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    DurationScaleToolsNode::DurationScaleToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
+        CreateOutputPin( "Result", GraphValueType::Pose, true );
+        CreateInputPin( "Input", GraphValueType::Pose );
+        CreateInputPin( "New Duration", GraphValueType::Float );
+    }
+
+    int16_t DurationScaleToolsNode::Compile( GraphCompilationContext& context ) const
+    {
+        DurationScaleNode::Settings* pSettings = nullptr;
+        NodeCompilationState const state = context.GetSettings<DurationScaleNode>( this, pSettings );
+        if ( state == NodeCompilationState::NeedCompilation )
+        {
+            auto pInputNode = GetConnectedInputNode<FlowToolsNode>( 0 );
+            if ( pInputNode != nullptr )
+            {
+                int16_t const compiledNodeIdx = pInputNode->Compile( context );
+                if ( compiledNodeIdx != InvalidIndex )
+                {
+                    pSettings->m_childNodeIdx = compiledNodeIdx;
+                }
+                else
+                {
+                    return InvalidIndex;
+                }
+            }
+            else
+            {
+                context.LogError( this, "Disconnected input pin!" );
+                return InvalidIndex;
+            }
+
+            //-------------------------------------------------------------------------
+
+            pInputNode = GetConnectedInputNode<FlowToolsNode>( 1 );
+            if ( pInputNode != nullptr )
+            {
+                int16_t const compiledNodeIdx = pInputNode->Compile( context );
+                if ( compiledNodeIdx != InvalidIndex )
+                {
+                    pSettings->m_durationValueNodeIdx = compiledNodeIdx;
+                }
+                else
+                {
+                    return InvalidIndex;
+                }
+            }
+            else
+            {
+                context.LogError( this, "Disconnected input pin!" );
+                return InvalidIndex;
+            }
+        }
+        return pSettings->m_nodeIdx;
+    }
+
+    //-------------------------------------------------------------------------
+
+    VelocityBasedSpeedScaleToolsNode::VelocityBasedSpeedScaleToolsNode()
+        : FlowToolsNode()
+    {
         CreateOutputPin( "Result", GraphValueType::Pose, true );
         CreateInputPin( "Input", GraphValueType::Pose );
         CreateInputPin( "Desired Velocity", GraphValueType::Float );

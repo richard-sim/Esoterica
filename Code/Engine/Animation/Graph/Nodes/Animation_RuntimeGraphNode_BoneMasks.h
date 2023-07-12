@@ -12,18 +12,13 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public BoneMaskValueNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
-            EE_SERIALIZE_GRAPHNODESETTINGS( BoneMaskValueNode::Settings, m_rootMotionWeight, m_dataSlotIdx );
+            EE_REFLECT_TYPE( Settings );
+            EE_SERIALIZE_GRAPHNODESETTINGS( BoneMaskValueNode::Settings, m_boneMaskID );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
 
-            float                               m_rootMotionWeight = 1.0f;
-            int16_t                             m_dataSlotIdx = InvalidIndex;
+            StringID                                        m_boneMaskID;
         };
-
-    public:
-
-        inline BoneMask const& GetBoneMask() const { return m_boneMask; }
 
     private:
 
@@ -32,7 +27,33 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        BoneMask                                            m_boneMask;
+        BoneMaskTaskList                                    m_taskList;
+    };
+
+    //-------------------------------------------------------------------------
+
+    class EE_ENGINE_API FixedWeightBoneMaskNode final : public BoneMaskValueNode
+    {
+    public:
+
+        struct EE_ENGINE_API Settings final : public BoneMaskValueNode::Settings
+        {
+            EE_REFLECT_TYPE( Settings );
+            EE_SERIALIZE_GRAPHNODESETTINGS( BoneMaskValueNode::Settings, m_boneWeight );
+
+            virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
+
+            float                                           m_boneWeight = 0.0f;
+        };
+
+    private:
+
+        virtual void InitializeInternal( GraphContext& context ) override;
+        virtual void GetValueInternal( GraphContext& context, void* pOutValue ) override;
+
+    private:
+
+        BoneMaskTaskList                                    m_taskList;
     };
 
     //-------------------------------------------------------------------------
@@ -43,7 +64,7 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public BoneMaskValueNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
             EE_SERIALIZE_GRAPHNODESETTINGS( BoneMaskValueNode::Settings, m_sourceMaskNodeIdx, m_targetMaskNodeIdx, m_blendWeightValueNodeIdx );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
@@ -64,8 +85,7 @@ namespace EE::Animation::GraphNodes
         BoneMaskValueNode*                                  m_pSourceBoneMask = nullptr;
         BoneMaskValueNode*                                  m_pTargetBoneMask = nullptr;
         FloatValueNode*                                     m_pBlendWeightValueNode = nullptr;
-        BoneMask                                            m_blendedBoneMask;
-        BoneMask const*                                     m_pResultMask = nullptr;
+        BoneMaskTaskList                                    m_taskList;
     };
 
     //-------------------------------------------------------------------------
@@ -76,7 +96,7 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public BoneMaskValueNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
             EE_SERIALIZE_GRAPHNODESETTINGS( BoneMaskValueNode::Settings, m_defaultMaskNodeIdx, m_parameterValueNodeIdx, m_switchDynamically, m_maskNodeIndices, m_parameterValues, m_blendTime );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
@@ -99,7 +119,7 @@ namespace EE::Animation::GraphNodes
         virtual void ShutdownInternal( GraphContext& context ) override;
         virtual void GetValueInternal( GraphContext& context, void* pOutValue ) override;
 
-        BoneMask const* GetBoneMaskForIndex( GraphContext& context, int32_t optionIndex ) const;
+        BoneMaskTaskList const* GetBoneMaskForIndex( GraphContext& context, int32_t optionIndex ) const;
 
         inline int32_t TrySelectMask( GraphContext& context ) const
         {
@@ -118,7 +138,7 @@ namespace EE::Animation::GraphNodes
         TInlineVector<BoneMaskValueNode*, 7>                m_boneMaskOptionNodes;
         int32_t                                             m_selectedMaskIndex = InvalidIndex;
         int32_t                                             m_newMaskIndex = InvalidIndex;
-        BoneMask                                            m_blendedBoneMask;
+        BoneMaskTaskList                                    m_taskList;
         Seconds                                             m_currentTimeInBlend = 0;
         bool                                                m_isBlending = false;
     };

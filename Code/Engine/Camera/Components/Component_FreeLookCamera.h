@@ -8,7 +8,7 @@ namespace EE
 {
     class EE_ENGINE_API FreeLookCameraComponent : public CameraComponent
     {
-        EE_REGISTER_ENTITY_COMPONENT( FreeLookCameraComponent );
+        EE_ENTITY_COMPONENT( FreeLookCameraComponent );
 
         friend class CameraDebugView;
 
@@ -20,8 +20,8 @@ namespace EE
         inline Radians GetPitch() const { return m_pitch; }
         inline Radians GetYaw() const { return m_yaw; }
 
-        // Perform local adjustments to the camera's heading and pitch
-        void AdjustPitchAndYaw( Radians headingDelta, Radians pitchDelta );
+        // Perform local adjustments to the camera's yaw and pitch
+        void AdjustPitchAndYaw( Radians yawDelta, Radians pitchDelta );
 
         // Reset the camera view to the default
         void ResetView();

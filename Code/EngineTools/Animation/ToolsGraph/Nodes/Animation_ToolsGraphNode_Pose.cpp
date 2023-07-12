@@ -6,9 +6,9 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void ZeroPoseToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ZeroPoseToolsNode::ZeroPoseToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Pose", GraphValueType::Pose );
     }
 
@@ -21,9 +21,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void ReferencePoseToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    ReferencePoseToolsNode::ReferencePoseToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Pose", GraphValueType::Pose );
     }
 
@@ -36,9 +36,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void AnimationPoseToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    AnimationPoseToolsNode::AnimationPoseToolsNode()
+        : DataSlotToolsNode()
     {
-        DataSlotToolsNode::Initialize( pParent );
         CreateOutputPin( "Pose", GraphValueType::Pose );
         CreateInputPin( "Time", GraphValueType::Float );
     }
@@ -62,17 +62,32 @@ namespace EE::Animation::GraphNodes
                     return InvalidIndex;
                 }
             }
-            else
-            {
-                context.LogError( this, "Disconnected time parameter pin on animation pose node!" );
-                return InvalidIndex;
-            }
 
             //-------------------------------------------------------------------------
 
             pSettings->m_dataSlotIndex = context.RegisterDataSlotNode( GetID() );
             pSettings->m_inputTimeRemapRange = m_inputTimeRemapRange;
+            pSettings->m_userSpecifiedTime = m_fixedTimeValue;
+            pSettings->m_useFramesAsInput = m_useFramesAsInput;
         }
         return pSettings->m_nodeIdx;
+    }
+
+    bool AnimationPoseToolsNode::DrawPinControls( VisualGraph::UserContext* pUserContext, VisualGraph::Flow::Pin const& pin )
+    {
+        DataSlotToolsNode::DrawPinControls( pUserContext, pin );
+
+        // Add parameter value input field
+        if ( pin.IsInputPin() && pin.m_type == GetPinTypeForValueType( GraphValueType::Float ) )
+        {
+            int32_t const pinIdx = GetInputPinIndex( pin.m_ID );
+
+            ImGui::SetNextItemWidth( 50 );
+            ImGui::InputFloat( "##parameter", &m_fixedTimeValue, 0.0f, 0.0f, "%.2f" );
+
+            return true;
+        }
+
+        return false;
     }
 }

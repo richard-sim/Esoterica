@@ -21,7 +21,8 @@ namespace EE::Resource
 
     public:
 
-        virtual ~IResource() {}
+        IResource( IResource const& ) = default;
+        virtual ~IResource() = default;
 
         inline ResourceID const& GetResourceID() const { return m_resourceID; }
         inline ResourcePath const& GetResourcePath() const { return m_resourceID.GetResourcePath(); }
@@ -31,6 +32,7 @@ namespace EE::Resource
 
         #if EE_DEVELOPMENT_TOOLS
         virtual char const* GetFriendlyName() const = 0;
+        uint64_t GetSourceResourceHash() const { return m_sourceResourceHash; }
         #endif
 
     protected:
@@ -40,13 +42,18 @@ namespace EE::Resource
     private:
 
         ResourceID      m_resourceID;
+
+        #if EE_DEVELOPMENT_TOOLS
+        uint64_t        m_sourceResourceHash = 0;
+        #endif
     };
 }
 
 //-------------------------------------------------------------------------
 
+// Define a resource
 // Note: The expected fourCC can only contain lowercase letters and digits
-#define EE_REGISTER_RESOURCE( typeFourCC, friendlyName ) \
+#define EE_RESOURCE( typeFourCC, friendlyName ) \
     public: \
         static bool const IsVirtualResource = false;\
         static ResourceTypeID const& GetStaticResourceTypeID() { static ResourceTypeID const typeID( typeFourCC ); return typeID; } \

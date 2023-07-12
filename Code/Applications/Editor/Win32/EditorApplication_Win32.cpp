@@ -74,11 +74,6 @@ namespace EE
     void EditorApplication::ProcessWindowResizeMessage( Int2 const& newWindowSize )
     {
         m_engine.GetRenderingSystem()->ResizePrimaryRenderTarget( newWindowSize );
-
-        // Hack to fix client area offset bug
-        RECT rect;
-        GetWindowRect( m_windowHandle, &rect );
-        MoveWindow( m_windowHandle, rect.left + 1, rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE );
     }
 
     void EditorApplication::ProcessInputMessage( UINT message, WPARAM wParam, LPARAM lParam )
@@ -110,7 +105,7 @@ namespace EE
         Int2 const windowDimensions( ( m_windowRect.right - m_windowRect.left ), ( m_windowRect.bottom - m_windowRect.top ) );
         if ( !m_engine.Initialize( windowDimensions ) )
         {
-            return FatalError( "Failed to initialize engine" );
+            return false;
         }
 
         return true;
@@ -123,8 +118,6 @@ namespace EE
 
     bool EditorApplication::ApplicationLoop()
     {
-        // Uncomment for live editing of ImguiTheme
-        //ImGuiX::Style::Apply();
         return m_engine.Update();
     }
 }

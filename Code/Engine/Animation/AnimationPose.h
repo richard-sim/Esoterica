@@ -19,16 +19,16 @@ namespace EE::Animation
 
     public:
 
-        enum class Type
+        enum class Type : uint8_t
         {
-            None,
+            None = 0,
             ReferencePose,
             ZeroPose
         };
 
-        enum class State
+        enum class State : uint8_t
         {
-            Unset,
+            Unset = 0,
             Pose,
             ReferencePose,
             ZeroPose,
@@ -39,13 +39,10 @@ namespace EE::Animation
 
         Pose( Skeleton const* pSkeleton, Type initialPoseType = Type::ReferencePose );
 
-        // Move
         Pose( Pose&& rhs );
+        Pose( Pose const& rhs );
         Pose& operator=( Pose&& rhs );
-
-        // Explicitly disable the copy operation to prevent accidental copies
-        Pose( Pose const& rhs ) = delete;
-        Pose& operator=( Pose const& rhs ) = delete;
+        Pose& operator=( Pose const& rhs );
 
         void CopyFrom( Pose const& rhs );
         EE_FORCE_INLINE void CopyFrom( Pose const* pRhs ) { CopyFrom( *pRhs ); }
@@ -118,7 +115,7 @@ namespace EE::Animation
         //-------------------------------------------------------------------------
 
         #if EE_DEVELOPMENT_TOOLS
-        void DrawDebug( Drawing::DrawContext& ctx, Transform const& worldTransform, Color color = Colors::HotPink ) const;
+        void DrawDebug( Drawing::DrawContext& ctx, Transform const& worldTransform, Color color = Colors::HotPink, float lineThickness = 2.0f ) const;
         #endif
 
     private:

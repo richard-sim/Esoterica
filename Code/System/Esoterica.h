@@ -1,5 +1,6 @@
 #pragma once
 
+#include "_Module/API.h"
 #include <stdint.h>
 
 //-------------------------------------------------------------------------
@@ -40,85 +41,75 @@ using nullptr_t = decltype( nullptr );
 #endif
 
 //-------------------------------------------------------------------------
-// Platform specific defines
+// Platform
 //-------------------------------------------------------------------------
+
+namespace EE::Platform
+{
+    enum class Target
+    {
+        PC = 0,
+    };
+}
 
 #if _WIN32
 #include "Platform/Platform_Win32.h"
 #endif
 
 //-------------------------------------------------------------------------
-// Debug defines
+// Logging
 //-------------------------------------------------------------------------
+
+#include "Logging/Log.h"
+
+//-------------------------------------------------------------------------
+// Defines
+//-------------------------------------------------------------------------
+
+#define InvalidIndex -1
+
+// Platform agnostic asserts
+//-------------------------------------------------------------------------
+
+// TODO: macr with comma in C++ with result in error macro expand
+// (e.g. for some type contains std::is_same_v<A, B> which contains a comma,
+//  and macro will expand that to cond = "is_same_v<A" and error = " B>")
+// To correct this, we have several solutions:
+// 
+// 1. Use macro to prevent macro expand.
+// #define COMMA ,
+// EE_STATIC_ASSERT( std::is_same_v<A COMMA B>, error_msg )
+// 
+// this way macro expand will separate comma correctly.
+//
+// Or something like:
+// #define SINGLE_ARG(...) __VA_ARGS__
+// EE_STATIC_ASSERT( SINGLE_ARG( std::is_same_v<A, B> ), error_msg )
+// 
+// 2. User takes care.
+// User just wrap cond with a parentheses.
+// 
+// EE_STATIC_ASSERT( ( std::is_same_v<A, B> ), error_msg )
+// 
+#define EE_STATIC_ASSERT( cond, error ) static_assert( cond, error )
 
 #if EE_DEVELOPMENT_TOOLS
 
-    // Platform agnostic asserts
-    //-------------------------------------------------------------------------
-    
-    // TODO: macr with comma in C++ with result in error macro expand
-    // (e.g. for some type contains std::is_same_v<A, B> which contains a comma,
-    //  and macro will expand that to cond = "is_same_v<A" and error = " B>")
-    // To correct this, we have several solutions:
-    // 
-    // 1. Use macro to prevent macro expand.
-    // #define COMMA ,
-    // EE_STATIC_ASSERT( std::is_same_v<A COMMA B>, error_msg )
-    // 
-    // this way macro expand will separate comma correctly.
-    //
-    // Or something like:
-    // #define SINGLE_ARG(...) __VA_ARGS__
-    // EE_STATIC_ASSERT( SINGLE_ARG( std::is_same_v<A, B> ), error_msg )
-    // 
-    // 2. User takes care.
-    // User just wrap cond with a parentheses.
-    // 
-    // EE_STATIC_ASSERT( ( std::is_same_v<A, B> ), error_msg )
-    // 
-    #define EE_STATIC_ASSERT( cond, error ) static_assert( cond, error )
-
-    #define EE_TRACE_ASSERT( msg ) { EE_TRACE_MSG( msg ); EE_HALT(); }
-    #define EE_UNIMPLEMENTED_FUNCTION() EE_TRACE_ASSERT("Function not implemented!\n")
-    #define EE_UNREACHABLE_CODE() EE_TRACE_ASSERT("Unreachable code encountered!\n")
+    #define EE_ASSERT( cond ) do { if( !(cond) ) { EE::Log::LogAssert( __FILE__, __LINE__, #cond ); EE_DEBUG_BREAK(); } } while( 0 )
+    #define EE_HALT() { EE::Log::LogAssert( __FILE__, __LINE__, "HALT" ); EE_DEBUG_BREAK(); }
+    #define EE_TRACE_MSG( msgFormat, ... ) EE::Log::TraceMessage( msgFormat, __VA_ARGS__ )
+    #define EE_TRACE_HALT( msgFormat, ... ) { EE::Log::LogAssert( __FILE__, __LINE__, msgFormat, __VA_ARGS__ ); EE_DEBUG_BREAK(); }
+    #define EE_UNIMPLEMENTED_FUNCTION() EE_TRACE_HALT( "Function not implemented!" )
+    #define EE_UNREACHABLE_CODE() EE_TRACE_HALT( "Unreachable code encountered!" )
 
 #else
 
     // Platform specific, need to be defined in Platform/Defines_XXX.h
-
     #define EE_ASSERT( cond ) do { (void)sizeof( cond );} while (0)
-    #define EE_TRACE_MSG_WIN32( msg )
-    #define EE_BREAK()
     #define EE_HALT()
-
-    #define EE_DISABLE_OPTIMIZATION
-    #define EE_ENABLE_OPTIMIZATION
-
-    // Platform agnostic asserts
-    //-------------------------------------------------------------------------
-
-    #define EE_STATIC_ASSERT( cond, error )
-    #define EE_TRACE_MSG( msg ) 
-    #define EE_TRACE_ASSERT( msg )
+    #define EE_TRACE_MSG( msgFormat, ... )
+    #define EE_TRACE_HALT( msgFormat, ... )
     #define EE_UNIMPLEMENTED_FUNCTION()
     #define EE_UNREACHABLE_CODE()
+
 #endif
-
-//-------------------------------------------------------------------------
-// Core typedefs
-//-------------------------------------------------------------------------
-
-namespace EE
-{
-    #define InvalidIndex -1
-
-    //-------------------------------------------------------------------------
-
-    namespace Platform
-    {
-        enum class Target
-        {
-            PC = 0,
-        };
-    }
-}

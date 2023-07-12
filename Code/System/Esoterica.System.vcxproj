@@ -15,17 +15,24 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Algorithm\Hash.h" />
-    <ClInclude Include="Algorithm\Quantization.h" />
-    <ClInclude Include="Algorithm\Sort.h" />
-    <ClInclude Include="Algorithm\TopologicalSort.h" />
-    <ClInclude Include="Algorithm\Encoding.h" />
+    <ClInclude Include="Utils\Sort.h" />
+    <ClInclude Include="Encoding\Hash.h" />
+    <ClInclude Include="Encoding\Quantization.h" />
+    <ClInclude Include="Imgui\ImguiFilteredCombo.h" />
+    <ClInclude Include="Logging\LoggingSystem.h" />
+    <ClInclude Include="Platform\Platform.h" />
+    <ClInclude Include="Serialization\BitSerialization.h" />
+    <ClInclude Include="ThirdParty\implot\implot.h" />
+    <ClInclude Include="ThirdParty\implot\implot_internal.h" />
+    <ClInclude Include="Utils\TopologicalSort.h" />
+    <ClInclude Include="Encoding\Encoding.h" />
     <ClInclude Include="Application\ApplicationGlobalState.h" />
     <ClInclude Include="Application\Platform\Application_Win32.h" />
     <ClInclude Include="Fonts\FontData_Lexend.h" />
     <ClInclude Include="Fonts\FontData_MaterialDesign.h" />
     <ClInclude Include="Fonts\FontData_Proggy.h" />
     <ClInclude Include="Fonts\FontDecompressor.h" />
+    <ClInclude Include="Utils\GlobalRegistryBase.h" />
     <ClInclude Include="Imgui\ImguiGizmo.h" />
     <ClInclude Include="Imgui\ImguiFont.h" />
     <ClInclude Include="Imgui\ImguiImageCache.h" />
@@ -76,6 +83,7 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
     <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h" />
+    <ClInclude Include="Math\MathUtils.h" />
     <ClInclude Include="Render\RenderAPI.h" />
     <ClInclude Include="Render\RenderPipeline.h" />
     <ClInclude Include="Render\RenderPipelineRegistry.h" />
@@ -434,11 +442,11 @@
     <ClInclude Include="TypeSystem\EnumInfo.h" />
     <ClInclude Include="TypeSystem\PropertyInfo.h" />
     <ClInclude Include="TypeSystem\PropertyPath.h" />
+    <ClInclude Include="TypeSystem\ReflectedType.h" />
     <ClInclude Include="TypeSystem\ResourceInfo.h" />
     <ClInclude Include="TypeSystem\TypeDescriptors.h" />
     <ClInclude Include="TypeSystem\TypeID.h" />
     <ClInclude Include="TypeSystem\TypeInfo.h" />
-    <ClInclude Include="TypeSystem\RegisteredType.h" />
     <ClInclude Include="TypeSystem\TypeRegistry.h" />
     <ClInclude Include="Serialization\TypeSerialization.h" />
     <ClInclude Include="Types\Atomic.h" />
@@ -446,7 +454,7 @@
     <ClInclude Include="FileSystem\FileSystemPath.h" />
     <ClInclude Include="FileSystem\FileStreams.h" />
     <ClInclude Include="FileSystem\FileSystem.h" />
-    <ClInclude Include="Log.h" />
+    <ClInclude Include="Logging\Log.h" />
     <ClInclude Include="Math\Transform.h" />
     <ClInclude Include="Math\Curves.h" />
     <ClInclude Include="Math\BoundingVolumes.h" />
@@ -466,7 +474,7 @@
     <ClInclude Include="Math\ViewVolume.h" />
     <ClInclude Include="Memory\Memory.h" />
     <ClInclude Include="Memory\Pointers.h" />
-    <ClInclude Include="Platform\PlatformHelpers_Win32.h" />
+    <ClInclude Include="Platform\PlatformUtils_Win32.h" />
     <ClInclude Include="Profiling.h" />
     <ClInclude Include="Systems.h" />
     <ClInclude Include="ThirdParty\enkits\LockLessMultiReadPipe.h" />
@@ -518,9 +526,15 @@
     <ClInclude Include="_Module\API.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Algorithm\Hash.cpp" />
-    <ClCompile Include="Algorithm\TopologicalSort.cpp" />
-    <ClCompile Include="Algorithm\Encoding.cpp" />
+    <ClCompile Include="Encoding\Hash.cpp" />
+    <ClCompile Include="Logging\LoggingSystem.cpp" />
+    <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
+    <ClCompile Include="Math\Platform\Math_Win32.h" />
+    <ClCompile Include="ThirdParty\implot\implot.cpp" />
+    <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
+    <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
+    <ClCompile Include="Utils\TopologicalSort.cpp" />
+    <ClCompile Include="Encoding\Encoding.cpp" />
     <ClCompile Include="Application\ApplicationGlobalState.cpp" />
     <ClCompile Include="Application\Platform\Application_Win32.cpp" />
     <ClCompile Include="Drawing\DebugDrawingSystem.cpp" />
@@ -546,7 +560,7 @@
     <ClCompile Include="Math\Curves.cpp" />
     <ClCompile Include="Math\FloatCurve.cpp" />
     <ClCompile Include="Math\MathRandom.cpp" />
-    <ClCompile Include="Math\MathStringHelpers.cpp" />
+    <ClCompile Include="Math\MathUtils.cpp" />
     <ClCompile Include="Drawing\DebugDrawingCommands.cpp" />
     <ClCompile Include="Drawing\DebugDrawing.cpp" />
     <ClCompile Include="Network\IPC\IPCMessage.cpp" />
@@ -595,7 +609,6 @@
     <ClCompile Include="FileSystem\FileStreams.cpp" />
     <ClCompile Include="FileSystem\FileSystemUtils.cpp" />
     <ClCompile Include="FileSystem\Platform\FileSystem_Win32.cpp" />
-    <ClCompile Include="Log.cpp" />
     <ClCompile Include="Math\Transform.cpp" />
     <ClCompile Include="Math\BoundingVolumes.cpp" />
     <ClCompile Include="Math\AABBTree.cpp" />
@@ -607,7 +620,7 @@
     <ClCompile Include="Math\Vector.cpp" />
     <ClCompile Include="Math\ViewVolume.cpp" />
     <ClCompile Include="Memory\Memory.cpp" />
-    <ClCompile Include="Platform\PlatformHelpers_Win32.cpp" />
+    <ClCompile Include="Platform\PlatformUtils_Win32.cpp" />
     <ClCompile Include="Profiling.cpp" />
     <ClCompile Include="Serialization\BinarySerialization.cpp" />
     <ClCompile Include="Serialization\JsonSerialization.cpp" />
@@ -647,7 +660,7 @@
     <ClCompile Include="TypeSystem\EnumInfo.cpp" />
     <ClCompile Include="TypeSystem\PropertyInfo.cpp" />
     <ClCompile Include="TypeSystem\PropertyPath.cpp" />
-    <ClCompile Include="TypeSystem\RegisteredType.cpp" />
+    <ClCompile Include="TypeSystem\ReflectedType.cpp" />
     <ClCompile Include="TypeSystem\TypeDescriptors.cpp" />
     <ClCompile Include="TypeSystem\TypeInfo.cpp" />
     <ClCompile Include="TypeSystem\TypeRegistry.cpp" />

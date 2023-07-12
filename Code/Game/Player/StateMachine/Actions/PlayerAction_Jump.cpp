@@ -1,14 +1,10 @@
 #include "PlayerAction_Jump.h"
 #include "Game/Player/Components/Component_MainPlayer.h"
-#include "Game/Player/Physics/PlayerPhysicsController.h"
 #include "Game/Player/Camera/PlayerCameraController.h"
 #include "Game/Player/Animation/PlayerAnimationController.h"
 #include "Game/Player/Animation/PlayerGraphController_Ability.h"
 #include "Engine/Physics/Components/Component_PhysicsCharacter.h"
 #include "System/Input/InputSystem.h"
-
-// hack for now
-#include "Game/Player/Animation/PlayerGraphController_Locomotion.h"
 
 //-------------------------------------------------------------------------
 
@@ -56,9 +52,7 @@ namespace EE::Player
             auto pAbilityAnimController = ctx.GetAnimSubGraphController<AbilityGraphController>();
             pAbilityAnimController->StartJump();
 
-            ctx.m_pCharacterController->DisableGravity();
-            ctx.m_pCharacterController->DisableProjectionOntoFloor();
-            ctx.m_pCharacterController->EnableStepHeight();
+            ctx.m_pCharacterComponent->SetGravityMode( Physics::ControllerGravityMode::NoGravity, 0.0f );
             m_jumpTimer.Start();
 
             if( m_isChargedJumpReady )
@@ -92,14 +86,8 @@ namespace EE::Player
         float const jumpTime = ( m_isChargedJumpReady ? g_bigJumpTimeToApex : g_smallJumpTimeToApex );
         if( m_jumpTimer.GetElapsedTimeSeconds() >= jumpTime )
         {
-            // Jump Completed
             return Status::Completed;
         }
-        //else if( m_jumpTimer.GetElapsedTimeSeconds() > 0.0f /*&& ctx.m_pCharacterComponent->GetCharacterVelocity().m_z <= 0.0f*/ )
-        //{
-        //    // Jump Collided with a over head collision
-        //    return Status::Completed;
-        //}
         else
         {
             m_jumpTimer.Update( ctx.GetDeltaTime() );
@@ -113,6 +101,7 @@ namespace EE::Player
 
             // Calculate desired player displacement
             //-------------------------------------------------------------------------
+
             Vector const movementInputs = pControllerState->GetLeftAnalogStickValue();
             auto const& camFwd = ctx.m_pCameraController->GetCameraRelativeForwardVector2D();
             auto const& camRight = ctx.m_pCameraController->GetCameraRelativeRightVector2D();
@@ -121,27 +110,36 @@ namespace EE::Player
             Vector const currentVelocity = ctx.m_pCharacterComponent->GetCharacterVelocity();
             Vector const currentVelocity2D = currentVelocity * Vector( 1.0f, 1.0f, 0.0f );
 
-            Vector const forward = camFwd * movementInputs.m_y;
-            Vector const right = camRight * movementInputs.m_x;
-            Vector const desiredHeadingVelocity2D = ( forward + right ) * g_maxAirControlAcceleration * ctx.GetDeltaTime();
+            Vector const forward = camFwd * movementInputs.GetSplatY();
+            Vector const right = camRight * movementInputs.GetSplatX();
+            Vector const desiredMovementVelocity2D = ( forward + right ) * g_maxAirControlAcceleration * ctx.GetDeltaTime();
 
-            Vector resultingVelocity = currentVelocity2D + desiredHeadingVelocity2D;
+            Vector resultingVelocity = currentVelocity2D + desiredMovementVelocity2D;
             float const length = resultingVelocity.GetLength2();
             if( length > g_maxAirControlSpeed )
             {
                 resultingVelocity = resultingVelocity.GetNormalized2() * g_maxAirControlSpeed;
             }
-            resultingVelocity.m_z = verticalVelocity;
+            resultingVelocity.SetZ( verticalVelocity );
 
-            Vector const facing = desiredHeadingVelocity2D.IsZero2() ? ctx.m_pCharacterComponent->GetForwardVector() : desiredHeadingVelocity2D.GetNormalized2();
+            Vector const facing = desiredMovementVelocity2D.IsZero2() ? ctx.m_pCharacterComponent->GetForwardVector() : desiredMovementVelocity2D.GetNormalized2();
 
             // Update animation controller
             //-------------------------------------------------------------------------
-            auto pLocomotionGraphController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
-            pLocomotionGraphController->SetLocomotionDesires( ctx.GetDeltaTime(), resultingVelocity, facing );
+
+            auto pAbilityGraphController = ctx.GetAnimSubGraphController<AbilityGraphController>();
+            pAbilityGraphController->SetDesiredMovement( ctx.GetDeltaTime(), resultingVelocity, facing );
         }
 
-        return Status::Interruptible;
+        //-------------------------------------------------------------------------
+
+        // Wait for the jump anim to complete
+        if ( ctx.m_pAnimationController->IsAnyTransitionAllowed() )
+        {
+            return Status::Interruptible;
+        }
+
+        return Status::Uninterruptible;
     }
 
     void JumpAction::StopInternal( ActionContext const& ctx, StopReason reason )

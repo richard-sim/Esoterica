@@ -4,18 +4,15 @@
 #include "Engine/Entity/EntityWorld.h"
 #include "Engine/Entity/EntityWorldManager.h"
 #include "Engine/Entity/ResourceLoaders/ResourceLoader_EntityCollection.h"
-#include "Engine/Physics/PhysicsSystem.h"
+#include "Engine/Physics/ResourceLoaders/ResourceLoader_PhysicsMaterialDatabase.h"
+#include "Engine/Physics/ResourceLoaders/ResourceLoader_PhysicsCollisionMesh.h"
+#include "Engine/Physics/ResourceLoaders/ResourceLoader_PhysicsRagdoll.h"
 #include "Engine/Physics/PhysicsMaterial.h"
 #include "Engine/Physics/Debug/PhysicsDebugRenderer.h"
-#include "Engine/Physics/ResourceLoaders/ResourceLoader_PhysicsMaterialDatabase.h"
-#include "Engine/Physics/ResourceLoaders/ResourceLoader_PhysicsMesh.h"
-#include "Engine/Physics/ResourceLoaders/ResourceLoader_PhysicsRagdoll.h"
 #include "Engine/Animation/ResourceLoaders/ResourceLoader_AnimationSkeleton.h"
 #include "Engine/Animation/ResourceLoaders/ResourceLoader_AnimationClip.h"
 #include "Engine/Animation/ResourceLoaders/ResourceLoader_AnimationGraph.h"
-#include "Engine/Animation/ResourceLoaders/ResourceLoader_AnimationBoneMask.h"
 #include "Engine/Navmesh/ResourceLoaders/ResourceLoader_Navmesh.h"
-#include "Engine/Navmesh/NavmeshSystem.h"
 #include "Engine/Render/RendererRegistry.h"
 #include "Engine/Render/Renderers/WorldRenderer.h"
 #include "Engine/Render/Renderers/DebugRenderer.h"
@@ -44,7 +41,7 @@ namespace EE
 {
     class EE_ENGINE_API EngineModule final
     {
-        EE_REGISTER_MODULE;
+        EE_REFLECT_MODULE;
 
         static void GetListOfAllRequiredModuleResources( TVector<ResourceID>& outResourceIDs );
 
@@ -56,6 +53,9 @@ namespace EE
         bool InitializeModule();
         void ShutdownModule();
 
+        //-------------------------------------------------------------------------
+
+        // Resource Loading
         void LoadModuleResources( Resource::ResourceSystem& resourceSystem );
         bool VerifyModuleResourceLoadingComplete();
         void UnloadModuleResources( Resource::ResourceSystem& resourceSystem );
@@ -70,7 +70,6 @@ namespace EE
         inline Render::RenderDevice* GetRenderDevice() { return m_pRenderDevice; }
         inline EntityWorldManager* GetEntityWorldManager() { return &m_entityWorldManager; }
         inline Render::RendererRegistry* GetRendererRegistry() { return &m_rendererRegistry; }
-        inline Physics::PhysicsSystem* GetPhysicsSystem() { return &m_physicsSystem; }
 
         //-------------------------------------------------------------------------
 
@@ -102,7 +101,6 @@ namespace EE
         // ImGui
         #if EE_DEVELOPMENT_TOOLS
         ImGuiX::ImguiSystem                             m_imguiSystem;
-        bool                                            m_imguiViewportsEnabled = true;
         #endif
 
         // Entity
@@ -125,16 +123,15 @@ namespace EE
 
         // Animation
         Animation::SkeletonLoader                       m_skeletonLoader;
-        Animation::BoneMaskLoader                       m_boneMaskLoader;
         Animation::AnimationClipLoader                  m_animationClipLoader;
         Animation::GraphLoader                          m_graphLoader;
 
         // Physics
-        Physics::PhysicsSystem                          m_physicsSystem;
-        Physics::PhysicsMeshLoader                      m_physicsMeshLoader;
+        Physics::CollisionMeshLoader                    m_physicsCollisionMeshLoader;
         Physics::PhysicsMaterialDatabaseLoader          m_physicsMaterialLoader;
         Physics::RagdollLoader                          m_physicsRagdollLoader;
-        TResourcePtr<Physics::PhysicsMaterialDatabase>  m_pPhysicMaterialDB;
+        Physics::MaterialRegistry                       m_physicsMaterialRegistry;
+        TResourcePtr<Physics::MaterialDatabase>         m_physicsMaterialDB;
 
         #if EE_DEVELOPMENT_TOOLS
         Physics::PhysicsRenderer                        m_physicsRenderer;
@@ -142,6 +139,5 @@ namespace EE
 
         // Navmesh
         Navmesh::NavmeshLoader                          m_navmeshLoader;
-        Navmesh::NavmeshSystem                          m_navmeshSystem;
     };
 }

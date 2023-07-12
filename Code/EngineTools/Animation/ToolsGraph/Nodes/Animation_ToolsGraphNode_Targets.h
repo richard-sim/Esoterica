@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class IsTargetSetToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( IsTargetSetToolsNode );
+        EE_REFLECT_TYPE( IsTargetSetToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        IsTargetSetToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "Is Target Set"; }
@@ -25,11 +25,11 @@ namespace EE::Animation::GraphNodes
 
     class TargetInfoToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( TargetInfoToolsNode );
+        EE_REFLECT_TYPE( TargetInfoToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        TargetInfoToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Target Info"; }
@@ -40,19 +40,19 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE TargetInfoNode::Info     m_infoType = TargetInfoNode::Info::Distance;
-        EE_EXPOSE bool                     m_isWorldSpaceTarget = true;
+        EE_REFLECT() TargetInfoNode::Info     m_infoType = TargetInfoNode::Info::Distance;
+        EE_REFLECT() bool                     m_isWorldSpaceTarget = true;
     };
 
     //-------------------------------------------------------------------------
 
     class TargetOffsetToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( TargetOffsetToolsNode );
+        EE_REFLECT_TYPE( TargetOffsetToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        TargetOffsetToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Target; }
         virtual char const* GetTypeName() const override { return "Target Offset"; }
@@ -62,8 +62,8 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE bool                 m_isBoneSpaceOffset  = true;
-        EE_EXPOSE Quaternion           m_rotationOffset = Quaternion::Identity;
-        EE_EXPOSE Vector               m_translationOffset = Vector::Zero;
+        EE_REFLECT() bool                 m_isBoneSpaceOffset  = true;
+        EE_REFLECT() Quaternion           m_rotationOffset = Quaternion::Identity;
+        EE_REFLECT() Vector               m_translationOffset = Vector::Zero;
     };
 }

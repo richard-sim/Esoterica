@@ -9,8 +9,8 @@ namespace EE::Animation
 {
     class SkeletonCompiler : public Resource::Compiler
     {
-        EE_REGISTER_TYPE( SkeletonCompiler );
-        static const int32_t s_version = 2;
+        EE_REFLECT_TYPE( SkeletonCompiler );
+        static const int32_t s_version = 3;
 
     public:
 

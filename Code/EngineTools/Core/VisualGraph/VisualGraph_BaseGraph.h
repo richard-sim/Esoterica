@@ -3,7 +3,7 @@
 #include "EngineTools/_Module/API.h"
 #include "VisualGraph_DrawingContext.h"
 #include "System/Serialization/JsonSerialization.h"
-#include "System/TypeSystem/RegisteredType.h"
+#include "System/TypeSystem/ReflectedType.h"
 #include "System/Esoterica.h"
 #include "System/Types/Event.h"
 #include "System/Types/Function.h"
@@ -29,18 +29,40 @@ namespace EE::VisualGraph
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINETOOLS_API BaseNode : public IRegisteredType
+    class EE_ENGINETOOLS_API BaseNode : public IReflectedType
     {
         friend BaseGraph;
         friend class GraphView;
 
-        constexpr static char const* const s_typeDataKey = "TypeData";
-        constexpr static char const* const s_childGraphKey = "ChildGraph";
-        constexpr static char const* const s_secondaryChildGraphKey = "SecondaryGraph";
+        // Serialization Keys
+        //-------------------------------------------------------------------------
+
+        constexpr static char const* const  s_typeDataKey = "TypeData";
+        constexpr static char const* const  s_childGraphKey = "ChildGraph";
+        constexpr static char const* const  s_secondaryChildGraphKey = "SecondaryGraph";
+
+        // Colors
+        //-------------------------------------------------------------------------
 
     public:
 
-        EE_REGISTER_TYPE( BaseNode );
+        constexpr static uint32_t const     s_defaultTitleColor = IM_COL32( 28, 28, 28, 255 );
+        constexpr static uint32_t const     s_defaultBackgroundColor = IM_COL32( 64, 64, 64, 255 );
+        constexpr static uint32_t const     s_defaultActiveColor = IM_COL32( 50, 205, 50, 255 );
+        constexpr static uint32_t const     s_defaultHoveredColor = IM_COL32( 150, 150, 150, 255 );
+        constexpr static uint32_t const     s_defaultSelectedColor = IM_COL32( 200, 200, 200, 255 );
+
+        constexpr static uint32_t const     s_connectionColor = IM_COL32( 185, 185, 185, 255 );
+        constexpr static uint32_t const     s_connectionColorValid = IM_COL32( 0, 255, 0, 255 );
+        constexpr static uint32_t const     s_connectionColorInvalid = IM_COL32( 255, 0, 0, 255 );
+        constexpr static uint32_t const     s_connectionColorHovered = IM_COL32( 255, 255, 255, 255 );
+
+        static Color const                  s_genericNodeSeparatorColor;
+        static Color const                  s_genericNodeInternalRegionDefaultColor;
+
+    public:
+
+        EE_REFLECT_TYPE( BaseNode );
 
         static BaseNode* TryCreateNodeFromSerializedData( TypeSystem::TypeRegistry const& typeRegistry, Serialization::JsonValue const& nodeObjectValue, BaseGraph* pParentGraph );
 
@@ -101,7 +123,10 @@ namespace EE::VisualGraph
         virtual bool IsDestroyable() const { return IsUserCreatable(); }
 
         // Returns the string path from the root graph
-        virtual String GetPathFromRoot() const;
+        virtual String GetStringPathFromRoot() const;
+
+        // Returns the ID path from the root graph
+        virtual TVector<UUID> GetIDPathFromRoot() const;
 
         // Regenerate UUIDs for this node and its sub-graphs, returns the original ID for the node.
         // The ID mapping will contain all the IDs changed: key = original ID, value = new ID
@@ -131,7 +156,7 @@ namespace EE::VisualGraph
         void SetCanvasPosition( Float2 const& newPosition );
 
         // Get node title bar color
-        virtual ImColor GetTitleBarColor() const { return VisualSettings::s_genericNodeTitleColor; }
+        virtual ImColor GetTitleBarColor() const { return s_defaultTitleColor; }
 
         // Optional function that can be overridden in derived classes to draw a border around the node to signify an active state
         virtual bool IsActive( UserContext* pUserContext ) const { return false; }
@@ -143,10 +168,10 @@ namespace EE::VisualGraph
         virtual Float2 GetNodeMargin() const { return Float2( 8, 4 ); }
 
         // Draw an internal separator
-        void DrawInternalSeparator( DrawContext const& ctx, Color color = VisualSettings::s_genericNodeSeparatorColor, float preMarginY = 2, float postMarginY = 4 ) const;
+        void DrawInternalSeparator( DrawContext const& ctx, Color color = s_genericNodeSeparatorColor, float preMarginY = 0.0f, float postMarginY = ImGui::GetStyle().ItemSpacing.y ) const;
 
         // Start an internal box region
-        void BeginDrawInternalRegion( DrawContext const& ctx, Color color = VisualSettings::s_genericNodeInternalRegionDefaultColor, float preMarginY = 0, float postMarginY = 0 ) const;
+        void BeginDrawInternalRegion( DrawContext const& ctx, Color color = s_genericNodeInternalRegionDefaultColor, float preMarginY = 0, float postMarginY = 0 ) const;
 
         // End an internal region
         void EndDrawInternalRegion( DrawContext const& ctx ) const;
@@ -195,6 +220,9 @@ namespace EE::VisualGraph
 
     protected:
 
+        // Override this if you need to do some logic each frame before the node is drawn - use sparingly
+        virtual void PreDrawUpdate( UserContext* pUserContext ) {}
+
         // Override this if you want to add extra controls to this node (the derived nodes will determine where this content is placed)
         virtual void DrawExtraControls( DrawContext const& ctx, UserContext* pUserContext ) {}
 
@@ -221,8 +249,12 @@ namespace EE::VisualGraph
 
     protected:
 
-        EE_REGISTER UUID            m_ID;
-        EE_REGISTER Float2          m_canvasPosition = Float2( 0, 0 ); // Updated each frame
+        EE_REFLECT( "IsToolsReadOnly" : true );
+        UUID                        m_ID;
+        
+        EE_REFLECT( "IsToolsReadOnly" : true );
+        Float2                      m_canvasPosition = Float2( 0, 0 ); // Updated each frame
+
         Float2                      m_size = Float2( 0, 0 ); // Updated each frame
         Float2                      m_titleRectSize = Float2( 0, 0 ); // Updated each frame
         bool                        m_isHovered = false;
@@ -245,25 +277,29 @@ namespace EE::VisualGraph
     enum class SearchMode { Localized, Recursive };
     enum class SearchTypeMatch { Exact, Derived };
 
-    class EE_ENGINETOOLS_API BaseGraph : public IRegisteredType
+    class EE_ENGINETOOLS_API BaseGraph : public IReflectedType
     {
         friend class GraphView;
+        friend class ScopedNodeModification;
 
         constexpr static char const* const s_nodesKey = "Nodes";
 
     public:
 
-        EE_REGISTER_TYPE( BaseGraph );
+        EE_REFLECT_TYPE( BaseGraph );
 
         static BaseGraph* CreateGraphFromSerializedData( TypeSystem::TypeRegistry const& typeRegistry, Serialization::JsonValue const& graphObjectValue, BaseNode* pParentNode  );
 
-        static inline TEventHandle<BaseGraph*> OnBeginModification() { return s_onBeginModification; }
-        static inline TEventHandle<BaseGraph*> OnEndModification() { return s_onEndModification; }
+        // Fired whenever a root graph is about to be modified
+        static inline TEventHandle<BaseGraph*> OnBeginRootGraphModification() { return s_onBeginRootGraphModification; }
+
+        // Fired whenever a root graph modification has been completed
+        static inline TEventHandle<BaseGraph*> OnEndRootGraphModification() { return s_onEndRootGraphModification; }
 
     private:
 
-        static TEvent<BaseGraph*>                 s_onBeginModification;
-        static TEvent<BaseGraph*>                 s_onEndModification;
+        static TEvent<BaseGraph*>                 s_onBeginRootGraphModification;
+        static TEvent<BaseGraph*>                 s_onEndRootGraphModification;
 
     public:
 
@@ -305,7 +341,15 @@ namespace EE::VisualGraph
 
         // Root Graph
         inline bool IsRootGraph() const { return !HasParentNode(); }
+
+        // Get the root graph for this graph
         BaseGraph* GetRootGraph();
+
+        // Returns the string path from the root graph
+        String GetStringPathFromRoot() const;
+
+        // Returns the string path from the root graph
+        TVector<UUID> GetIDPathFromRoot() const;
 
         // Parent Node
         inline bool HasParentNode() const { return m_pParentNode != nullptr; }
@@ -485,6 +529,9 @@ namespace EE::VisualGraph
         // Called whenever the user double clicks the graph - By default this will request a navigate action to its parent graph if it has one
         virtual void OnDoubleClick( UserContext* pUserContext );
 
+        // Called whenever we modify a direct child node of this graph
+        virtual void OnNodeModified( BaseNode* pModifiedNode ) {}
+
         // User this to draw any extra contextual information on the graph canvas
         virtual void DrawExtraInformation( DrawContext const& ctx, UserContext* pUserContext ) {}
 
@@ -506,13 +553,18 @@ namespace EE::VisualGraph
 
     protected:
 
-        EE_REGISTER UUID                        m_ID;
+        EE_REFLECT( "IsToolsReadOnly" : true );
+        UUID                                    m_ID;
+
         TVector<BaseNode*>                      m_nodes;
 
     private:
+
         BaseNode*                               m_pParentNode = nullptr; // Private so that we can enforce usage
         int32_t                                 m_beginModificationCallCount = 0;
-        EE_REGISTER Float2                      m_viewOffset = Float2( 0, 0 ); // Updated each frame
+
+        EE_REFLECT( "IsToolsReadOnly" : true );
+        Float2                                  m_viewOffset = Float2( 0, 0 ); // Updated each frame
     };
 
     //-------------------------------------------------------------------------
@@ -530,6 +582,11 @@ namespace EE::VisualGraph
 
         ~ScopedNodeModification()
         {
+            auto pParentGraph = m_pNode->GetParentGraph();
+            if ( pParentGraph != nullptr )
+            {
+                pParentGraph->OnNodeModified( m_pNode );
+            }
             m_pNode->EndModification();
         }
 

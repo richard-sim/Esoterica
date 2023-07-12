@@ -10,6 +10,7 @@
 #include "System/Types/String.h"
 #include "System/Types/BitFlags.h"
 #include "System/Types/Function.h"
+#include "System/Types/Arrays.h"
 
 //-------------------------------------------------------------------------
 
@@ -76,6 +77,7 @@ namespace EE::ImGuiX
         return isalnum( c ) || c == '_';
     }
 
+    // Filter a text callback restricting it to valid name ID characters
     inline int FilterNameIDChars( ImGuiInputTextCallbackData* data )
     {
         if ( IsValidNameIDChar( data->EventChar ) )
@@ -85,21 +87,36 @@ namespace EE::ImGuiX
         return 1;
     }
 
+    // Display a modal popup that is restricted to the current window's viewport
+    inline bool BeginViewportPopupModal( char const* pPopupName, bool* pIsPopupOpen, ImVec2 const& size = ImVec2( -1, -1 ), ImGuiCond windowSizeCond = ImGuiCond_Always, ImGuiWindowFlags windowFlags = ( ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize ) )
+    {
+        ImGui::OpenPopup( pPopupName );
+        ImGui::SetNextWindowSize( size, windowSizeCond );
+        ImGui::SetNextWindowViewport( ImGui::GetWindowViewport()->ID );
+        return ImGui::BeginPopupModal( pPopupName, pIsPopupOpen, windowFlags );
+    }
+
+    // Cancels an option dialog via ESC
+    inline bool CancelDialogViaEsc( bool isDialogOpen )
+    {
+        if ( ImGui::IsKeyPressed( ImGuiKey_Escape ) )
+        {
+            ImGui::CloseCurrentPopup();
+            return false;
+        }
+
+        return isDialogOpen;
+    }
+
     //-------------------------------------------------------------------------
     // Separators
     //-------------------------------------------------------------------------
 
-    // Create a centered separator which can be immediately followed by a item
-    EE_SYSTEM_API void PreSeparator( float width = 0 );
-
-    // Create a centered separator which can be immediately followed by a item
-    EE_SYSTEM_API void PostSeparator( float width = 0 );
-
     // Create a labeled separator: --- TEXT ---------------
-    EE_SYSTEM_API void TextSeparator( char const* text, float preWidth = 10.0f, float totalWidth = 0 );
+    EE_SYSTEM_API void TextSeparator( char const* text, float preWidth = 10.0f, float desiredWidth = 0 );
 
-    // Draws a vertical separator on the current line and forces the next item to be on the same line. The size is the offset between the previous item and the next
-    EE_SYSTEM_API void VerticalSeparator( ImVec2 const& size = ImVec2( -1, -1 ), ImColor const& color = 0 );
+    // Same as the Imgui::SameLine except it also draws a vertical separator.
+    EE_SYSTEM_API void SameLineSeparator( float width = 0, ImColor const& color = 0 );
 
     //-------------------------------------------------------------------------
     // Basic Widgets
@@ -114,14 +131,17 @@ namespace EE::ImGuiX
     // For use with text widget
     EE_SYSTEM_API void TextTooltip( const char* fmt, ... );
 
+    // A smaller checkbox allowing us to use a larger frame padding value
+    EE_SYSTEM_API bool Checkbox( char const* pLabel, bool* pValue );
+
     // Draw a button with an explicit icon
-    EE_SYSTEM_API bool IconButton( char const* pIcon, char const* pLabel, ImColor const& iconColor = ImGui::GetStyle().Colors[ImGuiCol_Text], ImVec2 const& size = ImVec2( 0, 0 ) );
+    EE_SYSTEM_API bool IconButton( char const* pIcon, char const* pLabel, ImColor const& iconColor = ImGui::GetStyle().Colors[ImGuiCol_Text], ImVec2 const& size = ImVec2( 0, 0 ), bool shouldCenterContents = false );
 
     // Draw a colored button
     EE_SYSTEM_API bool ColoredButton( ImColor const& backgroundColor, ImColor const& foregroundColor, char const* label, ImVec2 const& size = ImVec2( 0, 0 ) );
 
     // Draw a colored icon button
-    EE_SYSTEM_API bool ColoredIconButton( ImColor const& backgroundColor, ImColor const& foregroundColor, ImColor const& iconColor, char const* pIcon, char const* label, ImVec2 const& size = ImVec2( 0, 0 ) );
+    EE_SYSTEM_API bool ColoredIconButton( ImColor const& backgroundColor, ImColor const& foregroundColor, ImColor const& iconColor, char const* pIcon, char const* label, ImVec2 const& size = ImVec2( 0, 0 ), bool shouldCenterContents = false );
 
     // Draws a flat button - a button with no background
     EE_SYSTEM_API bool FlatButton( char const* label, ImVec2 const& size = ImVec2( 0, 0 ) );
@@ -138,16 +158,16 @@ namespace EE::ImGuiX
     }
 
     // Draw a colored icon button
-    EE_SYSTEM_API bool FlatIconButton( char const* pIcon, char const* pLabel, ImColor const& iconColor = ImGui::GetStyle().Colors[ImGuiCol_Text], ImVec2 const& size = ImVec2( 0, 0 ) );
+    EE_SYSTEM_API bool FlatIconButton( char const* pIcon, char const* pLabel, ImColor const& iconColor = ImGui::GetStyle().Colors[ImGuiCol_Text], ImVec2 const& size = ImVec2( 0, 0 ), bool shouldCenterContents = false );
 
-    // Combo button - button with extra drop down options - returns true if the primary button was pressed
-    EE_SYSTEM_API bool ComboButton( char const* pButtonLabel, char const* comboID, float buttonWidth, TFunction<void()>&& comboCallback );
-
-    // Combo button - button with extra drop down options - returns true if the primary button was pressed
-    EE_SYSTEM_API bool IconComboButton( char const* pIcon, char const* pButtonLabel, ImColor const& iconColor, char const* comboID, float buttonWidth, TFunction<void()>&& comboCallback );
+    // Button with extra drop down options - returns true if the primary button was pressed
+    EE_SYSTEM_API bool IconButtonWithDropDown( char const* widgetID, char const* pIcon, char const* pButtonLabel, ImColor const& iconColor, float buttonWidth, TFunction<void()> const& comboCallback, bool shouldCenterContents = false );
 
     // Toggle button
     EE_SYSTEM_API bool ToggleButton( char const* pOnLabel, char const* pOffLabel, bool& value, ImVec2 const& size = ImVec2( 0, 0 ), ImColor const& onColor = ImGuiX::Style::s_colorAccent0, ImColor const& offColor = ImGui::GetStyle().Colors[ImGuiCol_Text] );
+
+    // Toggle button
+    EE_SYSTEM_API bool FlatToggleButton( char const* pOnLabel, char const* pOffLabel, bool& value, ImVec2 const& size = ImVec2( 0, 0 ), ImColor const& onColor = ImGuiX::Style::s_colorAccent0, ImColor const& offColor = ImGui::GetStyle().Colors[ImGuiCol_Text] );
 
     // Draw an arrow between two points
     EE_SYSTEM_API void DrawArrow( ImDrawList* pDrawList, ImVec2 const& arrowStart, ImVec2 const& arrowEnd, ImColor const& color, float arrowWidth, float arrowHeadWidth = 5.0f );
@@ -163,7 +183,6 @@ namespace EE::ImGuiX
     EE_SYSTEM_API bool InputFloat2( char const* pID, Float2& value, float width = -1, bool readOnly = false );
     EE_SYSTEM_API bool InputFloat3( char const* pID, Float3& value, float width = -1, bool readOnly = false );
     EE_SYSTEM_API bool InputFloat4( char const* pID, Float4& value, float width = -1, bool readOnly = false );
-    EE_SYSTEM_API bool InputFloat4( char const* pID, Vector& value, float width = -1, bool readOnly = false );
 
     EE_SYSTEM_API bool InputTransform( char const* pID, Transform& value, float width = -1, bool readOnly = false );
 
@@ -207,7 +226,7 @@ namespace EE::ImGuiX
 
     public:
 
-        enum Options : uint8_t
+        enum Flags : uint8_t
         {
             TakeInitialFocus = 0
         };
@@ -215,12 +234,18 @@ namespace EE::ImGuiX
     public:
 
         // Draws the filter. Returns true if the filter has been updated
-        bool DrawAndUpdate( TBitFlags<Options> options = TBitFlags<Options>() );
+        bool DrawAndUpdate( float width = -1, TBitFlags<Flags> flags = TBitFlags<Flags>() );
 
+        // Set the help text shown when we dont have focus and the filter is empty
+        void SetFilterHelpText( String const& helpText ) { m_filterHelpText = helpText; }
+
+        // Clear the filter
         inline void Clear();
 
+        // Do we have a filter set?
         inline bool HasFilterSet() const { return !m_tokens.empty(); }
 
+        // Get the split filter text token
         inline TVector<String> const& GetFilterTokens() const { return m_tokens; }
 
         // Does a provided string match the current filter - the string copy is intentional!
@@ -230,7 +255,10 @@ namespace EE::ImGuiX
 
         char                m_buffer[s_bufferSize] = { 0 };
         TVector<String>     m_tokens;
+        String              m_filterHelpText = "Filter...";
     };
+
+    //-------------------------------------------------------------------------
 
     // A simple 3D gizmo to show the orientation of a camera in a scene
     struct EE_SYSTEM_API OrientationGuide
@@ -256,16 +284,17 @@ namespace EE::ImGuiX
 
     struct EE_SYSTEM_API ApplicationTitleBar
     {
-        static Float2 const s_windowControlButtonSize;
-        constexpr static float const s_minimumDraggableGap = 20;
+        constexpr static float const s_windowControlButtonWidth = 45;
+        constexpr static float const s_minimumDraggableGap = 24; // Minimum open gap left open to allow dragging
+        constexpr static float const s_sectionPadding = 8; // Padding between the window frame/window controls and the menu/control sections
 
-        static inline float GetWindowsControlsWidth() { return s_windowControlButtonSize.m_x * 3; }
+        static inline float GetWindowsControlsWidth() { return s_windowControlButtonWidth * 3; }
         static void DrawWindowControls();
 
     public:
 
-        // This function takes three delegates and sizes each representing an area of the title bar to draw to.
-        void Draw( TFunction<void()>&& leftSectionDrawFunction = TFunction<void()>(), float leftSectionWidth = 0, TFunction<void()>&& midSectionDrawFunction = TFunction<void()>(), float midSectionWidth = 0, TFunction<void()>&& rightSectionDrawFunction = TFunction<void()>(), float rightSectionWidth = 0 );
+        // This function takes two delegates and sizes each representing the title bar menu and an extra optional controls section
+        void Draw( TFunction<void()>&& menuSectionDrawFunction = TFunction<void()>(), float menuSectionWidth = 0, TFunction<void()>&& controlsSectionDrawFunction = TFunction<void()>(), float controlsSectionWidth = 0 );
 
         // Get the screen space rectangle for this title bar
         Math::ScreenSpaceRectangle const& GetScreenRectangle() const { return m_rect; }

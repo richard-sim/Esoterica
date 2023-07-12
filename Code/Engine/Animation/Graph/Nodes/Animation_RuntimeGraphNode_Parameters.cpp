@@ -76,42 +76,6 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void ControlParameterIntNode::Settings::InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const
-    {
-        CreateNode<ControlParameterIntNode>( context, options );
-    }
-
-    void ControlParameterIntNode::GetValueInternal( GraphContext& context, void* pOutValue )
-    {
-        if ( !WasUpdated( context ) )
-        {
-            MarkNodeActive( context );
-        }
-
-        *( (int32_t*) pOutValue ) = m_value;
-    }
-
-    void ControlParameterIntNode::SetValueInternal( void const* pInValue )
-    {
-        m_value = *(int32_t*) pInValue;
-    }
-
-    #if EE_DEVELOPMENT_TOOLS
-    void ControlParameterIntNode::RecordGraphState( RecordedGraphState& outState )
-    {
-        IntValueNode::RecordGraphState( outState );
-        outState.WriteValue( m_value );
-    }
-
-    void ControlParameterIntNode::RestoreGraphState( RecordedGraphState const& inState )
-    {
-        IntValueNode::RestoreGraphState( inState );
-        inState.ReadValue( m_value );
-    }
-    #endif
-
-    //-------------------------------------------------------------------------
-
     void ControlParameterFloatNode::Settings::InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const
     {
         CreateNode<ControlParameterFloatNode>( context, options );
@@ -288,40 +252,6 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void VirtualParameterIntNode::Settings::InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const
-    {
-        auto pNode = CreateNode<VirtualParameterIntNode>( context, options );
-        context.SetNodePtrFromIndex( m_childNodeIdx, pNode->m_pChildNode );
-    }
-
-    void VirtualParameterIntNode::InitializeInternal( GraphContext& context )
-    {
-        EE_ASSERT( m_pChildNode != nullptr );
-        IntValueNode::InitializeInternal( context );
-        m_pChildNode->Initialize( context );
-    }
-
-    void VirtualParameterIntNode::ShutdownInternal( GraphContext& context )
-    {
-        EE_ASSERT( m_pChildNode != nullptr );
-        m_pChildNode->Shutdown( context );
-        IntValueNode::ShutdownInternal( context );
-    }
-
-    void VirtualParameterIntNode::GetValueInternal( GraphContext& context, void* pOutValue )
-    {
-        EE_ASSERT( m_pChildNode != nullptr );
-        if ( !WasUpdated( context ) )
-        {
-            MarkNodeActive( context );
-            m_value = m_pChildNode->GetValue<int32_t>( context );
-        }
-
-        *reinterpret_cast<int32_t*>( pOutValue ) = m_value;
-    }
-
-    //-------------------------------------------------------------------------
-
     void VirtualParameterFloatNode::Settings::InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const
     {
         auto pNode = CreateNode<VirtualParameterFloatNode>( context, options );
@@ -450,9 +380,9 @@ namespace EE::Animation::GraphNodes
         if ( !WasUpdated( context ) )
         {
             MarkNodeActive( context );
-            m_value = *m_pChildNode->GetValue<BoneMask const*>( context );
+            m_value = *m_pChildNode->GetValue<BoneMaskTaskList const*>( context );
         }
 
-        *reinterpret_cast<BoneMask const**>( pOutValue ) = &m_value;
+        *reinterpret_cast<BoneMaskTaskList const**>( pOutValue ) = &m_value;
     }
 }

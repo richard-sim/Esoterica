@@ -12,6 +12,7 @@ namespace EE::Animation::GraphNodes
         context.SetOptionalNodePtrFromIndex( m_childNodeIdx, pNode->m_pChildNode );
         context.SetOptionalNodePtrFromIndex( m_layerBoneMaskNodeIdx, pNode->m_pBoneMaskNode );
         context.SetOptionalNodePtrFromIndex( m_layerWeightNodeIdx, pNode->m_pLayerWeightNode );
+        context.SetOptionalNodePtrFromIndex( m_layerRootMotionWeightNodeIdx, pNode->m_pLayerRootMotionWeightNode );
     }
 
     //-------------------------------------------------------------------------
@@ -36,10 +37,13 @@ namespace EE::Animation::GraphNodes
         m_transitionState = TransitionState::None;
         m_elapsedTimeInState = 0.0f;
         m_sampledEventRange = SampledEventRange();
+        m_previousTime = m_currentTime = 0.0f;
+        m_duration = 0.0f;
 
         if ( m_pChildNode != nullptr )
         {
             m_pChildNode->Initialize( context, initialTime );
+
             if ( m_pChildNode->IsValid() )
             {
                 m_duration = m_pChildNode->GetDuration();
@@ -100,7 +104,7 @@ namespace EE::Animation::GraphNodes
         m_transitionState = TransitionState::TransitioningIn;
     }
 
-    void StateNode::StartTransitionOut( GraphContext& context )
+    SampledEventRange StateNode::StartTransitionOut( GraphContext& context )
     {
         EE_ASSERT( context.IsValid() );
 
@@ -114,6 +118,8 @@ namespace EE::Animation::GraphNodes
 
         // Resample state events
         SampleStateEvents( context );
+
+        return m_sampledEventRange;
     }
 
     void StateNode::SampleStateEvents( GraphContext& context )
@@ -179,41 +185,49 @@ namespace EE::Animation::GraphNodes
         EE_ASSERT( context.IsValid() );
 
         // Early out if we are not in a layer
-        if ( !context.m_layerContext.IsSet() )
+        if ( !context.IsInLayer() )
         {
             return;
         }
 
-        // Update layer weight
+        // Update layer weights
         //-------------------------------------------------------------------------
 
         auto pStateSettings = GetSettings<StateNode>();
         if ( pStateSettings->m_isOffState )
         {
             context.m_layerContext.m_layerWeight = 0.0f;
+            context.m_layerContext.m_rootMotionLayerWeight = 0.0f;
         }
-        else if ( m_pLayerWeightNode != nullptr )
+        else
         {
-            context.m_layerContext.m_layerWeight *= Math::Clamp( m_pLayerWeightNode->GetValue<float>( context ), 0.0f, 1.0f );
+            if ( m_pLayerWeightNode != nullptr )
+            {
+                context.m_layerContext.m_layerWeight *= Math::Clamp( m_pLayerWeightNode->GetValue<float>( context ), 0.0f, 1.0f );
+            }
+
+            if ( m_pLayerRootMotionWeightNode != nullptr )
+            {
+                context.m_layerContext.m_rootMotionLayerWeight *= Math::Clamp( m_pLayerRootMotionWeightNode->GetValue<float>( context ), 0.0f, 1.0f );
+            }
         }
 
-        // Update bone mask
+        // Update bone mask task list
         //-------------------------------------------------------------------------
 
         if ( m_pBoneMaskNode != nullptr )
         {
-            auto pBoneMask = m_pBoneMaskNode->GetValue<BoneMask const*>( context );
-            if ( pBoneMask != nullptr )
+            auto pBoneMaskTaskList = m_pBoneMaskNode->GetValue<BoneMaskTaskList const*>( context );
+            if ( pBoneMaskTaskList != nullptr )
             {
-                // If we dont have a bone mask set, use a copy of the state's mask
-                if ( context.m_layerContext.m_pLayerMask == nullptr )
+                // If we dont have a bone mask task list, use a copy of the state's task list
+                if ( !context.m_layerContext.m_layerMaskTaskList.HasTasks() )
                 {
-                    context.m_layerContext.m_pLayerMask = context.m_boneMaskPool.GetBoneMask();
-                    context.m_layerContext.m_pLayerMask->CopyFrom( *pBoneMask );
+                    context.m_layerContext.m_layerMaskTaskList.CopyFrom( *pBoneMaskTaskList );
                 }
                 else // If we already have a bone mask set, combine the bone masks
                 {
-                    context.m_layerContext.m_pLayerMask->CombineWith( *pBoneMask );
+                    context.m_layerContext.m_layerMaskTaskList.CombineWith( *pBoneMaskTaskList );
                 }
             }
         }
@@ -227,7 +241,7 @@ namespace EE::Animation::GraphNodes
 
         // Set the result to a valid event range since we are recording it
         GraphPoseNodeResult result;
-        m_sampledEventRange = SampledEventRange( context.m_sampledEventsBuffer.GetNumSampledEvents() );
+        m_sampledEventRange = context.GetEmptySampledEventRange();
 
         // Update child
         if ( m_pChildNode != nullptr && m_pChildNode->IsValid() )
@@ -262,7 +276,7 @@ namespace EE::Animation::GraphNodes
 
         // Set the result to a valid event range since we are recording it
         GraphPoseNodeResult result;
-        m_sampledEventRange = SampledEventRange( context.m_sampledEventsBuffer.GetNumSampledEvents() );
+        m_sampledEventRange = context.GetEmptySampledEventRange();
 
         // Update child
         if ( m_pChildNode != nullptr && m_pChildNode->IsValid() )

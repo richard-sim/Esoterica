@@ -3,7 +3,7 @@
 #include "Applications/Reflector/ReflectorSettingsAndUtils.h"
 #include "Applications/Reflector/Database/ReflectionDatabase.h"
 #include "System/Time/Timers.h"
-#include "System/Platform/PlatformHelpers_Win32.h"
+#include "System/Platform/PlatformUtils_Win32.h"
 #include <fstream>
 
 //-------------------------------------------------------------------------
@@ -40,7 +40,7 @@ namespace EE::TypeSystem::Reflection
                 continue;
             }
 
-            m_context.m_headersToVisit.push_back( pHeader->m_ID );
+            m_context.m_headersToVisit.emplace_back( pHeader->m_ID, pHeader );
             includeStr += "#include \"" + pHeader->m_filePath.GetString() + "\"\n";
         }
 
@@ -133,12 +133,17 @@ namespace EE::TypeSystem::Reflection
 
         //-------------------------------------------------------------------------
 
-        // If we have an error from the parser, pre-pend the header to it
-        if ( m_context.ErrorOccured() )
+        if ( !m_context.HasErrorOccured() )
         {
-            m_context.LogError( "%s --> %s", reflectorHeader.c_str(), m_context.GetErrorMessage() );
+            m_context.CheckForOrphanedReflectionMacros();
         }
 
-        return !m_context.ErrorOccured();
+        // If we have an error from the parser, prepend the header to it
+        if ( m_context.HasErrorOccured() )
+        {
+            m_context.LogError( "\n%s", m_context.GetErrorMessage() );
+        }
+
+        return !m_context.HasErrorOccured();
     }
 }

@@ -54,7 +54,7 @@ namespace EE::AI
             m_pCharacterMeshComponent = pCharacterMeshComponent;
         }
 
-        else if ( auto pGraphComponent = TryCast<Animation::AnimationGraphComponent>( pComponent ) )
+        else if ( auto pGraphComponent = TryCast<Animation::GraphComponent>( pComponent ) )
         {
             // We only support one component ATM - animation graph comps are not singletons
             EE_ASSERT( m_pAnimGraphComponent == nullptr );
@@ -94,7 +94,7 @@ namespace EE::AI
             EE::Delete( m_behaviorContext.m_pAnimationController );
         }
 
-        else if ( auto pGraphComponent = TryCast<Animation::AnimationGraphComponent>( pComponent ) )
+        else if ( auto pGraphComponent = TryCast<Animation::GraphComponent>( pComponent ) )
         {
             EE_ASSERT( m_pAnimGraphComponent != nullptr );
             m_pAnimGraphComponent = nullptr;
@@ -109,7 +109,7 @@ namespace EE::AI
     {
         TScopedGuardValue const contextGuardValue( m_behaviorContext.m_pEntityWorldUpdateContext, &ctx );
         TScopedGuardValue const navmeshSystemGuardValue( m_behaviorContext.m_pNavmeshSystem, ctx.GetWorldSystem<Navmesh::NavmeshWorldSystem>() );
-        TScopedGuardValue const physicsSystemGuard( m_behaviorContext.m_pPhysicsScene, ctx.GetWorldSystem<Physics::PhysicsWorldSystem>()->GetScene() );
+        TScopedGuardValue const physicsSystemGuard( m_behaviorContext.m_pPhysicsWorld, ctx.GetWorldSystem<Physics::PhysicsWorldSystem>()->GetWorld() );
 
         #ifndef EE_ENABLE_NAVPOWER
         if ( true )
@@ -131,12 +131,12 @@ namespace EE::AI
             m_behaviorSelector.Update();
 
             // Update animation and get root motion delta (remember that root motion is in character space, so we need to convert the displacement to world space)
-            m_pAnimGraphComponent->EvaluateGraph( ctx.GetDeltaTime(), m_pCharacterMeshComponent->GetWorldTransform(), m_behaviorContext.m_pPhysicsScene );
+            m_pAnimGraphComponent->EvaluateGraph( ctx.GetDeltaTime(), m_pCharacterMeshComponent->GetWorldTransform(), m_behaviorContext.m_pPhysicsWorld );
             Vector const& deltaTranslation = m_pCharacterMeshComponent->GetWorldTransform().RotateVector( m_pAnimGraphComponent->GetRootMotionDelta().GetTranslation() );
             Quaternion const& deltaRotation = m_pAnimGraphComponent->GetRootMotionDelta().GetRotation();
 
             // Move character
-            m_behaviorContext.m_pCharacterController->TryMoveCapsule( ctx, m_behaviorContext.m_pPhysicsScene, deltaTranslation, deltaRotation );
+            m_behaviorContext.m_pCharacterController->TryMoveCapsule( ctx, m_behaviorContext.m_pPhysicsWorld, deltaTranslation, deltaRotation );
 
             // Run animation pose tasks
             m_pAnimGraphComponent->ExecutePrePhysicsTasks( ctx.GetDeltaTime(), m_pCharacterMeshComponent->GetWorldTransform() );

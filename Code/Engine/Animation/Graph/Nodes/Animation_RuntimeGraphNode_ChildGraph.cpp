@@ -2,7 +2,7 @@
 #include "Engine/Animation/Graph/Animation_RuntimeGraph_Instance.h"
 #include "Engine/Animation/TaskSystem/Animation_TaskSystem.h"
 #include "Engine/Animation/TaskSystem/Tasks/Animation_Task_DefaultPose.h"
-#include "System/Log.h"
+
 
 //-------------------------------------------------------------------------
 
@@ -64,7 +64,10 @@ namespace EE::Animation::GraphNodes
         {
             ReflectControlParameters( context );
 
-            auto pRootNode = m_pGraphInstance->GetRootNode();
+            auto pRootNode = const_cast<PoseNode*>( m_pGraphInstance->GetRootNode() );
+            EE_ASSERT( !pRootNode->IsInitialized() );
+            pRootNode->Initialize( context, initialTime );
+
             m_previousTime = pRootNode->GetCurrentTime();
             m_currentTime = pRootNode->GetCurrentTime();
             m_duration = pRootNode->GetDuration();
@@ -72,10 +75,18 @@ namespace EE::Animation::GraphNodes
         else
         {
             m_previousTime = m_currentTime = 0.0f;
-            m_duration = 0.0f;
+            m_duration = 0;
         }
+    }
 
-        m_isFirstUpdate = true;
+    void ChildGraphNode::ShutdownInternal( GraphContext& context )
+    {
+        if ( m_pGraphInstance != nullptr )
+        {
+            auto pRootNode = const_cast<PoseNode*>( m_pGraphInstance->GetRootNode() );
+            EE_ASSERT( pRootNode->IsInitialized() );
+            pRootNode->Shutdown( context );
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -122,12 +133,6 @@ namespace EE::Animation::GraphNodes
                 case GraphValueType::ID:
                 {
                     m_pGraphInstance->SetControlParameterValue( childParamIdx, pParameter->GetValue<StringID>( context ) );
-                }
-                break;
-
-                case GraphValueType::Int:
-                {
-                    m_pGraphInstance->SetControlParameterValue( childParamIdx, pParameter->GetValue<int32_t>( context ) );
                 }
                 break;
 
@@ -184,14 +189,13 @@ namespace EE::Animation::GraphNodes
         GraphPoseNodeResult result;
         if ( m_pGraphInstance == nullptr )
         {
-            result.m_sampledEventRange = SampledEventRange( context.m_sampledEventsBuffer.GetNumSampledEvents() );
+            result.m_sampledEventRange = context.GetEmptySampledEventRange();
             result.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::DefaultPoseTask>( GetNodeIndex(), Pose::Type::ReferencePose );
         }
         else
         {
             ReflectControlParameters( context );
-            result = m_pGraphInstance->EvaluateGraph( context.m_deltaTime, context.m_worldTransform, context.m_pPhysicsScene, m_isFirstUpdate );
-            m_isFirstUpdate = false;
+            result = m_pGraphInstance->EvaluateGraph( context.m_deltaTime, context.m_worldTransform, context.m_pPhysicsWorld );
             TransferGraphInstanceData( context, result );
         }
         return result;
@@ -205,14 +209,13 @@ namespace EE::Animation::GraphNodes
         GraphPoseNodeResult result;
         if ( m_pGraphInstance == nullptr )
         {
-            result.m_sampledEventRange = SampledEventRange( context.m_sampledEventsBuffer.GetNumSampledEvents() );
+            result.m_sampledEventRange = context.GetEmptySampledEventRange();
             result.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::DefaultPoseTask>( GetNodeIndex(), Pose::Type::ReferencePose );
         }
         else
         {
             ReflectControlParameters( context );
-            result = m_pGraphInstance->EvaluateGraph( context.m_deltaTime, context.m_worldTransform, context.m_pPhysicsScene, updateRange, m_isFirstUpdate );
-            m_isFirstUpdate = false;
+            result = m_pGraphInstance->EvaluateGraph( context.m_deltaTime, context.m_worldTransform, context.m_pPhysicsWorld, updateRange );
             TransferGraphInstanceData( context, result );
         }
         return result;
@@ -226,8 +229,8 @@ namespace EE::Animation::GraphNodes
         PoseNode::RecordGraphState( outState );
 
         // Record the child graph initial state
-        RecordedGraphState* pChildRecorder = outState.CreateChildGraphStateRecording( GetNodeIndex() );
-        m_pGraphInstance->StartRecording( *pChildRecorder );
+        RecordedGraphState* pChildGraphState = outState.CreateChildGraphStateRecording( GetNodeIndex() );
+        m_pGraphInstance->RecordGraphState( *pChildGraphState );
     }
 
     void ChildGraphNode::RestoreGraphState( RecordedGraphState const& inState )
@@ -235,8 +238,8 @@ namespace EE::Animation::GraphNodes
         PoseNode::RestoreGraphState( inState );
 
         // Restore child graph state
-        RecordedGraphState* pChildRecording = inState.GetChildGraphRecording( GetNodeIndex() );
-        m_pGraphInstance->SetToRecordedState( *pChildRecording );
+        RecordedGraphState* pChildGraphState = inState.GetChildGraphRecording( GetNodeIndex() );
+        m_pGraphInstance->SetToRecordedState( *pChildGraphState );
     }
     #endif
 }

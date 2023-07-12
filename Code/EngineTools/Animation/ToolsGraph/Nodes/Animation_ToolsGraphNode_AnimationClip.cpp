@@ -6,11 +6,12 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void AnimationClipToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    AnimationClipToolsNode::AnimationClipToolsNode()
+        :DataSlotToolsNode()
     {
-        DataSlotToolsNode::Initialize( pParent );
         CreateOutputPin( "Pose", GraphValueType::Pose );
         CreateInputPin( "Play In Reverse", GraphValueType::Bool );
+        CreateInputPin( "Reset Time", GraphValueType::Bool );
     }
 
     int16_t AnimationClipToolsNode::Compile( GraphCompilationContext& context ) const
@@ -19,13 +20,29 @@ namespace EE::Animation::GraphNodes
         NodeCompilationState const state = context.GetSettings<AnimationClipNode>( this, pSettings );
         if ( state == NodeCompilationState::NeedCompilation )
         {
-            auto pShouldPlayInReverseNodeNode = GetConnectedInputNode<FlowToolsNode>( 0 );
-            if ( pShouldPlayInReverseNodeNode != nullptr )
+            auto pShouldPlayInReverseNode = GetConnectedInputNode<FlowToolsNode>( 0 );
+            if ( pShouldPlayInReverseNode != nullptr )
             {
-                auto compiledNodeIdx = pShouldPlayInReverseNodeNode->Compile( context );
+                auto compiledNodeIdx = pShouldPlayInReverseNode->Compile( context );
                 if ( compiledNodeIdx != InvalidIndex )
                 {
                     pSettings->m_playInReverseValueNodeIdx = compiledNodeIdx;
+                }
+                else
+                {
+                    return InvalidIndex;
+                }
+            }
+
+            //-------------------------------------------------------------------------
+
+            auto pResetTimeNode = GetConnectedInputNode<FlowToolsNode>( 1 );
+            if ( pResetTimeNode != nullptr )
+            {
+                auto compiledNodeIdx = pResetTimeNode->Compile( context );
+                if ( compiledNodeIdx != InvalidIndex )
+                {
+                    pSettings->m_resetTimeValueNodeIdx = compiledNodeIdx;
                 }
                 else
                 {
@@ -41,5 +58,4 @@ namespace EE::Animation::GraphNodes
         }
         return pSettings->m_nodeIdx;
     }
-
 }

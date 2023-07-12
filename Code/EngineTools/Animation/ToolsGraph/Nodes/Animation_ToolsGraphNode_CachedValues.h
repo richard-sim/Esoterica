@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class CachedBoolToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( CachedBoolToolsNode );
+        EE_REFLECT_TYPE( CachedBoolToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        CachedBoolToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
         virtual char const* GetTypeName() const override { return "Cached Bool"; }
@@ -23,18 +23,18 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE CachedValueMode          m_mode = CachedValueMode::OnEntry;
+        EE_REFLECT() CachedValueMode          m_mode = CachedValueMode::OnEntry;
     };
 
     //-------------------------------------------------------------------------
 
     class CachedIDToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( CachedIDToolsNode );
+        EE_REFLECT_TYPE( CachedIDToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        CachedIDToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::ID; }
         virtual char const* GetTypeName() const override { return "Cached ID"; }
@@ -45,40 +45,18 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE CachedValueMode          m_mode = CachedValueMode::OnEntry;
-    };
-
-    //-------------------------------------------------------------------------
-    
-    class CachedIntToolsNode final : public FlowToolsNode
-    {
-        EE_REGISTER_TYPE( CachedIntToolsNode );
-
-    public:
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
-
-        virtual GraphValueType GetValueType() const override { return GraphValueType::Int; }
-        virtual char const* GetTypeName() const override { return "Cached Int"; }
-        virtual char const* GetCategory() const override { return "Values/Cached"; }
-        virtual TBitFlags<GraphType> GetAllowedParentGraphTypes() const override { return TBitFlags<GraphType>( GraphType::BlendTree, GraphType::ValueTree, GraphType::TransitionTree ); }
-        virtual int16_t Compile( GraphCompilationContext& context ) const override;
-        virtual void DrawInfoText( VisualGraph::DrawContext const& ctx ) override;
-
-    private:
-
-        EE_EXPOSE CachedValueMode          m_mode = CachedValueMode::OnEntry;
+        EE_REFLECT() CachedValueMode          m_mode = CachedValueMode::OnEntry;
     };
 
     //-------------------------------------------------------------------------
 
     class CachedFloatToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( CachedFloatToolsNode );
+        EE_REFLECT_TYPE( CachedFloatToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        CachedFloatToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Cached Float"; }
@@ -89,18 +67,18 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE CachedValueMode          m_mode = CachedValueMode::OnEntry;
+        EE_REFLECT() CachedValueMode          m_mode = CachedValueMode::OnEntry;
     };
 
     //-------------------------------------------------------------------------
 
     class CachedVectorToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( CachedVectorToolsNode );
+        EE_REFLECT_TYPE( CachedVectorToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        CachedVectorToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
         virtual char const* GetTypeName() const override { return "Cached Vector"; }
@@ -111,18 +89,18 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE CachedValueMode          m_mode = CachedValueMode::OnEntry;
+        EE_REFLECT() CachedValueMode          m_mode = CachedValueMode::OnEntry;
     };
 
     //-------------------------------------------------------------------------
 
     class CachedTargetToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( CachedTargetToolsNode );
+        EE_REFLECT_TYPE( CachedTargetToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        CachedTargetToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Target; }
         virtual char const* GetTypeName() const override { return "Cached Target"; }
@@ -133,6 +111,6 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE CachedValueMode          m_mode = CachedValueMode::OnEntry;
+        EE_REFLECT() CachedValueMode          m_mode = CachedValueMode::OnEntry;
     };
 }

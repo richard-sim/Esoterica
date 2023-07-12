@@ -11,7 +11,7 @@
 #include "System/Render/RenderViewport.h"
 #include "System/Drawing/DebugDrawing.h"
 #include "System/Profiling.h"
-#include "System/Log.h"
+
 
 //-------------------------------------------------------------------------
 
@@ -407,6 +407,11 @@ namespace EE::Render
     {
         EE_ASSERT( pComponent != nullptr && pComponent->IsInitialized() );
         EE_ASSERT( pComponent->GetMobility() == Mobility::Static );
+
+        if ( !pComponent->HasMeshResourceSet() )
+        {
+            return;
+        }
 
         if ( m_registeredStaticMeshComponents.HasItemForID( pComponent->GetID() ) )
         {

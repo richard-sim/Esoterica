@@ -85,7 +85,7 @@ namespace EE::Render
         friend class TextureCompiler;
         friend class TextureLoader;
 
-        EE_REGISTER_RESOURCE( 'txtr', "Render Texture" );
+        EE_RESOURCE( 'txtr', "Render Texture" );
         EE_SERIALIZE( m_format, m_rawData );
 
     public:
@@ -138,7 +138,7 @@ namespace EE::Render
         friend class TextureCompiler;
         friend class TextureLoader;
 
-        EE_REGISTER_RESOURCE( 'cbmp', "Render Cubemap Texture" );
+        EE_RESOURCE( 'cbmp', "Render Cubemap Texture" );
         EE_SERIALIZE( EE_SERIALIZE_BASE( Texture ) );
 
     public:

@@ -8,11 +8,11 @@ namespace EE::Animation::GraphNodes
 {
     class VectorInfoToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( VectorInfoToolsNode );
+        EE_REFLECT_TYPE( VectorInfoToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        VectorInfoToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
         virtual char const* GetTypeName() const override { return "Vector Info"; }
@@ -22,18 +22,18 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_EXPOSE VectorInfoNode::Info            m_desiredInfo = VectorInfoNode::Info::X;
+        EE_REFLECT() VectorInfoNode::Info            m_desiredInfo = VectorInfoNode::Info::X;
     };
 
     //-------------------------------------------------------------------------
 
     class VectorCreateToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( VectorCreateToolsNode );
+        EE_REFLECT_TYPE( VectorCreateToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        VectorCreateToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
         virtual char const* GetTypeName() const override { return "Vector Create"; }
@@ -46,11 +46,11 @@ namespace EE::Animation::GraphNodes
 
     class VectorNegateToolsNode final : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( VectorNegateToolsNode );
+        EE_REFLECT_TYPE( VectorNegateToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        VectorNegateToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
         virtual char const* GetTypeName() const override { return "Vector Negate"; }

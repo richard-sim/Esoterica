@@ -1,7 +1,7 @@
 #pragma once
 
 #include "UUID.h"
-#include "System/Log.h"
+
 #include <EASTL/functional.h>
 
 //-------------------------------------------------------------------------
@@ -106,6 +106,7 @@ namespace EE
 
     private:
 
+        // TODO: make this threadsafe!
         TVector<BoundUser>              m_boundUsers;
     };
 

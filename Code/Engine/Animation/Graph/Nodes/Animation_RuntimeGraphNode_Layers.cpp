@@ -20,6 +20,7 @@ namespace EE::Animation::GraphNodes
             Layer& pLayer = pNode->m_layers.emplace_back();
             context.SetNodePtrFromIndex( layerSettings.m_inputNodeIdx, pLayer.m_pInputNode );
             context.SetOptionalNodePtrFromIndex( layerSettings.m_weightValueNodeIdx, pLayer.m_pWeightValueNode );
+            context.SetOptionalNodePtrFromIndex( layerSettings.m_rootMotionWeightValueNodeIdx, pLayer.m_pRootMotionWeightValueNode );
             context.SetOptionalNodePtrFromIndex( layerSettings.m_boneMaskValueNodeIdx, pLayer.m_pBoneMaskValueNode );
         }
     }
@@ -42,7 +43,7 @@ namespace EE::Animation::GraphNodes
         else
         {
             m_previousTime = m_currentTime = 0.0f;
-            m_duration = 1.0f;
+            m_duration = 0;
         }
 
         //-------------------------------------------------------------------------
@@ -75,6 +76,12 @@ namespace EE::Animation::GraphNodes
                 m_layers[i].m_pBoneMaskValueNode->Initialize( context );
             }
         }
+
+        //-------------------------------------------------------------------------
+
+        #if EE_DEVELOPMENT_TOOLS
+        m_debugLayerWeights.resize( numLayers );
+        #endif
     }
 
     void LayerBlendNode::ShutdownInternal( GraphContext& context )
@@ -108,7 +115,7 @@ namespace EE::Animation::GraphNodes
     {
         EE_ASSERT( context.IsValid() );
 
-        GraphPoseNodeResult Result;
+        GraphPoseNodeResult result;
 
         if ( IsValid() )
         {
@@ -117,7 +124,7 @@ namespace EE::Animation::GraphNodes
 
             MarkNodeActive( context );
             m_previousTime = m_pBaseLayerNode->GetCurrentTime();
-            Result = m_pBaseLayerNode->Update( context );
+            result = m_pBaseLayerNode->Update( context );
             m_currentTime = m_pBaseLayerNode->GetCurrentTime();
             m_duration = m_pBaseLayerNode->GetDuration();
 
@@ -129,15 +136,15 @@ namespace EE::Animation::GraphNodes
             //-------------------------------------------------------------------------
 
             // We need to register a task at the base layer in all cases - since we blend the layers tasks on top of it
-            if ( !Result.HasRegisteredTasks() )
+            if ( !result.HasRegisteredTasks() )
             {
-                Result.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::DefaultPoseTask>( GetNodeIndex(), Pose::Type::ReferencePose );
+                result.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::DefaultPoseTask>( GetNodeIndex(), Pose::Type::ReferencePose );
             }
 
-            UpdateLayers( context, Result );
+            UpdateLayers( context, result );
         }
 
-        return Result;
+        return result;
     }
 
     // NB: Layered nodes always update the base according to the specified update time delta or time range. The layers are then updated relative to the base.
@@ -200,7 +207,7 @@ namespace EE::Animation::GraphNodes
             //-------------------------------------------------------------------------
 
             // If we are currently in a higher-level layer then cache it so that we can safely overwrite it
-            if ( context.m_layerContext.IsSet() )
+            if ( context.IsInLayer() )
             {
                 m_previousContext = context.m_layerContext;
             }
@@ -213,21 +220,34 @@ namespace EE::Animation::GraphNodes
             // Record the current state of the registered tasks
             auto const taskMarker = context.m_pTaskSystem->GetCurrentTaskIndexMarker();
 
+            // Record the current state of the root motion debugger
+            #if EE_DEVELOPMENT_TOOLS
+            auto pRootMotionDebugger = context.GetRootMotionDebugger();
+            auto const rootMotionActionMarker = pRootMotionDebugger->GetCurrentActionIndexMarker();
+            #endif
+
             // If we're not a state machine setup the layer context here
             if ( !pSettings->m_layerSettings[i].m_isStateMachineLayer )
             {
+                // Layer Weight
                 if ( m_layers[i].m_pWeightValueNode != nullptr )
                 {
                     context.m_layerContext.m_layerWeight = m_layers[i].m_pWeightValueNode->GetValue<float>( context );
                 }
 
+                // Root Motion
+                if ( m_layers[i].m_pRootMotionWeightValueNode != nullptr )
+                {
+                    context.m_layerContext.m_rootMotionLayerWeight = m_layers[i].m_pRootMotionWeightValueNode->GetValue<float>( context );
+                }
+
+                // Bone Mask
                 if ( m_layers[i].m_pBoneMaskValueNode != nullptr )
                 {
-                    auto pBoneMask = m_layers[i].m_pBoneMaskValueNode->GetValue<BoneMask const*>( context );
-                    if ( pBoneMask != nullptr )
+                    auto pBoneMaskTaskList = m_layers[i].m_pBoneMaskValueNode->GetValue<BoneMaskTaskList const*>( context );
+                    if ( pBoneMaskTaskList != nullptr )
                     {
-                        context.m_layerContext.m_pLayerMask = context.m_boneMaskPool.GetBoneMask();
-                        context.m_layerContext.m_pLayerMask->CopyFrom( *pBoneMask );
+                        context.m_layerContext.m_layerMaskTaskList.CopyFrom( *pBoneMaskTaskList );
                     }
                 }
             }
@@ -257,7 +277,7 @@ namespace EE::Animation::GraphNodes
                     PoseBlendMode poseBlendMode = pSettings->m_layerSettings[i].m_blendMode;
 
                     // We cannot perform a global blend without a bone mask
-                    if ( poseBlendMode == PoseBlendMode::InterpolativeGlobalSpace && context.m_layerContext.m_pLayerMask == nullptr )
+                    if ( poseBlendMode == PoseBlendMode::InterpolativeGlobalSpace && !context.m_layerContext.m_layerMaskTaskList.HasTasks() )
                     {
                         #if EE_DEVELOPMENT_TOOLS
                         context.LogWarning( GetNodeIndex(), "Attempting to perform a global blend without a bone mask! This is not supported so falling back to a local blend!" );
@@ -266,17 +286,28 @@ namespace EE::Animation::GraphNodes
                         poseBlendMode = PoseBlendMode::Interpolative;
                     }
 
-                    nodeResult.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::BlendTask>( GetNodeIndex(), nodeResult.m_taskIdx, layerResult.m_taskIdx, context.m_layerContext.m_layerWeight, poseBlendMode, context.m_layerContext.m_pLayerMask );
+                    nodeResult.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::BlendTask>( GetNodeIndex(), nodeResult.m_taskIdx, layerResult.m_taskIdx, context.m_layerContext.m_layerWeight, poseBlendMode, &context.m_layerContext.m_layerMaskTaskList );
 
-                    RootMotionBlendMode const rootMotionBlendMode = pSettings->m_onlySampleBaseRootMotion ? RootMotionBlendMode::IgnoreTarget : RootMotionBlendMode::Blend;
-                    nodeResult.m_rootMotionDelta = Blender::BlendRootMotionDeltas( nodeResult.m_rootMotionDelta, layerResult.m_rootMotionDelta, context.m_layerContext.m_layerWeight, rootMotionBlendMode );
+                    // Blend root motion
+                    if ( !pSettings->m_onlySampleBaseRootMotion )
+                    {
+                        RootMotionBlendMode const rootMotionBlendMode = ( poseBlendMode == PoseBlendMode::Additive ) ? RootMotionBlendMode::Additive : RootMotionBlendMode::Blend;
+                        float const rootMotionWeight = context.m_layerContext.m_layerWeight * context.m_layerContext.m_rootMotionLayerWeight;
+                        nodeResult.m_rootMotionDelta = Blender::BlendRootMotionDeltas( nodeResult.m_rootMotionDelta, layerResult.m_rootMotionDelta, rootMotionWeight, rootMotionBlendMode );
 
-                    #if EE_DEVELOPMENT_TOOLS
-                    rootMotionActionIdxLayer = context.GetRootMotionDebugger()->GetLastActionIndex();
-                    context.GetRootMotionDebugger()->RecordBlend( GetNodeIndex(), rootMotionActionIdxCurrentBase, rootMotionActionIdxLayer, nodeResult.m_rootMotionDelta );
-                    rootMotionActionIdxCurrentBase = context.GetRootMotionDebugger()->GetLastActionIndex();
-                    #endif
-
+                        #if EE_DEVELOPMENT_TOOLS
+                        rootMotionActionIdxLayer = pRootMotionDebugger->GetLastActionIndex();
+                        pRootMotionDebugger->RecordBlend( GetNodeIndex(), rootMotionActionIdxCurrentBase, rootMotionActionIdxLayer, nodeResult.m_rootMotionDelta );
+                        rootMotionActionIdxCurrentBase = pRootMotionDebugger->GetLastActionIndex();
+                        #endif
+                    }
+                    else
+                    {
+                        // Remove any root motion debug records
+                        #if EE_DEVELOPMENT_TOOLS
+                        pRootMotionDebugger->RollbackToActionIndexMarker( rootMotionActionMarker );
+                        #endif
+                    }
                 }
                 else // Layer is off
                 {
@@ -286,6 +317,11 @@ namespace EE::Animation::GraphNodes
                     // Remove any registered pose tasks
                     EE_ASSERT( pSettings->m_layerSettings[i].m_isStateMachineLayer ); // Cannot occur for local layers
                     context.m_pTaskSystem->RollbackToTaskIndexMarker( taskMarker );
+
+                    // Remove any root motion debug records
+                    #if EE_DEVELOPMENT_TOOLS
+                    pRootMotionDebugger->RollbackToActionIndexMarker( rootMotionActionMarker );
+                    #endif
                 }
             }
 
@@ -322,6 +358,11 @@ namespace EE::Animation::GraphNodes
             // End Layer
             //-------------------------------------------------------------------------
 
+            #if EE_DEVELOPMENT_TOOLS
+            EE_ASSERT( i < m_debugLayerWeights.size() );
+            m_debugLayerWeights[0] = context.m_layerContext.m_layerWeight;
+            #endif
+
             context.m_layerContext.EndLayer();
 
             // Restore previous context if it existed;
@@ -331,4 +372,14 @@ namespace EE::Animation::GraphNodes
             }
         }
     }
+
+    //-------------------------------------------------------------------------
+
+    #if EE_DEVELOPMENT_TOOLS
+    void LayerBlendNode::RestoreGraphState( RecordedGraphState const& inState )
+    {
+        PoseNode::RestoreGraphState( inState );
+        m_debugLayerWeights.resize( m_layers.size() );
+    }
+    #endif
 }

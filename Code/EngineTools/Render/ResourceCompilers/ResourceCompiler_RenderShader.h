@@ -12,7 +12,7 @@ namespace EE::Render
 
     class ShaderCompiler : public Resource::Compiler
     {
-        EE_REGISTER_TYPE( ShaderCompiler );
+        EE_REFLECT_TYPE( ShaderCompiler );
 
     protected:
 
@@ -32,7 +32,7 @@ namespace EE::Render
 
     class VertexShaderCompiler final : public ShaderCompiler
     {
-        EE_REGISTER_TYPE( VertexShaderCompiler );
+        EE_REFLECT_TYPE( VertexShaderCompiler );
         static const int32_t s_version = 1;
 
     public:
@@ -47,7 +47,7 @@ namespace EE::Render
 
     class PixelShaderCompiler final : public ShaderCompiler
     {
-        EE_REGISTER_TYPE( PixelShaderCompiler );
+        EE_REFLECT_TYPE( PixelShaderCompiler );
         static const int32_t s_version = 1;
 
     public:
@@ -62,7 +62,7 @@ namespace EE::Render
 
     class ComputeShaderCompiler final : public ShaderCompiler
     {
-        EE_REGISTER_TYPE( ComputeShaderCompiler );
+        EE_REFLECT_TYPE( ComputeShaderCompiler );
         static const int32_t s_version = 1;
 
     public:

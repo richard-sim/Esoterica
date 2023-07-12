@@ -14,7 +14,7 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public PoseNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
         };
 
@@ -34,7 +34,7 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public PoseNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
         };
 
@@ -54,14 +54,16 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public PoseNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
-            EE_SERIALIZE_GRAPHNODESETTINGS( PoseNode::Settings, m_poseTimeValueNodeIdx, m_dataSlotIndex, m_inputTimeRemapRange );
+            EE_REFLECT_TYPE( Settings );
+            EE_SERIALIZE_GRAPHNODESETTINGS( PoseNode::Settings, m_poseTimeValueNodeIdx, m_dataSlotIndex, m_inputTimeRemapRange, m_userSpecifiedTime, m_useFramesAsInput );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
 
             int16_t                             m_poseTimeValueNodeIdx = InvalidIndex;
             int16_t                             m_dataSlotIndex = InvalidIndex;
             FloatRange                          m_inputTimeRemapRange = FloatRange( 0, 1 ); // Time range allows for remapping a time value that is not a normalized time to the animation
+            float                               m_userSpecifiedTime = 0.0f;
+            bool                                m_useFramesAsInput = false;
         };
 
     public:
@@ -76,8 +78,6 @@ namespace EE::Animation::GraphNodes
 
         virtual GraphPoseNodeResult Update( GraphContext& context ) override;
         virtual GraphPoseNodeResult Update( GraphContext& context, SyncTrackTimeRange const& updateRange ) override { return Update( context ); }
-
-        float GetTimeValue( GraphContext& context );
 
     private:
 

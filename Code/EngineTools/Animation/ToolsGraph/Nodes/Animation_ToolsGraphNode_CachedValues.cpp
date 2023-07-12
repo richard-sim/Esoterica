@@ -5,9 +5,9 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void CachedBoolToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    CachedBoolToolsNode::CachedBoolToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Bool, true );
         CreateInputPin( "Value", GraphValueType::Bool );
     }
@@ -52,9 +52,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void CachedIDToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    CachedIDToolsNode::CachedIDToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::ID, true );
         CreateInputPin( "Value", GraphValueType::ID );
     }
@@ -97,54 +97,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void CachedIntToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    CachedFloatToolsNode::CachedFloatToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
-        CreateOutputPin( "Result", GraphValueType::Int, true );
-        CreateInputPin( "Value", GraphValueType::Int );
-    }
-
-    int16_t CachedIntToolsNode::Compile( GraphCompilationContext& context ) const
-    {
-        CachedIntNode::Settings* pSettings = nullptr;
-        if ( context.GetSettings<CachedIntNode>( this, pSettings ) == NodeCompilationState::NeedCompilation )
-        {
-            auto pInputNode = GetConnectedInputNode<FlowToolsNode>( 0 );
-            if ( pInputNode != nullptr )
-            {
-                int16_t const compiledNodeIdx = pInputNode->Compile( context );
-                if ( compiledNodeIdx != InvalidIndex )
-                {
-                    pSettings->m_inputValueNodeIdx = compiledNodeIdx;
-                }
-                else
-                {
-                    return InvalidIndex;
-                }
-            }
-            else
-            {
-                context.LogError( this, "Disconnected input pin!" );
-                return InvalidIndex;
-            }
-
-            //-------------------------------------------------------------------------
-
-            pSettings->m_mode = m_mode;
-        }
-        return pSettings->m_nodeIdx;
-    }
-
-    void CachedIntToolsNode::DrawInfoText( VisualGraph::DrawContext const& ctx )
-    {
-        ImGui::Text( m_mode == CachedValueMode::OnEntry ? "Cache On Entry" : "Cache On Exit" );
-    }
-
-    //-------------------------------------------------------------------------
-
-    void CachedFloatToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
-    {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
         CreateInputPin( "Value", GraphValueType::Float );
     }
@@ -187,9 +142,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void CachedVectorToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    CachedVectorToolsNode::CachedVectorToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Vector, true );
         CreateInputPin( "Value", GraphValueType::Vector );
     }
@@ -232,9 +187,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void CachedTargetToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    CachedTargetToolsNode::CachedTargetToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Target, true );
         CreateInputPin( "Value", GraphValueType::Target );
     }

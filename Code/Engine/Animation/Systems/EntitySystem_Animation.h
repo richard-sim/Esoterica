@@ -20,14 +20,14 @@ namespace EE::Render
 
 namespace EE::Animation
 {
-    class AnimationGraphComponent;
+    class GraphComponent;
     class AnimationClipPlayerComponent;
 
     //-------------------------------------------------------------------------
 
     class EE_ENGINE_API AnimationSystem : public EntitySystem
     {
-        EE_REGISTER_ENTITY_SYSTEM( AnimationSystem, RequiresUpdate( UpdateStage::PrePhysics ), RequiresUpdate( UpdateStage::PostPhysics, UpdatePriority::Low ) );
+        EE_ENTITY_SYSTEM( AnimationSystem, RequiresUpdate( UpdateStage::PrePhysics, UpdatePriority::Low ), RequiresUpdate( UpdateStage::PostPhysics, UpdatePriority::Low ) );
 
     public:
 
@@ -45,7 +45,7 @@ namespace EE::Animation
     private:
 
         TVector<AnimationClipPlayerComponent*>          m_animPlayers;
-        TVector<AnimationGraphComponent*>               m_animGraphs;
+        TVector<GraphComponent*>                        m_animGraphs;
         TVector<Render::SkeletalMeshComponent*>         m_meshComponents;
         SpatialEntityComponent*                         m_pRootComponent = nullptr;
     };

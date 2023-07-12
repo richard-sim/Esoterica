@@ -1,9 +1,9 @@
 #pragma once
 
-#include "EngineTools/Core/Helpers/GlobalRegistryBase.h"
 #include "EngineTools/Core/PropertyGrid/PropertyGrid.h"
 #include "System/FileSystem/FileSystemPath.h"
 #include "System/Resource/ResourceTypeID.h"
+#include "System/Utils/GlobalRegistryBase.h"
 
 //-------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ namespace EE::Resource
 
     //-------------------------------------------------------------------------
 
-    class RawFileInspector
+    class EE_ENGINETOOLS_API RawFileInspector
     {
     public:
 
@@ -72,7 +72,7 @@ namespace EE::Resource
     //-------------------------------------------------------------------------
     // Used to spawn the appropriate factory
 
-    class RawFileInspectorFactory : public TGlobalRegistryBase<RawFileInspectorFactory>
+    class EE_ENGINETOOLS_API RawFileInspectorFactory : public TGlobalRegistryBase<RawFileInspectorFactory>
     {
         EE_DECLARE_GLOBAL_REGISTRY( RawFileInspectorFactory );
 

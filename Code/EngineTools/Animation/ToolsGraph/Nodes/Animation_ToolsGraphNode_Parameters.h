@@ -3,11 +3,26 @@
 
 //-------------------------------------------------------------------------
 
+namespace EE::Animation
+{
+    class FlowGraph;
+}
+
+//-------------------------------------------------------------------------
+
 namespace EE::Animation::GraphNodes
 {
+    //-------------------------------------------------------------------------
+    // Control Parameter
+    //-------------------------------------------------------------------------
+
     class ControlParameterToolsNode : public FlowToolsNode
     {
-        EE_REGISTER_TYPE( ControlParameterToolsNode );
+        EE_REFLECT_TYPE( ControlParameterToolsNode );
+
+    public:
+
+        static ControlParameterToolsNode* Create( FlowGraph* pRootGraph, GraphValueType type, String const& name, String const& category );
 
     public:
 
@@ -31,20 +46,137 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_REGISTER String                     m_name;
-        EE_REGISTER String                     m_parameterCategory;
+        EE_REFLECT( "IsToolsReadOnly" : true ) String                     m_name;
+        EE_REFLECT( "IsToolsReadOnly" : true ) String                     m_parameterCategory;
     };
 
     //-------------------------------------------------------------------------
 
-    class VirtualParameterToolsNode final : public FlowToolsNode
+    class BoolControlParameterToolsNode : public ControlParameterToolsNode
     {
-        EE_REGISTER_TYPE( VirtualParameterToolsNode );
+        EE_REFLECT_TYPE( BoolControlParameterToolsNode );
+
+    public:
+
+        BoolControlParameterToolsNode();
+        BoolControlParameterToolsNode( String const& name, String const& categoryName = String() );
+
+        inline bool GetPreviewStartValue() const { return m_previewStartValue; }
+
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
+
+    private:
+
+        EE_REFLECT() bool m_previewStartValue = false;
+    };
+
+    //-------------------------------------------------------------------------
+
+    class FloatControlParameterToolsNode : public ControlParameterToolsNode
+    {
+        EE_REFLECT_TYPE( FloatControlParameterToolsNode );
+
+    public:
+
+        FloatControlParameterToolsNode();
+        FloatControlParameterToolsNode( String const& name, String const& categoryName = String() );
+
+        inline float GetPreviewStartValue() const { return m_previewStartValue; }
+        inline float GetPreviewRangeMin() const { return m_previewMin; }
+        inline float GetPreviewRangeMax() const { return m_previewMax; }
+
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
+
+    private:
+
+        EE_REFLECT() float m_previewStartValue = 0;
+        EE_REFLECT() float m_previewMin = 0;
+        EE_REFLECT() float m_previewMax = 1;
+    };
+
+    //-------------------------------------------------------------------------
+
+    class IDControlParameterToolsNode : public ControlParameterToolsNode
+    {
+        EE_REFLECT_TYPE( IDControlParameterToolsNode );
+
+    public:
+
+        IDControlParameterToolsNode();
+        IDControlParameterToolsNode( String const& name, String const& categoryName = String() );
+
+        inline StringID GetPreviewStartValue() const { return m_previewStartValue; }
+
+        virtual GraphValueType GetValueType() const override { return GraphValueType::ID; }
+
+    private:
+
+        EE_REFLECT( "CustomEditor" : "AnimGraph_ID" );
+        StringID m_previewStartValue;
+    };
+
+    //-------------------------------------------------------------------------
+
+    class VectorControlParameterToolsNode : public ControlParameterToolsNode
+    {
+        EE_REFLECT_TYPE( VectorControlParameterToolsNode );
+
+    public:
+
+        VectorControlParameterToolsNode();
+        VectorControlParameterToolsNode( String const& name, String const& categoryName = String() );
+
+        inline Vector GetPreviewStartValue() const { return m_previewStartValue; }
+
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
+
+    private:
+
+        EE_REFLECT() Vector m_previewStartValue = Vector::Zero;
+    };
+
+    //-------------------------------------------------------------------------
+
+    class TargetControlParameterToolsNode : public ControlParameterToolsNode
+    {
+        EE_REFLECT_TYPE( TargetControlParameterToolsNode );
+
+    public:
+
+        TargetControlParameterToolsNode();
+        TargetControlParameterToolsNode( String const& name, String const& categoryName = String() );
+
+        Target GetPreviewStartValue() const;
+        inline bool IsBoneTarget() const { return m_isBoneID; }
+        inline Transform const& GetPreviewTargetTransform() const { return m_previewStartTransform; }
+        void SetPreviewTargetTransform( Transform const& transform );
+
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Target; }
+
+    private:
+
+        EE_REFLECT() bool         m_isSet = false;
+        EE_REFLECT() bool         m_isBoneID = false;
+        EE_REFLECT() Transform    m_previewStartTransform = Transform::Identity;
+        EE_REFLECT() StringID     m_previewStartBoneID;
+    };
+
+    //-------------------------------------------------------------------------
+    // Virtual Parameter
+    //-------------------------------------------------------------------------
+
+    class VirtualParameterToolsNode : public FlowToolsNode
+    {
+        EE_REFLECT_TYPE( VirtualParameterToolsNode );
+
+    public:
+
+        static VirtualParameterToolsNode* Create( FlowGraph* pRootGraph, GraphValueType type, String const& name, String const& category );
 
     public:
 
         VirtualParameterToolsNode() = default;
-        VirtualParameterToolsNode( GraphValueType type, String const& name, String const& categoryName = String() );
+        VirtualParameterToolsNode( String const& name, String const& categoryName = String() );
 
         inline String const& GetParameterName() const { return m_name; }
         void Rename( String const& name, String const& category );
@@ -52,7 +184,6 @@ namespace EE::Animation::GraphNodes
         inline StringID GetParameterID() const { return StringID( m_name ); }
         inline String const& GetParameterCategory() const { return m_parameterCategory; }
 
-        virtual GraphValueType GetValueType() const override { return m_type; }
         virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
         virtual bool IsVisible() const override { return false; }
         virtual char const* GetName() const override { return m_name.c_str(); }
@@ -64,24 +195,101 @@ namespace EE::Animation::GraphNodes
 
     private:
 
-        EE_REGISTER String                     m_name;
-        EE_REGISTER String                     m_parameterCategory;
-        EE_REGISTER GraphValueType             m_type = GraphValueType::Float;
+        EE_REFLECT( "IsToolsReadOnly" : true ) String                     m_name;
+        EE_REFLECT( "IsToolsReadOnly" : true ) String                     m_parameterCategory;
     };
 
     //-------------------------------------------------------------------------
 
-    class ParameterReferenceToolsNode final : public FlowToolsNode
+    class BoolVirtualParameterToolsNode final : public VirtualParameterToolsNode
     {
-        EE_REGISTER_TYPE( ParameterReferenceToolsNode );
+        EE_REFLECT_TYPE( BoolVirtualParameterToolsNode );
+
+    public:
+
+        BoolVirtualParameterToolsNode() : VirtualParameterToolsNode() { CreateOutputPin( "Value", GraphValueType::Bool, true ); }
+        BoolVirtualParameterToolsNode( String const& name, String const& categoryName = String() ) : VirtualParameterToolsNode( name, categoryName ) { CreateOutputPin( "Value", GraphValueType::Bool, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
+    };
+
+    //-------------------------------------------------------------------------
+
+    class IDVirtualParameterToolsNode final : public VirtualParameterToolsNode
+    {
+        EE_REFLECT_TYPE( IDVirtualParameterToolsNode );
+
+    public:
+
+        IDVirtualParameterToolsNode() : VirtualParameterToolsNode() { CreateOutputPin( "Value", GraphValueType::ID, true ); }
+        IDVirtualParameterToolsNode( String const& name, String const& categoryName = String() ) : VirtualParameterToolsNode( name, categoryName ) { CreateOutputPin( "Value", GraphValueType::ID, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::ID; }
+    };
+
+    //-------------------------------------------------------------------------
+
+    class FloatVirtualParameterToolsNode final : public VirtualParameterToolsNode
+    {
+        EE_REFLECT_TYPE( FloatVirtualParameterToolsNode );
+
+    public:
+
+        FloatVirtualParameterToolsNode() : VirtualParameterToolsNode() { CreateOutputPin( "Value", GraphValueType::Float, true ); }
+        FloatVirtualParameterToolsNode( String const& name, String const& categoryName = String() ) : VirtualParameterToolsNode( name, categoryName ) { CreateOutputPin( "Value", GraphValueType::Float, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
+    };
+
+    //-------------------------------------------------------------------------
+
+    class VectorVirtualParameterToolsNode final : public VirtualParameterToolsNode
+    {
+        EE_REFLECT_TYPE( VectorVirtualParameterToolsNode );
+
+    public:
+
+        VectorVirtualParameterToolsNode() : VirtualParameterToolsNode() { CreateOutputPin( "Value", GraphValueType::Vector, true ); }
+        VectorVirtualParameterToolsNode( String const& name, String const& categoryName = String() ) : VirtualParameterToolsNode( name, categoryName ) { CreateOutputPin( "Value", GraphValueType::Vector, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
+    };
+
+    //-------------------------------------------------------------------------
+
+    class TargetVirtualParameterToolsNode final : public VirtualParameterToolsNode
+    {
+        EE_REFLECT_TYPE( TargetVirtualParameterToolsNode );
+
+    public:
+
+        TargetVirtualParameterToolsNode() : VirtualParameterToolsNode() { CreateOutputPin( "Value", GraphValueType::Target, true ); }
+        TargetVirtualParameterToolsNode( String const& name, String const& categoryName = String() ) : VirtualParameterToolsNode( name, categoryName ) { CreateOutputPin( "Value", GraphValueType::Target, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Target; }
+    };
+
+    //-------------------------------------------------------------------------
+
+    class BoneMaskVirtualParameterToolsNode final : public VirtualParameterToolsNode
+    {
+        EE_REFLECT_TYPE( BoneMaskVirtualParameterToolsNode );
+
+    public:
+
+        BoneMaskVirtualParameterToolsNode() : VirtualParameterToolsNode() { CreateOutputPin( "Value", GraphValueType::BoneMask, true ); }
+        BoneMaskVirtualParameterToolsNode( String const& name, String const& categoryName = String() ) : VirtualParameterToolsNode( name, categoryName ) { CreateOutputPin( "Value", GraphValueType::BoneMask, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::BoneMask; }
+    };
+
+    //-------------------------------------------------------------------------
+    // Parameter Reference
+    //-------------------------------------------------------------------------
+
+    class ParameterReferenceToolsNode : public FlowToolsNode
+    {
+        EE_REFLECT_TYPE( ParameterReferenceToolsNode );
 
     public:
 
         ParameterReferenceToolsNode() = default;
         ParameterReferenceToolsNode( ControlParameterToolsNode* pParameter );
         ParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter );
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
 
         void SetReferencedParameter( FlowToolsNode* pParameter );
         inline FlowToolsNode const* GetReferencedParameter() const { return m_pParameter; }
@@ -99,7 +307,6 @@ namespace EE::Animation::GraphNodes
         inline VirtualParameterToolsNode* GetReferencedVirtualParameter() { return TryCast<VirtualParameterToolsNode>( m_pParameter ); }
 
         virtual char const* GetName() const override { return m_pParameter->GetName(); }
-        virtual GraphValueType GetValueType() const override { return GetReferencedParameterValueType(); }
         virtual char const* GetTypeName() const override { return "Parameter"; }
         virtual char const* GetCategory() const override { return "Parameter"; }
         virtual bool IsUserCreatable() const override { return true; }
@@ -115,169 +322,101 @@ namespace EE::Animation::GraphNodes
         virtual void OnDoubleClick( VisualGraph::UserContext* pUserContext ) override;
         virtual void PrepareForCopy() override { UpdateCachedParameterData(); }
 
+        FlowToolsNode* GetDisplayValueNode();
+
     private:
 
-        FlowToolsNode*                         m_pParameter = nullptr;
+        FlowToolsNode*                                                    m_pParameter = nullptr;
 
         // These values are cached and serialize to help with restoring references after serialization and for copy/pasting
 
-        EE_REGISTER UUID                       m_parameterUUID;
-        EE_REGISTER GraphValueType             m_parameterValueType;
-        EE_REGISTER String                     m_parameterName;
-        EE_REGISTER String                     m_parameterCategory;
+        EE_REFLECT( "IsToolsReadOnly" : true ) UUID                       m_parameterUUID;
+        EE_REFLECT( "IsToolsReadOnly" : true ) GraphValueType             m_parameterValueType;
+        EE_REFLECT( "IsToolsReadOnly" : true ) String                     m_parameterName;
+        EE_REFLECT( "IsToolsReadOnly" : true ) String                     m_parameterCategory;
     };
 
     //-------------------------------------------------------------------------
 
-    class BoolControlParameterToolsNode : public ControlParameterToolsNode
+    class BoolParameterReferenceToolsNode final : public ParameterReferenceToolsNode
     {
-        EE_REGISTER_TYPE( BoolControlParameterToolsNode );
+        EE_REFLECT_TYPE( BoolParameterReferenceToolsNode );
 
     public:
 
-        using ControlParameterToolsNode::ControlParameterToolsNode;
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
-
-        inline bool GetPreviewStartValue() const { return m_previewStartValue; }
-
+        BoolParameterReferenceToolsNode() : ParameterReferenceToolsNode() { CreateOutputPin( "Value", GraphValueType::Bool, true ); }
+        BoolParameterReferenceToolsNode( ControlParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Bool, true ); }
+        BoolParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Bool, true ); }
         virtual GraphValueType GetValueType() const override { return GraphValueType::Bool; }
-
-    private:
-
-        EE_EXPOSE bool m_previewStartValue = false;
     };
 
     //-------------------------------------------------------------------------
 
-    class FloatControlParameterToolsNode : public ControlParameterToolsNode
+    class IDParameterReferenceToolsNode final : public ParameterReferenceToolsNode
     {
-        EE_REGISTER_TYPE( FloatControlParameterToolsNode );
+        EE_REFLECT_TYPE( IDParameterReferenceToolsNode );
 
     public:
 
-        using ControlParameterToolsNode::ControlParameterToolsNode;
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
-
-        inline float GetPreviewStartValue() const { return m_previewStartValue; }
-        inline float GetPreviewRangeMin() const { return m_previewMin; }
-        inline float GetPreviewRangeMax() const { return m_previewMax; }
-
-        virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
-
-    private:
-
-        EE_EXPOSE float m_previewStartValue = 0;
-        EE_EXPOSE float m_previewMin = 0;
-        EE_EXPOSE float m_previewMax = 1;
-    };
-
-    //-------------------------------------------------------------------------
-
-    class IntControlParameterToolsNode : public ControlParameterToolsNode
-    {
-        EE_REGISTER_TYPE( IntControlParameterToolsNode );
-
-    public:
-
-        using ControlParameterToolsNode::ControlParameterToolsNode;
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
-
-        inline int32_t GetPreviewStartValue() const { return m_previewStartValue; }
-
-        virtual GraphValueType GetValueType() const override { return GraphValueType::Int; }
-
-    private:
-
-        EE_EXPOSE int32_t m_previewStartValue = 0;
-    };
-
-    //-------------------------------------------------------------------------
-
-    class IDControlParameterToolsNode : public ControlParameterToolsNode
-    {
-        EE_REGISTER_TYPE( IDControlParameterToolsNode );
-
-    public:
-
-        using ControlParameterToolsNode::ControlParameterToolsNode;
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
-
-        inline StringID GetPreviewStartValue() const { return m_previewStartValue; }
-
+        IDParameterReferenceToolsNode() : ParameterReferenceToolsNode() { CreateOutputPin( "Value", GraphValueType::ID, true ); }
+        IDParameterReferenceToolsNode( ControlParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::ID, true ); }
+        IDParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::ID, true ); }
         virtual GraphValueType GetValueType() const override { return GraphValueType::ID; }
-
-    private:
-
-        EE_EXPOSE StringID m_previewStartValue;
     };
 
     //-------------------------------------------------------------------------
 
-    class VectorControlParameterToolsNode : public ControlParameterToolsNode
+    class FloatParameterReferenceToolsNode final : public ParameterReferenceToolsNode
     {
-        EE_REGISTER_TYPE( VectorControlParameterToolsNode );
+        EE_REFLECT_TYPE( FloatParameterReferenceToolsNode );
 
     public:
 
-        using ControlParameterToolsNode::ControlParameterToolsNode;
+        FloatParameterReferenceToolsNode() : ParameterReferenceToolsNode() { CreateOutputPin( "Value", GraphValueType::Float, true ); }
+        FloatParameterReferenceToolsNode( ControlParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Float, true ); }
+        FloatParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Float, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::Float; }
+    };
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
+    //-------------------------------------------------------------------------
 
-        inline Vector GetPreviewStartValue() const { return m_previewStartValue; }
+    class VectorParameterReferenceToolsNode final : public ParameterReferenceToolsNode
+    {
+        EE_REFLECT_TYPE( VectorParameterReferenceToolsNode );
 
+    public:
+
+        VectorParameterReferenceToolsNode() : ParameterReferenceToolsNode() { CreateOutputPin( "Value", GraphValueType::Vector, true ); }
+        VectorParameterReferenceToolsNode( ControlParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Vector, true ); }
+        VectorParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Vector, true ); }
         virtual GraphValueType GetValueType() const override { return GraphValueType::Vector; }
-
-    private:
-
-        EE_EXPOSE Vector m_previewStartValue = Vector::Zero;
     };
 
     //-------------------------------------------------------------------------
 
-    class TargetControlParameterToolsNode : public ControlParameterToolsNode
+    class TargetParameterReferenceToolsNode final : public ParameterReferenceToolsNode
     {
-        EE_REGISTER_TYPE( TargetControlParameterToolsNode );
+        EE_REFLECT_TYPE( TargetParameterReferenceToolsNode );
 
     public:
 
-        using ControlParameterToolsNode::ControlParameterToolsNode;
-
-        virtual void Initialize( VisualGraph::BaseGraph* pParentGraph ) override;
-
-        inline Target GetPreviewStartValue() const
-        {
-            Target target;
-
-            if ( m_isSet )
-            {
-                if ( m_isBoneID )
-                {
-                    target = Target( m_previewStartBoneID );
-                }
-                else
-                {
-                    target = Target( m_previewStartTransform );
-                }
-            }
-
-            return target;
-        }
-
-        inline bool IsBoneTarget() const { return m_isBoneID; }
-        inline Transform const& GetPreviewTargetTransform() const { return m_previewStartTransform; }
-        void SetPreviewTargetTransform( Transform const& transform );
-
+        TargetParameterReferenceToolsNode() : ParameterReferenceToolsNode() { CreateOutputPin( "Value", GraphValueType::Target, true ); }
+        TargetParameterReferenceToolsNode( ControlParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Target, true ); }
+        TargetParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::Target, true ); }
         virtual GraphValueType GetValueType() const override { return GraphValueType::Target; }
+    };
 
-    private:
+    //-------------------------------------------------------------------------
 
-        EE_EXPOSE bool         m_isSet = false;
-        EE_EXPOSE bool         m_isBoneID = false;
-        EE_EXPOSE Transform    m_previewStartTransform = Transform::Identity;
-        EE_EXPOSE StringID     m_previewStartBoneID;
+    class BoneMaskParameterReferenceToolsNode final : public ParameterReferenceToolsNode
+    {
+        EE_REFLECT_TYPE( BoneMaskParameterReferenceToolsNode );
+
+    public:
+
+        BoneMaskParameterReferenceToolsNode() : ParameterReferenceToolsNode() { CreateOutputPin( "Value", GraphValueType::BoneMask, true ); }
+        BoneMaskParameterReferenceToolsNode( ControlParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::BoneMask, true ); }
+        BoneMaskParameterReferenceToolsNode( VirtualParameterToolsNode* pParameter ) : ParameterReferenceToolsNode( pParameter ) { CreateOutputPin( "Value", GraphValueType::BoneMask, true ); }
+        virtual GraphValueType GetValueType() const override { return GraphValueType::BoneMask; }
     };
 }

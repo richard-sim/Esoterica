@@ -7,7 +7,6 @@
     <ClCompile Include="Render\RenderViewport.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="Log.cpp" />
     <ClCompile Include="Profiling.cpp" />
     <ClCompile Include="IniFile.cpp" />
     <ClCompile Include="Systems.cpp" />
@@ -146,7 +145,7 @@
     <ClCompile Include="Math\MathRandom.cpp">
       <Filter>Math</Filter>
     </ClCompile>
-    <ClCompile Include="Math\MathStringHelpers.cpp">
+    <ClCompile Include="Math\MathUtils.cpp">
       <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Math\Transform.cpp">
@@ -284,7 +283,7 @@
     <ClCompile Include="Platform\Platform_Win32.cpp">
       <Filter>Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Platform\PlatformHelpers_Win32.cpp">
+    <ClCompile Include="Platform\PlatformUtils_Win32.cpp">
       <Filter>Platform</Filter>
     </ClCompile>
     <ClCompile Include="Threading\TaskSystem.cpp">
@@ -296,13 +295,13 @@
     <ClCompile Include="Threading\Platform\Threading_Win32.cpp">
       <Filter>Threading\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Algorithm\Hash.cpp">
+    <ClCompile Include="Encoding\Hash.cpp">
       <Filter>Algorithm</Filter>
     </ClCompile>
-    <ClCompile Include="Algorithm\TopologicalSort.cpp">
+    <ClCompile Include="Utils\TopologicalSort.cpp">
       <Filter>Algorithm</Filter>
     </ClCompile>
-    <ClCompile Include="Algorithm\Encoding.cpp">
+    <ClCompile Include="Encoding\Encoding.cpp">
       <Filter>Algorithm</Filter>
     </ClCompile>
     <ClCompile Include="FileSystem\FileSystemPath.cpp">
@@ -336,9 +335,6 @@
       <Filter>TypeSystem</Filter>
     </ClCompile>
     <ClCompile Include="TypeSystem\PropertyPath.cpp">
-      <Filter>TypeSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="TypeSystem\RegisteredType.cpp">
       <Filter>TypeSystem</Filter>
     </ClCompile>
     <ClCompile Include="TypeSystem\TypeDescriptors.cpp">
@@ -378,6 +374,13 @@
     </ClCompile>
     <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
     <ClCompile Include="Render\RenderPipelineState.cpp" />
+    <ClCompile Include="TypeSystem\ReflectedType.cpp" />
+    <ClCompile Include="Math\Platform\Math_Win32.h" />
+    <ClCompile Include="ThirdParty\implot\implot.cpp" />
+    <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
+    <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
+    <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
+    <ClCompile Include="Logging\LoggingSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -388,7 +391,7 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="IniFile.h" />
-    <ClInclude Include="Log.h" />
+    <ClInclude Include="Logging\Log.h" />
     <ClInclude Include="Profiling.h" />
     <ClInclude Include="Systems.h" />
     <ClInclude Include="Application\ApplicationGlobalState.h">
@@ -1483,10 +1486,7 @@
     <ClInclude Include="Math\MathRandom.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="Math\MathStringHelpers.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\MathHelpers.h">
+    <ClInclude Include="Math\MathUtils.h">
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Math\Transform.h">
@@ -1720,7 +1720,7 @@
     <ClInclude Include="Platform\Platform_Win32.h">
       <Filter>Platform</Filter>
     </ClInclude>
-    <ClInclude Include="Platform\PlatformHelpers_Win32.h">
+    <ClInclude Include="Platform\PlatformUtils_Win32.h">
       <Filter>Platform</Filter>
     </ClInclude>
     <ClInclude Include="Threading\TaskSystem.h">
@@ -1729,16 +1729,16 @@
     <ClInclude Include="Threading\Threading.h">
       <Filter>Threading</Filter>
     </ClInclude>
-    <ClInclude Include="Algorithm\Hash.h">
+    <ClInclude Include="Encoding\Hash.h">
       <Filter>Algorithm</Filter>
     </ClInclude>
-    <ClInclude Include="Algorithm\Quantization.h">
+    <ClInclude Include="Encoding\Quantization.h">
       <Filter>Algorithm</Filter>
     </ClInclude>
-    <ClInclude Include="Algorithm\TopologicalSort.h">
+    <ClInclude Include="Utils\TopologicalSort.h">
       <Filter>Algorithm</Filter>
     </ClInclude>
-    <ClInclude Include="Algorithm\Encoding.h">
+    <ClInclude Include="Encoding\Encoding.h">
       <Filter>Algorithm</Filter>
     </ClInclude>
     <ClInclude Include="FileSystem\FileSystemUtils.h">
@@ -1783,9 +1783,6 @@
     <ClInclude Include="TypeSystem\TypeInfo.h">
       <Filter>TypeSystem</Filter>
     </ClInclude>
-    <ClInclude Include="TypeSystem\RegisteredType.h">
-      <Filter>TypeSystem</Filter>
-    </ClInclude>
     <ClInclude Include="TypeSystem\TypeRegistry.h">
       <Filter>TypeSystem</Filter>
     </ClInclude>
@@ -1824,7 +1821,15 @@
     <ClInclude Include="Render\RenderPipeline.h" />
     <ClInclude Include="Render\RenderPipelineRegistry.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h" />
-    <ClInclude Include="Algorithm\Sort.h" />
+    <ClInclude Include="Utils\Sort.h" />
+    <ClInclude Include="TypeSystem\ReflectedType.h" />
+    <ClInclude Include="Utils\GlobalRegistryBase.h" />
+    <ClInclude Include="ThirdParty\implot\implot.h" />
+    <ClInclude Include="ThirdParty\implot\implot_internal.h" />
+    <ClInclude Include="Serialization\BitSerialization.h" />
+    <ClInclude Include="Imgui\ImguiFilteredCombo.h" />
+    <ClInclude Include="Platform\Platform.h" />
+    <ClInclude Include="Logging\LoggingSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

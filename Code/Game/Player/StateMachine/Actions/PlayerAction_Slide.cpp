@@ -1,15 +1,11 @@
 #include "PlayerAction_Slide.h"
 #include "Game/Player/Components/Component_MainPlayer.h"
-#include "Game/Player/Physics/PlayerPhysicsController.h"
 #include "Game/Player/Camera/PlayerCameraController.h"
 #include "Game/Player/Animation/PlayerAnimationController.h"
 #include "Game/Player/Animation/PlayerGraphController_Ability.h"
 #include "Engine/Physics/Components/Component_PhysicsCharacter.h"
 #include "System/Input/InputSystem.h"
 #include "System/Drawing/DebugDrawing.h"
-
-// hack for now
-#include "Game/Player/Animation/PlayerGraphController_Locomotion.h"
 
 //-------------------------------------------------------------------------
 
@@ -25,8 +21,8 @@ namespace EE::Player
             Vector const movementInputs = ctx.m_pInputState->GetControllerState()->GetLeftAnalogStickValue();
             Vector const& camFwd = ctx.m_pCameraController->GetCameraRelativeForwardVector2D();
             Vector const& camRight = ctx.m_pCameraController->GetCameraRelativeRightVector2D();
-            Vector const forward = camFwd * movementInputs.m_y;
-            Vector const right = camRight * movementInputs.m_x;
+            Vector const forward = camFwd * movementInputs.GetY();
+            Vector const right = camRight * movementInputs.GetX();
             m_slideDirection = ( forward + right ).GetNormalized2();
 
             ctx.m_pAnimationController->SetCharacterState( CharacterAnimationState::Ability );
@@ -39,7 +35,7 @@ namespace EE::Player
 
             // Cancel sprint and enable crouch
             ctx.m_pPlayerComponent->m_sprintFlag = false;
-            ctx.m_pPlayerComponent->m_crouchFlag = true;
+            //ctx.m_pPlayerComponent->m_crouchFlag = true;
 
             return true;
         }
@@ -67,8 +63,9 @@ namespace EE::Player
         // Update animation controller
         //-------------------------------------------------------------------------
 
-        auto pLocomotionGraphController = ctx.GetAnimSubGraphController<LocomotionGraphController>();
-        pLocomotionGraphController->SetLocomotionDesires(ctx.GetDeltaTime(), desiredVelocity, ctx.m_pCharacterComponent->GetForwardVector() );
+        auto pGraphController = ctx.m_pAnimationController;
+        auto pAbilityGraphController = ctx.GetAnimSubGraphController<AbilityGraphController>();
+        pAbilityGraphController->SetDesiredMovement( ctx.GetDeltaTime(), desiredVelocity, ctx.m_pCharacterComponent->GetForwardVector() );
 
         //-------------------------------------------------------------------------
 
@@ -83,12 +80,12 @@ namespace EE::Player
 
         //-------------------------------------------------------------------------
 
-        if ( pLocomotionGraphController->IsTransitionFullyAllowed() )
+        if ( pGraphController->IsTransitionFullyAllowed() )
         {
             return Status::Completed;
         }
 
-        return pLocomotionGraphController->IsTransitionConditionallyAllowed() ? Status::Interruptible : Status::Uninterruptible;
+        return pGraphController->IsTransitionConditionallyAllowed() ? Status::Interruptible : Status::Uninterruptible;
     }
 
     void SlideAction::StopInternal( ActionContext const& ctx, StopReason reason )

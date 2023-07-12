@@ -4,6 +4,23 @@
 
 namespace EE::Animation
 {
+    #if EE_DEVELOPMENT_TOOLS
+    char const* GetNameForStateEventType( StateEventType type )
+    {
+        constexpr static char const* const names[] =
+        {
+            "Entry",
+            "FullyInState",
+            "Exit",
+            "Timed",
+        };
+
+        return names[(uint8_t) type];
+    }
+    #endif
+
+    //-------------------------------------------------------------------------
+
     void SampledEventsBuffer::Clear()
     {
         m_sampledEvents.clear();
@@ -59,7 +76,7 @@ namespace EE::Animation
                     continue;
                 }
 
-                if ( !se.IsIgnored() && se.IsFromActiveBranch() && se.GetEventType() == eventType && se.GetStateEventID() == ID )
+                if ( !se.IsIgnored() && se.IsFromActiveBranch() && se.GetStateEventType() == eventType && se.GetStateEventID() == ID )
                 {
                     return true;
                 }
@@ -74,7 +91,7 @@ namespace EE::Animation
                     continue;
                 }
 
-                if ( !se.IsIgnored() && se.GetEventType() == eventType && se.GetStateEventID() == ID )
+                if ( !se.IsIgnored() && se.GetStateEventType() == eventType && se.GetStateEventID() == ID )
                 {
                     return true;
                 }
@@ -139,7 +156,7 @@ namespace EE::Animation
                 continue;
             }
 
-            if ( se.GetEventType() == eventType && se.GetStateEventID() == ID )
+            if ( se.GetStateEventType() == eventType && se.GetStateEventID() == ID )
             {
                 return true;
             }
@@ -163,8 +180,8 @@ namespace EE::Animation
 
         if ( ( numEventsSource0 + numEventsSource1 ) > 0 )
         {
-            UpdateWeights( eventRange0, blendWeight );
-            UpdateWeights( eventRange1, 1.0f - blendWeight );
+            UpdateWeights( eventRange0, 1.0f - blendWeight );
+            UpdateWeights( eventRange1, blendWeight );
 
             // Combine sampled event range - source0's range must always be before source1's range
             if ( numEventsSource0 > 0 && numEventsSource1 > 0 )

@@ -5,9 +5,9 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void IDEventConditionToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    IDEventConditionToolsNode::IDEventConditionToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Bool, true );
     }
 
@@ -17,12 +17,29 @@ namespace EE::Animation::GraphNodes
         NodeCompilationState const state = context.GetSettings<IDEventConditionNode>( this, pSettings );
         if ( state == NodeCompilationState::NeedCompilation )
         {
+            if ( m_eventIDs.empty() )
+            {
+                context.LogError( this, "No event conditions specified for condition node!" );
+                return InvalidIndex;
+            }
+
             pSettings->m_sourceStateNodeIdx = context.IsCompilingConduit() ? context.GetConduitSourceStateIndex() : InvalidIndex;
             pSettings->m_operator = m_operator;
             pSettings->m_searchRule = m_searchRule;
 
             pSettings->m_eventIDs.clear();
-            pSettings->m_eventIDs.insert( pSettings->m_eventIDs.begin(), m_eventIDs.begin(), m_eventIDs.end() );
+            for ( auto const& ID : m_eventIDs )
+            {
+                if ( ID.IsValid() )
+                {
+                    pSettings->m_eventIDs.emplace_back( ID );
+                }
+                else
+                {
+                    context.LogError( this, "Invalid ID detected!" );
+                    return InvalidIndex;
+                }
+            }
         }
         return pSettings->m_nodeIdx;
     }
@@ -54,13 +71,13 @@ namespace EE::Animation::GraphNodes
 
         InlineString infoText;
 
-        if ( m_operator == IDEventConditionNode::Operator::Or )
+        if ( m_operator == EventConditionOperator::Or )
         {
-            infoText = "Any: ";
+            infoText = "Any of These: \n";
         }
         else
         {
-            infoText = "All: ";
+            infoText = "All of these: \n";
         }
 
         for ( auto i = 0; i < m_eventIDs.size(); i++ )
@@ -70,7 +87,7 @@ namespace EE::Animation::GraphNodes
                 infoText.append( m_eventIDs[i].c_str() );
                 if ( i != m_eventIDs.size() - 1 )
                 {
-                    infoText.append( ", " );
+                    infoText.append( "\n" );
                 }
             }
         }
@@ -78,11 +95,152 @@ namespace EE::Animation::GraphNodes
         ImGui::Text( infoText.c_str() );
     }
 
+    void IDEventConditionToolsNode::GetLogicAndEventIDs( TVector<StringID>& outIDs ) const
+    {
+        for ( auto ID : m_eventIDs )
+        {
+            outIDs.emplace_back( ID );
+        }
+    }
+
+    void IDEventConditionToolsNode::RenameLogicAndEventIDs( StringID oldID, StringID newID )
+    {
+        bool foundMatch = false;
+        for ( auto const ID : m_eventIDs )
+        {
+            if ( ID == oldID )
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if ( foundMatch )
+        {
+            VisualGraph::ScopedNodeModification snm( this );
+            for ( auto& ID : m_eventIDs )
+            {
+                if ( ID == oldID )
+                {
+                    ID = newID;
+                }
+            }
+        }
+    }
+
     //-------------------------------------------------------------------------
 
-    void GenericEventPercentageThroughToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    StateEventConditionToolsNode::StateEventConditionToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
+        CreateOutputPin( "Result", GraphValueType::Bool, true );
+
+        m_conditions.emplace_back();
+    }
+
+    int16_t StateEventConditionToolsNode::Compile( GraphCompilationContext& context ) const
+    {
+        StateEventConditionNode::Settings* pSettings = nullptr;
+        NodeCompilationState const state = context.GetSettings<StateEventConditionNode>( this, pSettings );
+        if ( state == NodeCompilationState::NeedCompilation )
+        {
+            if ( m_conditions.empty() )
+            {
+                context.LogError( this, "No event conditions specified for condition node!" );
+                return InvalidIndex;
+            }
+
+            pSettings->m_sourceStateNodeIdx = context.IsCompilingConduit() ? context.GetConduitSourceStateIndex() : InvalidIndex;
+            pSettings->m_operator = m_operator;
+
+            pSettings->m_conditions.clear();
+            for ( auto const& condition : m_conditions )
+            {
+                if ( condition.m_eventID.IsValid() )
+                {
+                    StateEventConditionNode::Condition& runtimeCondition = pSettings->m_conditions.emplace_back();
+                    runtimeCondition.m_eventID = condition.m_eventID;
+                    runtimeCondition.m_eventTypeCondition = condition.m_type;
+                }
+                else
+                {
+                    context.LogError( this, "Invalid ID detected!" );
+                    return InvalidIndex;
+                }
+            }
+
+        }
+        return pSettings->m_nodeIdx;
+    }
+
+    void StateEventConditionToolsNode::DrawInfoText( VisualGraph::DrawContext const& ctx )
+    {
+        InlineString infoText;
+
+        if ( m_operator == EventConditionOperator::Or )
+        {
+            infoText = "Any of these: \n";
+        }
+        else
+        {
+            infoText = "All of these: \n";
+        }
+
+        constexpr static char const* const typeLabels[] = { "Entry", "FullyInState","Exit", "Timed", "All" };
+
+        for ( auto i = 0; i < m_conditions.size(); i++ )
+        {
+            if ( m_conditions[i].m_eventID.IsValid() )
+            {
+                infoText.append_sprintf( "[%s] %s", typeLabels[(uint8_t) m_conditions[i].m_type], m_conditions[i].m_eventID.c_str() );
+                if ( i != m_conditions.size() - 1 )
+                {
+                    infoText.append( "\n" );
+                }
+            }
+        }
+
+        ImGui::Text( infoText.c_str() );
+    }
+
+    void StateEventConditionToolsNode::GetLogicAndEventIDs( TVector<StringID>& outIDs ) const
+    {
+        for ( auto const& condition : m_conditions )
+        {
+            outIDs.emplace_back( condition.m_eventID );
+        }
+    }
+
+    void StateEventConditionToolsNode::RenameLogicAndEventIDs( StringID oldID, StringID newID )
+    {
+        bool foundMatch = false;
+        for ( auto const& condition : m_conditions )
+        {
+            if ( condition.m_eventID == oldID )
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if ( foundMatch )
+        {
+            VisualGraph::ScopedNodeModification snm( this );
+            for ( auto& condition : m_conditions )
+            {
+                if ( condition.m_eventID == oldID )
+                {
+                    condition.m_eventID = newID;
+                }
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------
+
+    GenericEventPercentageThroughToolsNode::GenericEventPercentageThroughToolsNode()
+        : FlowToolsNode()
+    {
         CreateOutputPin( "Result", GraphValueType::Float, true );
     }
 
@@ -123,9 +281,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FootEventConditionToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FootEventConditionToolsNode::FootEventConditionToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Bool, true );
     }
 
@@ -158,9 +316,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void FootstepEventPercentageThroughToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    FootstepEventPercentageThroughToolsNode::FootstepEventPercentageThroughToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
     }
 
@@ -194,10 +352,10 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void SyncEventIndexConditionToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    SyncEventIndexConditionToolsNode::SyncEventIndexConditionToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
-        CreateOutputPin( "Result", GraphValueType::Float, true );
+        CreateOutputPin( "Result", GraphValueType::Bool, true );
     }
 
     int16_t SyncEventIndexConditionToolsNode::Compile( GraphCompilationContext& context ) const
@@ -233,9 +391,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void CurrentSyncEventToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    CurrentSyncEventToolsNode::CurrentSyncEventToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Float, true );
     }
 
@@ -252,9 +410,9 @@ namespace EE::Animation::GraphNodes
 
     //-------------------------------------------------------------------------
 
-    void TransitionEventConditionToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    TransitionEventConditionToolsNode::TransitionEventConditionToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateOutputPin( "Result", GraphValueType::Bool, true );
     }
 

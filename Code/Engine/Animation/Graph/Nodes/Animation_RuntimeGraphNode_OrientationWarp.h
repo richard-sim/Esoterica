@@ -17,7 +17,7 @@ namespace EE::Animation::GraphNodes
 
         struct EE_ENGINE_API Settings final : public PoseNode::Settings
         {
-            EE_REGISTER_TYPE( Settings );
+            EE_REFLECT_TYPE( Settings );
             EE_SERIALIZE_GRAPHNODESETTINGS( PoseNode::Settings, m_clipReferenceNodeIdx, m_targetValueNodeIdx, m_isOffsetNode, m_isOffsetRelativeToCharacter, m_samplingMode );
 
             virtual void InstantiateNode( InstantiationContext const& context, InstantiationOptions options ) const override;
@@ -31,6 +31,7 @@ namespace EE::Animation::GraphNodes
 
     private:
 
+        virtual bool IsValid() const override;
         virtual SyncTrack const& GetSyncTrack() const override { return m_pClipReferenceNode->GetSyncTrack(); }
         virtual void InitializeInternal( GraphContext& context, SyncTrackTime const& initialTime ) override;
         virtual void ShutdownInternal( GraphContext& context ) override;

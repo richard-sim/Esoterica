@@ -7,11 +7,11 @@ namespace EE::Animation::GraphNodes
 {
     class ChildGraphToolsNode final : public DataSlotToolsNode
     {
-        EE_REGISTER_TYPE( ChildGraphToolsNode );
+        EE_REFLECT_TYPE( ChildGraphToolsNode );
 
     public:
 
-        virtual void Initialize( VisualGraph::BaseGraph* pParent ) override;
+        ChildGraphToolsNode();
 
         virtual GraphValueType GetValueType() const override { return GraphValueType::Pose; }
         virtual char const* GetTypeName() const override { return "Child Graph"; }
@@ -22,7 +22,55 @@ namespace EE::Animation::GraphNodes
         virtual ImColor GetTitleBarColor() const override { return ImGuiX::ImColors::Gold; }
         virtual void DrawContextMenuOptions( VisualGraph::DrawContext const& ctx, VisualGraph::UserContext* pUserContext, Float2 const& mouseCanvasPos, VisualGraph::Flow::Pin* pPin ) override;
 
-        virtual char const* const GetDefaultSlotName() const override { return "Graph"; }
+        virtual char const* GetDefaultSlotName() const override { return "Graph"; }
         virtual ResourceTypeID GetSlotResourceTypeID() const override;
+    };
+
+    //-------------------------------------------------------------------------
+
+    struct OpenChildGraphCommand : public VisualGraph::AdvancedCommand
+    {
+        EE_REFLECT_TYPE( OpenChildGraphCommand );
+
+        enum Option { OpenInPlace, OpenInNewEditor };
+
+    public:
+
+        OpenChildGraphCommand() = default;
+
+        OpenChildGraphCommand( ChildGraphToolsNode* pSourceNode, Option option )
+            : m_option( option )
+        {
+            EE_ASSERT( pSourceNode != nullptr );
+            m_pCommandSourceNode = pSourceNode;
+        }
+
+    public:
+
+        Option m_option = OpenInPlace;
+    };
+
+    //-------------------------------------------------------------------------
+
+    struct ReflectParametersCommand : public VisualGraph::AdvancedCommand
+    {
+        EE_REFLECT_TYPE( ReflectParametersCommand );
+
+        enum Option { FromParent, FromChild };
+
+    public:
+
+        ReflectParametersCommand() = default;
+
+        ReflectParametersCommand( ChildGraphToolsNode* pSourceNode, Option option )
+            : m_option( option )
+        {
+            EE_ASSERT( pSourceNode != nullptr );
+            m_pCommandSourceNode = pSourceNode;
+        }
+
+    public:
+
+        Option m_option = FromParent;
     };
 }

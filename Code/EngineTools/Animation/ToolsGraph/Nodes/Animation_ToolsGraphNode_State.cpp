@@ -9,21 +9,31 @@
 
 namespace EE::Animation::GraphNodes
 {
-    void StateLayerDataToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
+    StateLayerDataToolsNode::StateLayerDataToolsNode()
+        : FlowToolsNode()
     {
-        FlowToolsNode::Initialize( pParent );
         CreateInputPin( "Layer Weight", GraphValueType::Float );
+        CreateInputPin( "Root Motion Weight", GraphValueType::Float );
         CreateInputPin( "Layer Mask", GraphValueType::BoneMask );
     }
 
     //-------------------------------------------------------------------------
+
+    StateToolsNode::StateToolsNode( StateType type )
+        : m_type( type )
+    {
+        if ( m_type == StateType::OffState )
+        {
+            m_name = "Off";
+        }
+    }
 
     void StateToolsNode::Initialize( VisualGraph::BaseGraph* pParent )
     {
         VisualGraph::SM::State::Initialize( pParent );
 
         auto pBlendTree = EE::New<FlowGraph>( GraphType::BlendTree );
-        pBlendTree->CreateNode<ResultToolsNode>( GraphValueType::Pose );
+        pBlendTree->CreateNode<PoseResultToolsNode>();
         SetChildGraph( pBlendTree );
 
         auto pValueTree = EE::New<FlowGraph>( GraphType::ValueTree );
@@ -35,7 +45,7 @@ namespace EE::Animation::GraphNodes
         {
             auto pStateMachineNode = pBlendTree->CreateNode<StateMachineToolsNode>();
             
-            auto resultNodes = GetChildGraph()->FindAllNodesOfType<ResultToolsNode>();
+            auto resultNodes = GetChildGraph()->FindAllNodesOfType<ResultToolsNode>( VisualGraph::SearchMode::Localized, VisualGraph::SearchTypeMatch::Derived );
             EE_ASSERT( resultNodes.size() == 1 );
             auto pBlendTreeResultNode = resultNodes[0];
 
@@ -212,19 +222,32 @@ namespace EE::Animation::GraphNodes
         //-------------------------------------------------------------------------
 
         InlineString string;
-        auto CreateEventString = [&] ( TVector<StringID> const& IDs )
+        auto CreateEventString = [&] ( TVector<StringID> const& stateIDs, TVector<StringID> const& specificIDs )
         {
-            string.clear();
-            for ( int32_t i = 0; i < (int32_t) IDs.size(); i++ )
+            TInlineVector<StringID, 10> finalIDs;
+            finalIDs.insert( finalIDs.end(), stateIDs.begin(), stateIDs.end() );
+
+            for ( StringID specificID : specificIDs )
             {
-                if ( !IDs[i].IsValid() )
+                if ( !VectorContains( finalIDs, specificID ) )
+                {
+                    finalIDs.emplace_back( specificID );
+                }
+            }
+
+            //-------------------------------------------------------------------------
+
+            string.clear();
+            for ( int32_t i = 0; i < (int32_t) finalIDs.size(); i++ )
+            {
+                if ( !finalIDs[i].IsValid() )
                 {
                     continue;
                 }
 
-                string += IDs[i].c_str();
+                string += finalIDs[i].c_str();
 
-                if ( i != IDs.size() - 1 )
+                if ( i != finalIDs.size() - 1 )
                 {
                     string += ", ";
                 }
@@ -253,23 +276,23 @@ namespace EE::Animation::GraphNodes
 
         bool hasStateEvents = false;
 
-        if ( !m_entryEvents.empty() )
+        if ( !m_entryEvents.empty() || !m_events.empty() )
         {
-            CreateEventString( m_entryEvents );
+            CreateEventString( m_events, m_entryEvents );
             ImGui::Text( "Entry: %s", string.c_str() );
             hasStateEvents = true;
         }
 
-        if ( !m_executeEvents.empty() )
+        if ( !m_executeEvents.empty() || !m_events.empty() )
         {
-            CreateEventString( m_executeEvents );
+            CreateEventString( m_events, m_executeEvents );
             ImGui::Text( "Execute: %s", string.c_str() );
             hasStateEvents = true;
         }
 
-        if ( !m_exitEvents.empty() )
+        if ( !m_exitEvents.empty() || !m_events.empty() )
         {
-            CreateEventString( m_exitEvents );
+            CreateEventString( m_events, m_exitEvents );
             ImGui::Text( "Exit: %s", string.c_str() );
             hasStateEvents = true;
         }
@@ -311,6 +334,30 @@ namespace EE::Animation::GraphNodes
                 PoseNodeDebugInfo const debugInfo = pGraphNodeContext->GetPoseNodeDebugInfo( runtimeNodeIdx );
                 DrawPoseNodeDebugInfo( ctx, GetWidth(), debugInfo );
                 shouldDrawEmptyDebugInfoBlock = false;
+            }
+
+            //-------------------------------------------------------------------------
+
+            if ( pGraphNodeContext->m_showRuntimeIndices && runtimeNodeIdx != InvalidIndex )
+            {
+                InlineString const idxStr( InlineString::CtorSprintf(), "%d", runtimeNodeIdx );
+                ImVec2 const textSize = ImGui::CalcTextSize( idxStr.c_str() );
+
+                //-------------------------------------------------------------------------
+
+                ImGuiStyle const& style = ImGui::GetStyle();
+                constexpr static float const verticalOffset = 10;
+                float const bubbleHeight = ImGui::GetFrameHeightWithSpacing();
+                float const bubbleWidth = textSize.x + 12;
+
+                ImVec2 const startRect( GetCanvasPosition().m_x, GetCanvasPosition().m_y - bubbleHeight - verticalOffset );
+                ImVec2 const endRect( startRect.x + bubbleWidth, startRect.y + bubbleHeight );
+                ImVec2 const canvasStartRect = ctx.CanvasPositionToScreenPosition( startRect );
+
+                ctx.m_pDrawList->AddRectFilled( canvasStartRect, ctx.CanvasPositionToScreenPosition( endRect ), ImGuiX::ImColors::MediumRed, 3 );
+
+                auto pFont = ImGuiX::GetFont( ImGuiX::Font::Medium );
+                ctx.m_pDrawList->AddText( pFont, pFont->FontSize, canvasStartRect + ImVec2( 4, 2 ), ImGuiX::ImColors::White, idxStr.c_str() );
             }
         }
 
@@ -365,7 +412,7 @@ namespace EE::Animation::GraphNodes
             return false;
         }
 
-        auto resultNodes = GetChildGraph()->FindAllNodesOfType<ResultToolsNode>();
+        auto resultNodes = GetChildGraph()->FindAllNodesOfType<ResultToolsNode>( VisualGraph::SearchMode::Localized, VisualGraph::SearchTypeMatch::Derived );
         if ( resultNodes.size() != 1 )
         {
             return false;
@@ -399,6 +446,99 @@ namespace EE::Animation::GraphNodes
             auto childSMs = GetChildGraph()->FindAllNodesOfType<StateMachineToolsNode>();
             EE_ASSERT( childSMs.size() == 1 );
             childSMs[0]->OnShowNode();
+        }
+    }
+
+    void StateToolsNode::GetLogicAndEventIDs( TVector<StringID>& outIDs ) const
+    {
+        for ( auto const ID : m_entryEvents )
+        {
+            outIDs.emplace_back( ID );
+        }
+
+        for ( auto const ID : m_executeEvents )
+        {
+            outIDs.emplace_back( ID );
+        }
+
+        for ( auto const ID : m_exitEvents )
+        {
+            outIDs.emplace_back( ID );
+        }
+
+        for ( auto const& evt : m_timeRemainingEvents )
+        {
+            outIDs.emplace_back( evt.m_ID );
+        }
+
+        for ( auto const& evt : m_timeElapsedEvents )
+        {
+            outIDs.emplace_back( evt.m_ID );
+        }
+    }
+
+    void StateToolsNode::RenameLogicAndEventIDs( StringID oldID, StringID newID )
+    {
+        bool foundMatch = false;
+
+        //-------------------------------------------------------------------------
+
+        TVector<StringID> IDs;
+        GetLogicAndEventIDs( IDs );
+        for ( auto const ID : IDs )
+        {
+            if ( ID == oldID )
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        //-------------------------------------------------------------------------
+
+        if ( foundMatch )
+        {
+            VisualGraph::ScopedNodeModification snm( this );
+
+            for ( auto& ID : m_entryEvents )
+            {
+                if ( ID == oldID )
+                {
+                    ID = newID;
+                }
+            }
+
+            for ( auto& ID : m_executeEvents )
+            {
+                if ( ID == oldID )
+                {
+                    ID = newID;
+                }
+            }
+
+            for ( auto& ID : m_exitEvents )
+            {
+                if ( ID == oldID )
+                {
+                    ID = newID;
+                }
+            }
+
+            for ( auto& evt : m_timeRemainingEvents )
+            {
+                if ( evt.m_ID == oldID )
+                {
+                    evt.m_ID = newID;
+                }
+            }
+
+            for ( auto& evt : m_timeElapsedEvents )
+            {
+                if ( evt.m_ID == oldID )
+                {
+                    evt.m_ID = newID;
+                }
+            }
         }
     }
 }
