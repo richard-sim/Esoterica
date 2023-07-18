@@ -1,10 +1,10 @@
 #pragma once
 
-#include "System/Log.h"
+#include "System/Logging/Log.h"
 #include "System/Render/RenderAPI.h"
 #include "System/Render/RenderStates.h"
 #include "System/Resource/ResourcePath.h"
-#include "System/Algorithm/Hash.h"
+#include "System/Encoding/Hash.h"
 #include "System/Types/Set.h"
 
 //-------------------------------------------------------------------------

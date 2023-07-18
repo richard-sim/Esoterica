@@ -3,7 +3,7 @@
 #include "VulkanInstance.h"
 #include "VulkanCommonSettings.h"
 #include "System/Memory/Memory.h"
-#include "System/Log.h"
+#include "System/Logging/Log.h"
 
 namespace EE::Render
 {

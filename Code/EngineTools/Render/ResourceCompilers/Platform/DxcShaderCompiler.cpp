@@ -1,5 +1,5 @@
 #include "DxcShaderCompiler.h"
-#include "System/Log.h"
+#include "System/Logging/Log.h"
 #include "System/Types/String.h"
 #include "System/Types/WString.h"
 

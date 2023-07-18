@@ -70,7 +70,7 @@ namespace EE
         class EE_SYSTEM_API VertexShader : public Shader
         {
             EE_SERIALIZE( EE_SERIALIZE_BASE( Shader ), m_vertexLayoutDesc );
-            EE_REGISTER_RESOURCE( 'vsdr', "Vertex Shader" );
+            EE_RESOURCE( 'vsdr', "Vertex Shader" );
 
             friend class RenderDevice;
             friend class ShaderCompiler;

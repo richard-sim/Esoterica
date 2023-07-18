@@ -5,7 +5,7 @@
 #include "VulkanSurface.h"
 #include "VulkanDevice.h"
 #include "VulkanUtils.h"
-#include "System/Log.h"
+#include "System/Logging/Log.h"
 
 namespace EE::Render
 {
