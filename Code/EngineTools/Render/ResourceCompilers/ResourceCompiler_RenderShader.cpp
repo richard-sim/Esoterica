@@ -1,10 +1,11 @@
 #include "ResourceCompiler_RenderShader.h"
 #include "EngineTools/Render/ResourceDescriptors/ResourceDescriptor_RenderShader.h"
-#include "System/FileSystem/FileSystem.h"
-#include "System/Serialization/BinarySerialization.h"
-#include "System/Memory/Pointers.h"
-#include "System/Types/String.h"
-#include "System/Algorithm/Sort.h"
+
+#include "Base/FileSystem/FileSystem.h"
+#include "Base/Serialization/BinarySerialization.h"
+#include "Base/Memory/Pointers.h"
+#include "Base/Types/String.h"
+#include "Base/Algorithm/Sort.h"
 
 #include "EngineTools/Render/ResourceCompilers/Platform/DxcShaderCompiler.h"
 

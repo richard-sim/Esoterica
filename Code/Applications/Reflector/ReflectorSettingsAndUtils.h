@@ -1,7 +1,7 @@
 #pragma once
 
-#include "System/Types/String.h"
-#include "System/FileSystem/FileSystemPath.h"
+#include "Base/Types/String.h"
+#include "Base/FileSystem/FileSystemPath.h"
 
 //-------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ namespace EE::TypeSystem::Reflection
 
         char const* const g_allowedProjectNames[] =
         {
-            "Esoterica.System",
+            "Esoterica.Base",
             "Esoterica.Engine.Runtime",
             "Esoterica.Game.Runtime",
             "Esoterica.Engine.Tools",
@@ -84,10 +84,10 @@ namespace EE::TypeSystem::Reflection
         char const* const g_includePaths[] =
         {
             "Code\\",
-            "Code\\System\\ThirdParty\\EA\\EABase\\include\\common\\",
-            "Code\\System\\ThirdParty\\EA\\EASTL\\include\\",
-            "Code\\System\\ThirdParty\\",
-            "Code\\System\\ThirdParty\\imgui\\",
+            "Code\\Base\\ThirdParty\\EA\\EABase\\include\\common\\",
+            "Code\\Base\\ThirdParty\\EA\\EASTL\\include\\",
+            "Code\\Base\\ThirdParty\\",
+            "Code\\Base\\ThirdParty\\imgui\\",
             "External\\PhysX\\physx\\include\\",
             #if EE_ENABLE_NAVPOWER
             "External\\NavPower\\include\\"

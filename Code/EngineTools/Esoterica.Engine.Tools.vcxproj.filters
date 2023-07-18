@@ -322,10 +322,7 @@
     <ClCompile Include="Resource\ResourcePicker.cpp">
       <Filter>Resource</Filter>
     </ClCompile>
-    <ClCompile Include="Resource\ResourceBrowser\ResourceBrowser.cpp">
-      <Filter>Resource\ResourceBrowser</Filter>
-    </ClCompile>
-    <ClCompile Include="Resource\ResourceBrowser\ResourceBrowser_DescriptorCreator.cpp">
+    <ClCompile Include="Resource\ResourceDescriptorCreator.cpp">
       <Filter>Resource\ResourceBrowser</Filter>
     </ClCompile>
     <ClCompile Include="Resource\RawFileInspectors\RawFileInspector_FBX.cpp">
@@ -338,6 +335,10 @@
       <Filter>Resource\RawFileInspectors</Filter>
     </ClCompile>
     <ClCompile Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.cpp" />
+    <ClCompile Include="Core\EditorTool.cpp" />
+    <ClCompile Include="Core\EditorTools\EditorTool_SystemLog.cpp" />
+    <ClCompile Include="Resource\EditorTools\EditorTool_ResourceBrowser.cpp" />
+    <ClCompile Include="Resource\EditorTools\EditorTool_ResourceSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation\ToolsGraph\Animation_ToolsGraph_UserContext.h">
@@ -709,10 +710,7 @@
     <ClInclude Include="Resource\ResourcePicker.h">
       <Filter>Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Resource\ResourceBrowser\ResourceBrowser.h">
-      <Filter>Resource\ResourceBrowser</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource\ResourceBrowser\ResourceBrowser_DescriptorCreator.h">
+    <ClInclude Include="Resource\ResourceDescriptorCreator.h">
       <Filter>Resource\ResourceBrowser</Filter>
     </ClInclude>
     <ClInclude Include="Resource\RawFileInspectors\RawFileInspector_FBX.h">
@@ -935,6 +933,10 @@
       <Filter>ThirdParty\subprocess</Filter>
     </ClInclude>
     <ClInclude Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.h" />
+    <ClInclude Include="Core\EditorTool.h" />
+    <ClInclude Include="Core\EditorTools\EditorTool_SystemLog.h" />
+    <ClInclude Include="Resource\EditorTools\EditorTool_ResourceBrowser.h" />
+    <ClInclude Include="Resource\EditorTools\EditorTool_ResourceSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Animation">
