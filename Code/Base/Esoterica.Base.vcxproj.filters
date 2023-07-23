@@ -355,20 +355,6 @@
     <ClCompile Include="Serialization\TypeSerialization.cpp">
       <Filter>Serialization</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" />
-    <ClCompile Include="RenderGraph\RenderGraph.cpp" />
-    <ClCompile Include="RenderGraph\RenderGraphResource.cpp" />
-    <ClCompile Include="RenderGraph\RenderGraphContext.cpp" />
-    <ClCompile Include="RenderGraph\RenderGraphNode.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" />
     <ClCompile Include="Render\RenderResourceBarrier.cpp">
       <Filter>Render</Filter>
     </ClCompile>
@@ -381,6 +367,51 @@
     <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Logging\LoggingSystem.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraph.cpp">
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\RenderGraphContext.cpp">
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\RenderGraphNode.cpp">
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\RenderGraphResource.cpp">
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp">
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1795,32 +1826,16 @@
     <ClInclude Include="Serialization\TypeSerialization.h">
       <Filter>Serialization</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
-    <ClInclude Include="RenderGraph\RenderGraph.h" />
-    <ClInclude Include="RenderGraph\RenderGraphResource.h" />
-    <ClInclude Include="RenderGraph\RenderGraphContext.h" />
     <ClInclude Include="Types\Variant.h" />
-    <ClInclude Include="RenderGraph\RenderGraphNode.h" />
     <ClInclude Include="Types\Atomic.h" />
     <ClInclude Include="Types\RefCount.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" />
     <ClInclude Include="Render\RenderResourceBarrier.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
     <ClInclude Include="Types\WString.h" />
     <ClInclude Include="Types\Set.h" />
     <ClInclude Include="Render\RenderPipeline.h" />
     <ClInclude Include="Render\RenderPipelineRegistry.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="TypeSystem\ReflectedType.h" />
     <ClInclude Include="Utils\GlobalRegistryBase.h" />
@@ -1830,6 +1845,59 @@
     <ClInclude Include="Imgui\ImguiFilteredCombo.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Logging\LoggingSystem.h" />
+    <!-- [Legacy] ClInclude Include="Math\MathStringHelpers.h" /-->
+    <!-- [Legacy] ClInclude Include="Math\MathHelpers.h" /-->
+    <ClInclude Include="RenderGraph\RenderGraph.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphContext.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphNode.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphResource.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h">
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h">
+      <Filter>Render\Platform\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">
@@ -2063,6 +2131,12 @@
     </Filter>
     <Filter Include="Serialization">
       <UniqueIdentifier>{88455efa-8ad7-43d8-8c93-20130116aaa4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderGraph">
+      <UniqueIdentifier>{0273e318-9f9e-4381-96aa-85d48a5bad2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\Vulkan">
+      <UniqueIdentifier>{364f5d27-dcd6-47e1-8dfd-e720c67be72c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

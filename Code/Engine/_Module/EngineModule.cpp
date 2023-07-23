@@ -14,9 +14,9 @@
 
 //-------------------------------------------------------------------------
 
-#include "System/Render/RenderResourceBarrier.h"
-#include "System/RenderGraph/RenderGraphResource.h"
-#include "System/Render/RenderAPI.h"
+#include "Base/Render/RenderResourceBarrier.h"
+#include "Base/RenderGraph/RenderGraphResource.h"
+#include "Base/Render/RenderAPI.h"
 
 namespace EE
 {

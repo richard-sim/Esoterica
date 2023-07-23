@@ -1,6 +1,6 @@
 #pragma once
 
-#include "System/Types/Atomic.h"
+#include "Base/Types/Atomic.h"
 
 #include <type_traits>
 #include <limits>

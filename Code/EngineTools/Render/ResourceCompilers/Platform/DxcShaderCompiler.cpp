@@ -1,7 +1,7 @@
 #include "DxcShaderCompiler.h"
-#include "System/Logging/Log.h"
-#include "System/Types/String.h"
-#include "System/Types/WString.h"
+#include "Base/Logging/Log.h"
+#include "Base/Types/String.h"
+#include "Base/Types/WString.h"
 
 #include <spirv_cross/spirv_cross.hpp>
 

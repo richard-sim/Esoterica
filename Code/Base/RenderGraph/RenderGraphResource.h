@@ -1,10 +1,10 @@
 #pragma once
 
-#include "System/_Module/API.h"
+#include "Base/_Module/API.h"
 
-#include "System/Types/Variant.h"
-#include "System/Memory/Pointers.h"
-#include "System/Render/RenderAPI.h"
+#include "Base/Types/Variant.h"
+#include "Base/Memory/Pointers.h"
+#include "Base/Render/RenderAPI.h"
 #include "RenderGraphResourceBarrier.h"
 
 #include <limits>
@@ -39,7 +39,7 @@ namespace EE
 		};
 
 		// TODO: put this inside impl namespace
-		class EE_SYSTEM_API RGResourceSlotID
+		class EE_BASE_API RGResourceSlotID
 		{
 		public:
 
@@ -110,7 +110,7 @@ namespace EE
 			}
 		};
 
-		class EE_SYSTEM_API RGBufferDesc final : public RGResourceDesc<RGBufferDesc, BufferDesc>
+		class EE_BASE_API RGBufferDesc final : public RGResourceDesc<RGBufferDesc, BufferDesc>
 		{
 		public:
 
@@ -128,7 +128,7 @@ namespace EE
 			DescType				m_desc;
 		};
 
-		class EE_SYSTEM_API RGTextureDesc final : public RGResourceDesc<RGTextureDesc, TextureDesc>
+		class EE_BASE_API RGTextureDesc final : public RGResourceDesc<RGTextureDesc, TextureDesc>
 		{
 		public:
 
@@ -200,7 +200,7 @@ namespace EE
 		//typedef RGResourceDesc<RGBufferDesc> BufferDescBaseType;
 		//typedef RGResourceDesc<RGTextureDesc> TextureDescBaseType;
 
-		class EE_SYSTEM_API RGResource
+		class EE_BASE_API RGResource
 		{
 		public:
 

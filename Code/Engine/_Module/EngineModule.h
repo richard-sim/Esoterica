@@ -32,8 +32,8 @@
 #include "Base/Threading/TaskSystem.h"
 #include "Base/Systems.h"
 
-#include "System/RenderGraph/RenderGraph.h"
-#include "System/Render/RenderPipelineRegistry.h"
+#include "Base/RenderGraph/RenderGraph.h"
+#include "Base/Render/RenderPipelineRegistry.h"
 
 //-------------------------------------------------------------------------
 

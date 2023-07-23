@@ -2,8 +2,8 @@
 
 #include "VulkanInstance.h"
 #include "VulkanCommonSettings.h"
-#include "System/Memory/Memory.h"
-#include "System/Logging/Log.h"
+#include "Base/Memory/Memory.h"
+#include "Base/Logging/Log.h"
 
 namespace EE::Render
 {

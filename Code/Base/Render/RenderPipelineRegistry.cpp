@@ -1,8 +1,8 @@
 #include "RenderPipelineRegistry.h"
-#include "System/Resource/ResourceSystem.h"
-#include "System/Resource/ResourceRequesterID.h"
-#include "System/Threading/Threading.h"
-#include "System/Threading/TaskSystem.h"
+#include "Base/Resource/ResourceSystem.h"
+#include "Base/Resource/ResourceRequesterID.h"
+#include "Base/Threading/Threading.h"
+#include "Base/Threading/TaskSystem.h"
 
 namespace EE::Render
 {

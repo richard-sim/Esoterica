@@ -1,8 +1,8 @@
 #pragma once
 
-#include "System/_Module/API.h"
+#include "Base/_Module/API.h"
 
-#include "System/Render/RenderTexture.h"
+#include "Base/Render/RenderTexture.h"
 
 //-------------------------------------------------------------------------
 //	Rather than use sophisticated enum and bit flags inside vulkan or DX12
@@ -149,13 +149,13 @@ namespace EE::Render
 		AccelerationStructureBufferWrite,
 	};
 
-	bool EE_SYSTEM_API IsCommonReadOnlyAccess( RenderResourceBarrierState const& access );
-	bool EE_SYSTEM_API IsCommonWriteAccess( RenderResourceBarrierState const& access );
+	bool EE_BASE_API IsCommonReadOnlyAccess( RenderResourceBarrierState const& access );
+	bool EE_BASE_API IsCommonWriteAccess( RenderResourceBarrierState const& access );
 
-	bool EE_SYSTEM_API IsRasterReadOnlyAccess( RenderResourceBarrierState const& access );
-	bool EE_SYSTEM_API IsRasterWriteAccess( RenderResourceBarrierState const& access );
+	bool EE_BASE_API IsRasterReadOnlyAccess( RenderResourceBarrierState const& access );
+	bool EE_BASE_API IsRasterWriteAccess( RenderResourceBarrierState const& access );
 
-	class EE_SYSTEM_API RenderResourceAccessState
+	class EE_BASE_API RenderResourceAccessState
 	{
 	public:
 

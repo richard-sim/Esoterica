@@ -5,7 +5,7 @@
 #include "Base/Serialization/BinarySerialization.h"
 #include "Base/Memory/Pointers.h"
 #include "Base/Types/String.h"
-#include "Base/Algorithm/Sort.h"
+#include "Base/Utils/Sort.h"
 
 #include "EngineTools/Render/ResourceCompilers/Platform/DxcShaderCompiler.h"
 
@@ -469,12 +469,12 @@ namespace EE::Render
         if ( pShader->GetPipelineStage() == PipelineStage::Pixel )
         {
             Resource::ResourceHeader hdr( s_version, PixelShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
-            archive << hdr << *static_cast<PixelShader*>( pShader );
+            archive << hdr << *static_cast<PixelShader*>( pShader.get() );
         }
         if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
         {
             Resource::ResourceHeader hdr( s_version, PixelShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
-            archive << hdr << *static_cast<VertexShader*>( pShader );
+            archive << hdr << *static_cast<VertexShader*>( pShader.get() );
         }
 
         if ( archive.WriteToFile( ctx.m_outputFilePath ) )
@@ -575,17 +575,17 @@ namespace EE::Render
 
         if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
         {
-            Resource::ResourceHeader hdr( compilerVersion, VertexShader::GetStaticResourceTypeID() );
+            Resource::ResourceHeader hdr( compilerVersion, VertexShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
             archive << hdr << *static_cast<VertexShader*>( pShader.get() );
         }
         if ( pShader->GetPipelineStage() == PipelineStage::Pixel )
         {
-            Resource::ResourceHeader hdr( compilerVersion, PixelShader::GetStaticResourceTypeID() );
+            Resource::ResourceHeader hdr( compilerVersion, PixelShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
             archive << hdr << *static_cast<PixelShader*>( pShader.get() );
         }
         if ( pShader->GetPipelineStage() == PipelineStage::Compute )
         {
-            Resource::ResourceHeader hdr( compilerVersion, ComputeShader::GetStaticResourceTypeID() );
+            Resource::ResourceHeader hdr( compilerVersion, ComputeShader::GetStaticResourceTypeID(), ctx.m_sourceResourceHash );
             archive << hdr << *static_cast<ComputeShader*>( pShader.get() );
         }
 

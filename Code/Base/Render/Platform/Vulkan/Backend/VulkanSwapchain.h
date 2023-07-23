@@ -1,8 +1,8 @@
 #pragma once
 #ifdef EE_VULKAN
 
-#include "System/Memory/Pointers.h"
-#include "System/Types/Arrays.h"
+#include "Base/Memory/Pointers.h"
+#include "Base/Types/Arrays.h"
 #include "VulkanResource.h"
 #include "VulkanTexture.h"
 

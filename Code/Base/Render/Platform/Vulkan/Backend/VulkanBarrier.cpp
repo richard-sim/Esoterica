@@ -1,7 +1,7 @@
 #if defined(EE_VULKAN)
 #include "VulkanBarrier.h"
 
-#include "System/Types/Arrays.h"
+#include "Base/Types/Arrays.h"
 
 namespace EE::Render
 {

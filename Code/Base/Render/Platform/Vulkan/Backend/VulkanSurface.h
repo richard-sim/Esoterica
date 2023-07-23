@@ -1,7 +1,7 @@
 #pragma once
 #ifdef EE_VULKAN
 
-#include "System/Memory/Pointers.h"
+#include "Base/Memory/Pointers.h"
 
 #include <vulkan/vulkan_core.h>
 

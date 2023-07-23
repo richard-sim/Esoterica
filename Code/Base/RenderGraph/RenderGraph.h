@@ -1,13 +1,13 @@
 #pragma once
 
-#include "System/_Module/API.h"
+#include "Base/_Module/API.h"
 
 #include "RenderGraphNode.h"
-#include "System/Threading/Threading.h"
-#include "System/Types/Arrays.h"
-#include "System/Types/String.h"
-#include "System/Render/RenderPipelineState.h"
-#include "System/Render/RenderResourceBarrier.h"
+#include "Base/Threading/Threading.h"
+#include "Base/Types/Arrays.h"
+#include "Base/Types/String.h"
+#include "Base/Render/RenderPipelineState.h"
+#include "Base/Render/RenderResourceBarrier.h"
 
 namespace EE
 {
@@ -47,7 +47,7 @@ namespace EE
 			RGResourceSlotID				m_slotID;
 		};
 
-		class EE_SYSTEM_API RenderGraph
+		class EE_BASE_API RenderGraph
 		{
 
 			friend class RGNodeBuilder;
@@ -91,7 +91,7 @@ namespace EE
 		// Helper class to build a render graph node.
 		// User can register pipeline and define the resource usage in a certain pass.
 		// TODO: [Safety Consideration] It is thread safe?
-		class EE_SYSTEM_API RGNodeBuilder
+		class EE_BASE_API RGNodeBuilder
 		{
 		public:
 

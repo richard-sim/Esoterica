@@ -1,10 +1,10 @@
 #pragma once
 
-#include "System/_Module/API.h"
+#include "Base/_Module/API.h"
 
-#include "System/Render/RenderAPI.h"
-#include "System/Types/BitFlags.h"
-#include "System/Types/RefCount.h"
+#include "Base/Render/RenderAPI.h"
+#include "Base/Types/BitFlags.h"
+#include "Base/Types/RefCount.h"
 
 //-------------------------------------------------------------------------
 //	Rather than use sophisticated enum and bit flags inside vulkan or DX12
@@ -153,13 +153,13 @@ namespace EE
 			AccelerationStructureBufferWrite,
 		};
 
-		bool EE_SYSTEM_API IsCommonReadOnlyAccess( RGResourceBarrierState const& access );
-		bool EE_SYSTEM_API IsCommonWriteAccess( RGResourceBarrierState const& access );
+		bool EE_BASE_API IsCommonReadOnlyAccess( RGResourceBarrierState const& access );
+		bool EE_BASE_API IsCommonWriteAccess( RGResourceBarrierState const& access );
 
-		bool EE_SYSTEM_API IsRasterReadOnlyAccess( RGResourceBarrierState const& access );
-		bool EE_SYSTEM_API IsRasterWriteAccess( RGResourceBarrierState const& access );
+		bool EE_BASE_API IsRasterReadOnlyAccess( RGResourceBarrierState const& access );
+		bool EE_BASE_API IsRasterWriteAccess( RGResourceBarrierState const& access );
 
-		class EE_SYSTEM_API RGResourceAccessState
+		class EE_BASE_API RGResourceAccessState
 		{
 		public:
 

@@ -20,7 +20,7 @@ namespace EE::Render
 
     enum class ShaderBackendLanguage : uint8_t
     {
-        EE_REGISTER_ENUM
+        EE_REFLECT_ENUM
 
         DX11 = 0,
         Vulkan,
@@ -28,7 +28,7 @@ namespace EE::Render
 
     enum class ShaderLanguage : uint8_t
     {
-        EE_REGISTER_ENUM
+        EE_REFLECT_ENUM
 
         Hlsl = 0,
         Glsl,
@@ -63,7 +63,7 @@ namespace EE::Render
 
     struct EE_ENGINETOOLS_API VertexShaderResourceDescriptor final : public ShaderResourceDescriptor
     {
-        EE_REGISTER_TYPE( VertexShaderResourceDescriptor );
+        EE_REFLECT_TYPE( VertexShaderResourceDescriptor );
 
         VertexShaderResourceDescriptor()
         {
@@ -78,7 +78,7 @@ namespace EE::Render
     
     struct EE_ENGINETOOLS_API PixelShaderResourceDescriptor final : public ShaderResourceDescriptor
     {
-        EE_REGISTER_TYPE( PixelShaderResourceDescriptor );
+        EE_REFLECT_TYPE( PixelShaderResourceDescriptor );
 
         PixelShaderResourceDescriptor()
         {
@@ -93,7 +93,7 @@ namespace EE::Render
     
     struct EE_ENGINETOOLS_API ComputeShaderResourceDescriptor final : public ShaderResourceDescriptor
     {
-        EE_REGISTER_TYPE( ComputeShaderResourceDescriptor );
+        EE_REFLECT_TYPE( ComputeShaderResourceDescriptor );
 
         ComputeShaderResourceDescriptor()
         {

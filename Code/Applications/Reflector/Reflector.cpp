@@ -9,7 +9,7 @@
 #include "Base/Time/Timers.h"
 #include "Base/Utils/TopologicalSort.h"
 
-#include "System/Types/Arrays.h"
+#include "Base/Types/Arrays.h"
 
 #include <eastl/sort.h>
 #include <fstream>

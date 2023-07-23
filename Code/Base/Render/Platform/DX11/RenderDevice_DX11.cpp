@@ -1,29 +1,22 @@
 #if defined(_WIN32) && defined(EE_DX11)
 
 #include "RenderDevice_DX11.h"
-<<<<<<<< HEAD:Code/Base/Render/Platform/DX11/RenderDevice_DX11.cpp
-#include "System/Render/RenderCoreResources.h"
-#include "System/IniFile.h"
-#include "System/Profiling.h"
-========
-#include "TextureLoader_Win32.h"
+//#include "TextureLoader_Win32.h"
 #include "Base/Render/RenderCoreResources.h"
 #include "Base/IniFile.h"
 #include "Base/Profiling.h"
->>>>>>>> heads/upstream:Code/Base/Render/Platform/RenderDevice_DX11.cpp
-
 
 #ifdef _WIN32
-#include "System/Render/Platform/Windows/TextureLoader_Win32.h"
+#include "Base/Render/Platform/Windows/TextureLoader_Win32.h"
 #endif
 
 #ifdef EE_VULKAN
-#include "System/Render/Platform/Vulkan/Backend/VulkanInstance.h"
-#include "System/Render/Platform/Vulkan/Backend/VulkanSurface.h"
-#include "System/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
-#include "System/Render/Platform/Vulkan/Backend/VulkanDevice.h"
-#include "System/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
-#include "System/Render/Platform/Vulkan/Backend/VulkanResource.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanInstance.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanSurface.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanDevice.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanResource.h"
 
 #include <vulkan/vulkan.hpp>
 #endif

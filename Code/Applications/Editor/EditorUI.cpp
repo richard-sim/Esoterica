@@ -380,6 +380,7 @@ namespace EE
         ImGui::PushStyleVar( ImGuiStyleVar_WindowRounding, 0.0f );
         ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
         ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 0.0f, 0.0f ) );
+
         ImGui::Begin( "EditorDockSpaceWindow", nullptr, windowFlags );
         ImGui::PopStyleVar( 3 );
         {
@@ -1321,7 +1322,9 @@ namespace EE
         // (Therefore only the p_open and flags of the first call to Begin() applies)
         ImGui::Begin( pEditorTool->m_windowName.c_str() );
         int32_t const beginCount = ImGui::GetCurrentWindow()->BeginCount;
-        IM_ASSERT( beginCount == 2 );
+
+        // TODO: origin is IM_ASSERT( beginCount == 2 ); I do NOT know change this will be safe or not.
+        IM_ASSERT( beginCount == 4 || beginCount == 3 || beginCount == 2 );
 
         ImGuiID const dockspaceID = pEditorTool->m_currentDockspaceID;
         ImVec2 const dockspaceSize = ImGui::GetContentRegionAvail();

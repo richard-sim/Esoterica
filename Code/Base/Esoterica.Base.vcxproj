@@ -15,6 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
     <ClInclude Include="Encoding\Quantization.h" />
@@ -62,8 +63,8 @@
     <ClInclude Include="Network\NetworkSystem.h" />
     <ClInclude Include="Platform\Platform_Win32.h" />
     <ClInclude Include="Drawing\DebugDrawingSystem.h" />
-    <ClInclude Include="Math\MathStringHelpers.h" />
-    <ClInclude Include="Math\MathHelpers.h" />
+    <!-- [Legacy] ClInclude Include="Math\MathStringHelpers.h" /-->
+    <!-- [Legacy] ClInclude Include="Math\MathHelpers.h" /-->
     <ClInclude Include="RenderGraph\RenderGraph.h" />
     <ClInclude Include="RenderGraph\RenderGraphContext.h" />
     <ClInclude Include="RenderGraph\RenderGraphNode.h" />
@@ -530,6 +531,7 @@
     <ClCompile Include="Logging\LoggingSystem.cpp" />
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Math\Platform\Math_Win32.h" />
+    <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_items.cpp" />

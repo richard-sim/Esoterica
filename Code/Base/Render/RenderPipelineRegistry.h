@@ -1,13 +1,14 @@
 #pragma once
 
-#include "System/_Module/API.h"
-#include "System/Systems.h"
-#include "System/Resource/ResourcePtr.h"
-#include "System/Render/RenderShader.h"
-#include "System/Render/RenderPipeline.h"
-#include "System/Render/RenderPipelineState.h"
-#include "System/Types/IDVector.h"
-#include "System/Memory/Pointers.h"
+#include "Base/_Module/API.h"
+
+#include "Base/Systems.h"
+#include "Base/Resource/ResourcePtr.h"
+#include "Base/Render/RenderShader.h"
+#include "Base/Render/RenderPipeline.h"
+#include "Base/Render/RenderPipelineState.h"
+#include "Base/Types/IDVector.h"
+#include "Base/Memory/Pointers.h"
 
 #include <numeric>
 
@@ -121,7 +122,7 @@ namespace EE::Render
 
 	//-------------------------------------------------------------------------
 
-	class EE_SYSTEM_API PipelineRegistry
+	class EE_BASE_API PipelineRegistry
 	{
 
 	public:

@@ -5,7 +5,7 @@
 #include "Base/Types/Color.h"
 #include "Base/Threading/Threading.h"
 
-#include "System/Memory/Pointers.h"
+#include "Base/Memory/Pointers.h"
 
 #include <D3D11.h>
 
@@ -17,7 +17,6 @@ namespace EE { class IniFile; }
 
 namespace EE::Render
 {
-<<<<<<<< HEAD:Code/Base/Render/Platform/DX11/RenderDevice_DX11.h
     #ifdef EE_VULKAN
     // temporary
     namespace Backend
@@ -29,10 +28,7 @@ namespace EE::Render
     }
     #endif
 
-    class EE_SYSTEM_API RenderDevice
-========
     class EE_BASE_API RenderDevice
->>>>>>>> heads/upstream:Code/Base/Render/Platform/RenderDevice_DX11.h
     {
 
     public:

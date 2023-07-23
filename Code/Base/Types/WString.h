@@ -1,6 +1,6 @@
 #pragma once
 
-#include "System/Types/String.h"
+#include "Base/Types/String.h"
 
 #include <EASTL/string.h>
 #include <EASTL/fixed_string.h>

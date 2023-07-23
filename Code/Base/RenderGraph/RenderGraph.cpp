@@ -1,6 +1,6 @@
 #include "RenderGraph.h"
-#include "System/Logging/Log.h"
-#include "System/Threading/Threading.h"
+#include "Base/Logging/Log.h"
+#include "Base/Threading/Threading.h"
 
 namespace EE
 {

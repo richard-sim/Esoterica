@@ -1,8 +1,8 @@
 #include "RenderResourceBarrier.h"
 
 #if defined(EE_VULKAN)
-#include "System/Render/Platform/Vulkan/Backend/VulkanBarrier.h"
-#include "System/Render/Platform/Vulkan/Backend/VulkanCommandBuffer.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanBarrier.h"
+#include "Base/Render/Platform/Vulkan/Backend/VulkanCommandBuffer.h"
 #endif
 
 namespace EE::Render

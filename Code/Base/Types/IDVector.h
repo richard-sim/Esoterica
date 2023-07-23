@@ -1,7 +1,7 @@
 #pragma once
 #include "Arrays.h"
 #include "HashMap.h"
-#include "System/Memory/Pointers.h"
+#include "Base/Memory/Pointers.h"
 
 //-------------------------------------------------------------------------
 // ID Vector

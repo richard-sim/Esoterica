@@ -1,7 +1,7 @@
 #pragma once
 
-#include "System/FileSystem/FileSystemPath.h"
-#include "System/Types/Function.h"
+#include "Base/FileSystem/FileSystemPath.h"
+#include "Base/Types/Function.h"
 
 #include <atlbase.h> // ComPtr
 #include <dxc/dxcapi.h>

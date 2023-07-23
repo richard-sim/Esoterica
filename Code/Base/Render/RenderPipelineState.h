@@ -1,13 +1,12 @@
 #pragma once
 
-#include "System/Logging/Log.h"
-#include "System/Render/RenderAPI.h"
-#include "System/Resource/ResourcePath.h"
-#include "System/Encoding/Hash.h"
-#include "System/Types/Set.h"
-
+#include "Base/Logging/Log.h"
+#include "Base/Render/RenderAPI.h"
 #include "Base/Render/RenderShader.h"
 #include "Base/Render/RenderStates.h"
+#include "Base/Resource/ResourcePath.h"
+#include "Base/Encoding/Hash.h"
+#include "Base/Types/Set.h"
 
 //-------------------------------------------------------------------------
 
@@ -38,7 +37,7 @@ namespace EE::Render
     //    RasterizerState*                m_pRasterizerState = nullptr;
     //};
 
-    struct EE_SYSTEM_API PipelineShaderDesc
+    struct EE_BASE_API PipelineShaderDesc
     {
         PipelineShaderDesc( PipelineStage stage, ResourcePath shaderPath, String entryName = "main" );
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "System/_Module/API.h"
+#include "Base/_Module/API.h"
 
 #include "RenderGraphResource.h"
-#include "System/Render/RenderResourceBarrier.h"
-#include "System/Types/Arrays.h"
-#include "System/Types/String.h"
+#include "Base/Render/RenderResourceBarrier.h"
+#include "Base/Types/Arrays.h"
+#include "Base/Types/String.h"
 
 #include <limits>
 
@@ -13,7 +13,7 @@ namespace EE
 {
 	namespace RG
 	{
-		class EE_SYSTEM_API RGNodeResource
+		class EE_BASE_API RGNodeResource
 		{
 		public:
 
@@ -51,7 +51,7 @@ namespace EE
 
 		typedef uint32_t NodeID;
 
-		class EE_SYSTEM_API RGNode
+		class EE_BASE_API RGNode
 		{
 		public:
 

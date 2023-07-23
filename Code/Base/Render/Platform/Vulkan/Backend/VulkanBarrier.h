@@ -1,7 +1,7 @@
 #pragma once
 #if defined(EE_VULKAN)
 
-#include "System/Render/RenderResourceBarrier.h"
+#include "Base/Render/RenderResourceBarrier.h"
 #include "VulkanCommandBuffer.h"
 
 #include <vulkan/vulkan_core.h>
