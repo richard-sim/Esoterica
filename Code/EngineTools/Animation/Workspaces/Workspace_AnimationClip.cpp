@@ -3,6 +3,7 @@
 #include "EngineTools/Animation/ResourceDescriptors/ResourceDescriptor_AnimationClip.h"
 #include "Engine/Animation/Components/Component_AnimationClipPlayer.h"
 #include "Engine/Animation/Systems/EntitySystem_Animation.h"
+#include "Engine/Entity/EntityWorldUpdateContext.h"
 #include "Engine/Render/Components/Component_SkeletalMesh.h"
 #include "Engine/Entity/EntityWorld.h"
 #include "Engine/UpdateContext.h"
@@ -211,48 +212,17 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    void AnimationClipWorkspace::Update( UpdateContext const& context, bool isVisible, bool isFocused )
+    void AnimationClipWorkspace::PreWorldUpdate( EntityWorldUpdateContext const& updateContext )
     {
-        if ( IsResourceLoaded() )
+        if ( !IsResourceLoaded() )
         {
-            m_eventTimeline.SetAnimationInfo( m_workspaceResource->GetNumFrames(), m_workspaceResource->GetFPS() );
+            return;
         }
 
-        if ( m_timelineEditor.IsDirty() )
-        {
-            MarkDirty();
-        }
-
-        // Enable the global timeline keyboard shortcuts
-        if ( isFocused && !m_isDescriptorWindowFocused && !m_isDetailsWindowFocused )
-        {
-            m_timelineEditor.HandleGlobalKeyboardInputs();
-        }
-
-        // Update
         //-------------------------------------------------------------------------
 
-        if ( IsResourceLoaded() )
+        if ( updateContext.GetUpdateStage() == UpdateStage::FrameEnd )
         {
-            // Update pose and position
-            //-------------------------------------------------------------------------
-
-            Percentage const percentageThroughAnimation = m_timelineEditor.GetCurrentTimeAsPercentage();
-            if ( m_currentAnimTime != percentageThroughAnimation || m_characterPoseUpdateRequested )
-            {
-                m_currentAnimTime = percentageThroughAnimation;
-                m_pAnimationComponent->SetAnimTime( percentageThroughAnimation );
-                m_characterTransform = m_isRootMotionEnabled ? m_workspaceResource->GetRootTransform( percentageThroughAnimation ) : Transform::Identity;
-
-                // Update character preview position
-                if ( m_pMeshComponent != nullptr )
-                {
-                    m_pMeshComponent->SetWorldTransform( m_characterTransform );
-                }
-
-                m_characterPoseUpdateRequested = false;
-            }
-            
             // Draw root motion in viewport
             //-------------------------------------------------------------------------
 
@@ -286,6 +256,45 @@ namespace EE::Animation
         }
     }
 
+    void AnimationClipWorkspace::Update( UpdateContext const& context, bool isVisible, bool isFocused )
+    {
+        if ( IsResourceLoaded() )
+        {
+            m_eventTimeline.SetAnimationInfo( m_workspaceResource->GetNumFrames(), m_workspaceResource->GetFPS() );
+        }
+
+        // Enable the global timeline keyboard shortcuts
+        if ( isFocused && !m_isDescriptorWindowFocused && !m_isDetailsWindowFocused )
+        {
+            m_timelineEditor.HandleGlobalKeyboardInputs();
+        }
+
+        // Update
+        //-------------------------------------------------------------------------
+
+        if ( IsResourceLoaded() )
+        {
+            // Update pose and position
+            //-------------------------------------------------------------------------
+
+            Percentage const percentageThroughAnimation = m_timelineEditor.GetPlayheadTimeAsPercentage();
+            if ( m_currentAnimTime != percentageThroughAnimation || m_characterPoseUpdateRequested )
+            {
+                m_currentAnimTime = percentageThroughAnimation;
+                m_pAnimationComponent->SetAnimTime( percentageThroughAnimation );
+                m_characterTransform = m_isRootMotionEnabled ? m_workspaceResource->GetRootTransform( percentageThroughAnimation ) : Transform::Identity;
+
+                // Update character preview position
+                if ( m_pMeshComponent != nullptr )
+                {
+                    m_pMeshComponent->SetWorldTransform( m_characterTransform );
+                }
+
+                m_characterPoseUpdateRequested = false;
+            }
+        }
+    }
+
     void AnimationClipWorkspace::DrawMenu( UpdateContext const& context )
     {
         TWorkspace<AnimationClip>::DrawMenu( context );
@@ -296,6 +305,30 @@ namespace EE::Animation
         if ( ImGui::BeginMenu( EE_ICON_TUNE" Options" ) )
         {
             ImGui::Checkbox( "Root Motion Enabled", &m_isRootMotionEnabled );
+
+            ImGui::Checkbox( "Draw Bone Pose", &m_isPoseDrawingEnabled );
+
+            ImGui::Checkbox( "Draw Bone Names", &m_shouldDrawBoneNames );
+
+            //-------------------------------------------------------------------------
+
+            ImGuiX::TextSeparator( "Capsule Debug" );
+
+            ImGui::Checkbox( "Show Preview Capsule", &m_isPreviewCapsuleDrawingEnabled );
+
+            ImGui::Text( "Half-Height" );
+            ImGui::SameLine( 90 );
+            if ( ImGui::InputFloat( "##HH", &m_previewCapsuleHalfHeight, 0.05f ) )
+            {
+                m_previewCapsuleHalfHeight = Math::Clamp( m_previewCapsuleHalfHeight, 0.05f, 10.0f );
+            }
+
+            ImGui::Text( "Radius" );
+            ImGui::SameLine( 90 );
+            if ( ImGui::InputFloat( "##R", &m_previewCapsuleRadius, 0.01f ) )
+            {
+                m_previewCapsuleRadius = Math::Clamp( m_previewCapsuleRadius, 0.01f, 5.0f );
+            }
 
             ImGui::EndMenu();
         }
@@ -347,39 +380,6 @@ namespace EE::Animation
             return;
         }
 
-        // Debug Options
-        //-------------------------------------------------------------------------
-
-        auto DrawDebugOptions = [this] ()
-        {
-            ImGui::Checkbox( "Draw Bone Pose", &m_isPoseDrawingEnabled );
-
-            ImGui::Checkbox( "Draw Bone Names", &m_shouldDrawBoneNames );
-
-            //-------------------------------------------------------------------------
-
-            ImGuiX::TextSeparator( "Capsule Debug" );
-
-            ImGui::Checkbox( "Show Preview Capsule", &m_isPreviewCapsuleDrawingEnabled );
-
-            ImGui::Text( "Half-Height" );
-            ImGui::SameLine( 90 );
-            if ( ImGui::InputFloat( "##HH", &m_previewCapsuleHalfHeight, 0.05f ) )
-            {
-                m_previewCapsuleHalfHeight = Math::Clamp( m_previewCapsuleHalfHeight, 0.05f, 10.0f );
-            }
-
-            ImGui::Text( "Radius" );
-            ImGui::SameLine( 90 );
-            if ( ImGui::InputFloat( "##R", &m_previewCapsuleRadius, 0.01f ) )
-            {
-                m_previewCapsuleRadius = Math::Clamp( m_previewCapsuleRadius, 0.01f, 5.0f );
-            }
-        };
-
-        ImGui::SameLine();
-        DrawViewportToolbarComboIcon( "##DebugOptions", EE_ICON_BUG_CHECK, "Debug Options", DrawDebugOptions );
-
         // Play Button
         //-------------------------------------------------------------------------
 
@@ -407,7 +407,7 @@ namespace EE::Animation
 
         auto PrintAnimDetails = [this] ( Color color )
         {
-            Percentage const currentTime = m_timelineEditor.GetCurrentTimeAsPercentage();
+            Percentage const currentTime = m_timelineEditor.GetPlayheadTimeAsPercentage();
             uint32_t const numFrames = m_workspaceResource->GetNumFrames();
             FrameTime const frameTime = m_workspaceResource->GetFrameTime( currentTime );
 
@@ -416,8 +416,8 @@ namespace EE::Animation
             ImGui::Text( "Avg Angular Velocity: %.2f r/s", m_workspaceResource->GetAverageAngularVelocity().ToFloat() );
             ImGui::Text( "Distance Covered: %.2fm", m_workspaceResource->GetTotalRootMotionDelta().GetTranslation().GetLength3() );
             ImGui::Text( "Frame: %.2f/%d (%.2f/%d)", frameTime.ToFloat(), numFrames - 1, frameTime.ToFloat() + 1.0f, numFrames ); // Draw offset time too to match DCC timelines that start at 1
-            ImGui::Text( "Time: %.2fs/%0.2fs", m_timelineEditor.GetCurrentTimeAsPercentage().ToFloat() * m_workspaceResource->GetDuration(), m_workspaceResource->GetDuration().ToFloat() );
-            ImGui::Text( "Percentage: %.2f%%", m_timelineEditor.GetCurrentTimeAsPercentage().ToFloat() * 100 );
+            ImGui::Text( "Time: %.2fs/%0.2fs", m_timelineEditor.GetPlayheadTimeAsPercentage().ToFloat() * m_workspaceResource->GetDuration(), m_workspaceResource->GetDuration().ToFloat() );
+            ImGui::Text( "Percentage: %.2f%%", m_timelineEditor.GetPlayheadTimeAsPercentage().ToFloat() * 100 );
 
             if ( m_workspaceResource->IsAdditive() )
             {
@@ -454,12 +454,6 @@ namespace EE::Animation
             //-------------------------------------------------------------------------
 
             m_timelineEditor.UpdateAndDraw( GetWorld()->GetTimeScale() * context.GetDeltaTime() );
-
-            // Transfer dirty state from property grid
-            if ( m_propertyGrid.IsDirty() )
-            {
-                m_timelineEditor.MarkDirty();
-            }
 
             // Handle selection changes
             auto const& selectedItems = m_timelineEditor.GetSelectedItems();
@@ -648,6 +642,7 @@ namespace EE::Animation
         }
 
         m_propertyGrid.ClearDirty();
+
         return true;
     }
 

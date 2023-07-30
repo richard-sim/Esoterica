@@ -68,7 +68,7 @@ namespace EE::Animation::GraphNodes
 
         #if EE_DEVELOPMENT_TOOLS
         inline float GetLayerWeight( int32_t layerIdx ) const { return m_layers[layerIdx].m_weight; }
-        void GetSyncUpdateRangesForUnsynchronizedLayers( TVector<TPair<int8_t, SyncTrackTimeRange>>& outRanges ) const;
+        void GetSyncUpdateRangesForUnsynchronizedLayers( TInlineVector<TPair<int8_t, SyncTrackTimeRange>, 5>& outLayerUpdateRanges ) const;
         #endif
 
     private:
@@ -76,8 +76,7 @@ namespace EE::Animation::GraphNodes
         virtual void InitializeInternal( GraphContext& context, SyncTrackTime const& initialTime ) override;
         virtual void ShutdownInternal( GraphContext& context ) override;
 
-        virtual GraphPoseNodeResult Update( GraphContext& context ) override;
-        virtual GraphPoseNodeResult Update( GraphContext& context, SyncTrackTimeRange const& updateRange ) override;
+        virtual GraphPoseNodeResult Update( GraphContext& context, SyncTrackTimeRange const* pUpdateRange ) override;
 
         void UpdateLayers( GraphContext& context, GraphPoseNodeResult& NodeResult );
 

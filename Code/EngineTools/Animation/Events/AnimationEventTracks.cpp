@@ -17,6 +17,18 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
+    TypeSystem::TypeInfo const* SnapToFrameEventTrack::GetEventTypeInfo() const
+    {
+        return SnapToFrameEvent::s_pTypeInfo;
+    }
+
+    InlineString SnapToFrameEventTrack::GetItemLabel( Timeline::TrackItem const* pItem ) const
+    {
+        auto pAnimEvent = GetAnimEvent<SnapToFrameEvent>( pItem );
+        return pAnimEvent->GetDebugText();
+    }
+    //-------------------------------------------------------------------------
+
     TypeSystem::TypeInfo const* FootEventTrack::GetEventTypeInfo() const
     {
         return FootEvent::s_pTypeInfo;
@@ -32,6 +44,66 @@ namespace EE::Animation
     {
         auto pAnimEvent = GetAnimEvent<FootEvent>( pItem );
         return FootEvent::GetPhaseColor( pAnimEvent->GetFootPhase() );
+    }
+
+    bool FootEventTrack::DrawContextMenu( Timeline::TrackContext const& context, TVector<Track*>& tracks, float playheadPosition )
+    {
+        EventTrack::DrawContextMenu( context, tracks, playheadPosition );
+
+        bool updatePhases = false;
+        FootEvent::Phase startingPhase = FootEvent::Phase::LeftFootDown;
+
+        if ( ImGui::BeginMenu( EE_ICON_SHOE_PRINT" Set foot events" ) )
+        {
+            if ( ImGui::MenuItem( "Starting Phase: Left Down") )
+            {
+                startingPhase = FootEvent::Phase::LeftFootDown;
+                updatePhases = true;
+            }
+
+            if ( ImGui::MenuItem( "Starting Phase: Right Passing" ) )
+            {
+                startingPhase = FootEvent::Phase::RightFootPassing;
+                updatePhases = true;
+            }
+
+            if ( ImGui::MenuItem( "Starting Phase: Right Down" ) )
+            {
+                startingPhase = FootEvent::Phase::RightFootDown;
+                updatePhases = true;
+            }
+
+            if ( ImGui::MenuItem( "Starting Phase: Left Passing" ) )
+            {
+                startingPhase = FootEvent::Phase::LeftFootPassing;
+                updatePhases = true;
+            }
+
+            ImGui::EndMenu();
+        }
+
+        //-------------------------------------------------------------------------
+
+        if ( updatePhases )
+        {
+            AutoSetPhases( context, startingPhase );
+        }
+
+        return false;
+    }
+
+    void FootEventTrack::AutoSetPhases( Timeline::TrackContext const& context, FootEvent::Phase startingPhase )
+    {
+        Timeline::ScopedModification const stm( context );
+
+        FootEvent::Phase currentPhase = startingPhase;
+
+        for ( auto pItem : m_items )
+        {
+            auto pFootEvent = GetAnimEvent<FootEvent>( pItem );
+            pFootEvent->m_phase = currentPhase;
+            currentPhase = FootEvent::Phase( ( (int8_t) currentPhase + 1 ) % 4 );
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -69,7 +141,7 @@ namespace EE::Animation
     {
         for ( auto pItem : m_items )
         {
-            if ( pItem->GetStartTime() < 1.0f || pItem->GetEndTime() > ( context.GetTimeRange().m_end - 1 ) )
+            if ( pItem->GetStartTime() < 1.0f || pItem->GetEndTime() > ( context.GetTimelineLength() - 1 ) )
             {
                 m_validationStatueMessage = "Warp event is not allowed to be within the first or last frame!";
                 return Status::HasErrors;

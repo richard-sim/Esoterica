@@ -216,6 +216,7 @@
     <ClInclude Include="Animation\AnimationTarget.h" />
     <ClInclude Include="Animation\Components\Component_AnimationClipPlayer.h" />
     <ClInclude Include="Animation\Components\Component_AnimationGraph.h" />
+    <ClInclude Include="Animation\Events\AnimationEvent_SnapToFrame.h" />
     <ClInclude Include="Animation\Events\AnimationEvent_RootMotion.h" />
     <ClInclude Include="Animation\Events\AnimationEvent_Transition.h" />
     <ClInclude Include="Animation\Events\AnimationEvent_Ragdoll.h" />
@@ -224,7 +225,6 @@
     <ClInclude Include="Animation\Events\AnimationEvent_ID.h" />
     <ClInclude Include="Animation\Events\AnimationEvent_Warp.h" />
     <ClInclude Include="Animation\Graph\Animation_RuntimeGraph_Recording.h" />
-    <ClInclude Include="Animation\Graph\Animation_RuntimeGraph_Version.h" />
     <ClInclude Include="Animation\Graph\Nodes\Animation_RuntimeGraphNode_Blend2D.h" />
     <ClInclude Include="Animation\Graph\Nodes\Animation_RuntimeGraphNode_TargetWarp.h" />
     <ClInclude Include="Animation\Graph\Nodes\Animation_RuntimeGraphNode_SimulatedRagdoll.h" />

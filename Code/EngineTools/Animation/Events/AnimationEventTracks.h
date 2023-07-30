@@ -3,6 +3,7 @@
 #include "AnimationEventTrack.h"
 
 #include "Engine/Animation/Events/AnimationEvent_ID.h"
+#include "Engine/Animation/Events/AnimationEvent_SnapToFrame.h"
 #include "Engine/Animation/Events/AnimationEvent_Foot.h"
 #include "Engine/Animation/Events/AnimationEvent_Warp.h"
 #include "Engine/Animation/Events/AnimationEvent_Ragdoll.h"
@@ -29,6 +30,19 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
+    class SnapToFrameEventTrack final : public EventTrack
+    {
+        EE_REFLECT_TYPE( SnapToFrameEventTrack );
+
+        virtual const char* GetTypeName() const override { return "Snap To Frame"; }
+        virtual TypeSystem::TypeInfo const* GetEventTypeInfo() const override;
+        virtual Timeline::ItemType GetAllowedItemType() const override { return Timeline::ItemType::Duration; }
+        virtual bool AllowMultipleTracks() const override { return false; }
+        virtual InlineString GetItemLabel( Timeline::TrackItem const* pItem ) const override;
+    };
+
+    //-------------------------------------------------------------------------
+
     class FootEventTrack final : public EventTrack
     {
         EE_REFLECT_TYPE( FootEventTrack );
@@ -37,6 +51,9 @@ namespace EE::Animation
         virtual TypeSystem::TypeInfo const* GetEventTypeInfo() const override;
         virtual InlineString GetItemLabel( Timeline::TrackItem const* pItem ) const override;
         virtual Color GetItemColor( Timeline::TrackItem const* pItem ) const override;
+        virtual bool DrawContextMenu( Timeline::TrackContext const& context, TVector<Track*>& tracks, float playheadPosition ) override;
+
+        void AutoSetPhases( Timeline::TrackContext const& context, FootEvent::Phase startingPhase );
     };
 
     //-------------------------------------------------------------------------

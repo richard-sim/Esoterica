@@ -48,13 +48,17 @@ namespace EE::Animation::GraphNodes
 
         //-------------------------------------------------------------------------
 
-        GraphLayerInitInfo const* pLayerInitInfo = nullptr;
-        for ( auto const& li : context.m_layerInitInfo )
+        // Check if we have layer initialization data for this node
+        GraphLayerUpdateState const* pLayerInitializationData = nullptr;
+        if ( context.m_pLayerInitializationInfo != nullptr )
         {
-            if ( li.m_layerNodeIdx == GetNodeIndex() )
+            for ( auto const& li : *context.m_pLayerInitializationInfo )
             {
-                pLayerInitInfo = &li;
-                break;
+                if ( li.m_nodeIdx == GetNodeIndex() )
+                {
+                    pLayerInitializationData = &li;
+                    break;
+                }
             }
         }
 
@@ -72,23 +76,23 @@ namespace EE::Animation::GraphNodes
             {
                 m_layers[i].m_pInputNode->Initialize( context, initialTime );
             }
-            else
+            else // If we have initialization data initialize the layer to the specified time, otherwise just initialize it to the start
             {
-                SyncTrackTime initTime;
+                SyncTrackTime layerInitTime;
 
-                if( pLayerInitInfo != nullptr )
+                if( pLayerInitializationData != nullptr )
                 {
-                    for ( auto const& layerInfo : pLayerInitInfo->m_layerInitTimes )
+                    for ( auto const& layerInfo : pLayerInitializationData->m_updateRanges )
                     {
                         if ( layerInfo.first == i )
                         {
-                            initTime = layerInfo.second.m_startTime;
+                            layerInitTime = layerInfo.second.m_startTime;
                             break;
                         }
                     }
                 }
 
-                m_layers[i].m_pInputNode->Initialize( context, initTime );
+                m_layers[i].m_pInputNode->Initialize( context, layerInitTime );
             }
 
             // Optional Nodes
@@ -131,7 +135,7 @@ namespace EE::Animation::GraphNodes
     }
 
     // NB: Layered nodes always update the base according to the specified update time delta or time range. The layers are then updated relative to the base.
-    GraphPoseNodeResult LayerBlendNode::Update( GraphContext& context )
+    GraphPoseNodeResult LayerBlendNode::Update( GraphContext& context, SyncTrackTimeRange const* pUpdateRange )
     {
         EE_ASSERT( context.IsValid() );
 
@@ -143,46 +147,20 @@ namespace EE::Animation::GraphNodes
             //-------------------------------------------------------------------------
 
             MarkNodeActive( context );
-            m_previousTime = m_pBaseLayerNode->GetCurrentTime();
-            result = m_pBaseLayerNode->Update( context );
-            m_currentTime = m_pBaseLayerNode->GetCurrentTime();
-            m_duration = m_pBaseLayerNode->GetDuration();
 
-            #if EE_DEVELOPMENT_TOOLS
-            m_rootMotionActionIdxBase = context.GetRootMotionDebugger()->GetLastActionIndex();
-            #endif
-
-            // Update the layers
-            //-------------------------------------------------------------------------
-
-            // We need to register a task at the base layer in all cases - since we blend the layers tasks on top of it
-            if ( !result.HasRegisteredTasks() )
+            if ( pUpdateRange != nullptr )
             {
-                result.m_taskIdx = context.m_pTaskSystem->RegisterTask<Tasks::DefaultPoseTask>( GetNodeIndex(), Pose::Type::ReferencePose );
+                result = m_pBaseLayerNode->Update( context, pUpdateRange );
+                m_previousTime = GetSyncTrack().GetPercentageThrough( pUpdateRange->m_startTime );
+                m_currentTime = m_pBaseLayerNode->GetCurrentTime();
+            }
+            else // Unsynchronized
+            {
+                m_previousTime = m_pBaseLayerNode->GetCurrentTime();
+                result = m_pBaseLayerNode->Update( context );
+                m_currentTime = m_pBaseLayerNode->GetCurrentTime();
             }
 
-            UpdateLayers( context, result );
-        }
-
-        return result;
-    }
-
-    // NB: Layered nodes always update the base according to the specified update time delta or time range. The layers are then updated relative to the base.
-    GraphPoseNodeResult LayerBlendNode::Update( GraphContext& context, SyncTrackTimeRange const& updateRange )
-    {
-        EE_ASSERT( context.IsValid() );
-
-        GraphPoseNodeResult result;
-
-        if ( IsValid() )
-        {
-            // Update the base
-            //-------------------------------------------------------------------------
-
-            MarkNodeActive( context );
-            result = m_pBaseLayerNode->Update( context, updateRange );
-            m_previousTime = GetSyncTrack().GetPercentageThrough( updateRange.m_startTime );
-            m_currentTime = m_pBaseLayerNode->GetCurrentTime();
             m_duration = m_pBaseLayerNode->GetDuration();
 
             #if EE_DEVELOPMENT_TOOLS
@@ -280,7 +258,7 @@ namespace EE::Animation::GraphNodes
             {
                 if ( pSettings->m_layerSettings[i].m_isSynchronized )
                 {
-                    layerResult = m_layers[i].m_pInputNode->Update( context, layerUpdateRange );
+                    layerResult = m_layers[i].m_pInputNode->Update( context, &layerUpdateRange );
                 }
                 else
                 {
@@ -425,7 +403,7 @@ namespace EE::Animation::GraphNodes
         PoseNode::RestoreGraphState( inState );
     }
 
-    void LayerBlendNode::GetSyncUpdateRangesForUnsynchronizedLayers( TVector<TPair<int8_t, SyncTrackTimeRange>>& outRanges ) const
+    void LayerBlendNode::GetSyncUpdateRangesForUnsynchronizedLayers( TInlineVector<TPair<int8_t, SyncTrackTimeRange>, 5>& outLayerUpdateRanges ) const
     {
         auto pSettings = GetSettings<LayerBlendNode>();
         int8_t const numLayers = (int8_t) m_layers.size();
@@ -438,7 +416,7 @@ namespace EE::Animation::GraphNodes
                 Percentage const currentTime = m_layers[i].m_pInputNode->GetCurrentTime();
                 if ( prevTime != 0.0f && currentTime != 0.0f )
                 {
-                    outRanges.emplace_back( i, SyncTrackTimeRange( layerSyncTrack.GetTime( prevTime ), layerSyncTrack.GetTime( currentTime ) ) );
+                    outLayerUpdateRanges.emplace_back( i, SyncTrackTimeRange( layerSyncTrack.GetTime( prevTime ), layerSyncTrack.GetTime( currentTime ) ) );
                 }
             }
         }

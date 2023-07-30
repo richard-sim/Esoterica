@@ -787,6 +787,8 @@ namespace EE::EntityModel
 
     void EntityEditorWorkspace::PostUndoRedo( UndoStack::Operation operation, IUndoableAction const* pAction )
     {
+        Workspace::PostUndoRedo( operation, pAction );
+
         EntityUndoableAction const* pUndoableAction = static_cast<EntityUndoableAction const*>( pAction );
 
         if ( pUndoableAction->GetActionType() != EntityUndoableAction::TransformUpdate )
@@ -1012,7 +1014,7 @@ namespace EE::EntityModel
                 }
             }
 
-            drawingCtx.DrawWireBox( m_selectionBounds, Colors::Yellow, 3.0f, Drawing::EnableDepthTest );
+            drawingCtx.DrawWireBox( m_selectionBounds, Colors::Yellow, 3.0f, Drawing::DepthTest::Enable );
 
             // Update Gizmo
             //-------------------------------------------------------------------------

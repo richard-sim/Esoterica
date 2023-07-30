@@ -45,23 +45,23 @@ namespace EE::Timeline
         void EndModification() const { m_endModification(); }
 
         // Get the current timeline length
-        EE_FORCE_INLINE FloatRange const& GetTimeRange() const { return m_timelineRange; }
+        EE_FORCE_INLINE float const& GetTimelineLength() const { return m_timelineLength; }
 
     private:
 
-        FloatRange          m_timelineRange;
+        float               m_timelineLength;
         TFunction<void()>   m_beginModification;
         TFunction<void()>   m_endModification;
     };
 
     //-------------------------------------------------------------------------
 
-    class EE_ENGINETOOLS_API [[nodiscard]] ScopedTimelineModification
+    class EE_ENGINETOOLS_API [[nodiscard]] ScopedModification
     {
     public:
 
-        ScopedTimelineModification( TrackContext const& context ) : m_context( context ) { context.BeginModification(); }
-        ~ScopedTimelineModification() { m_context.EndModification(); }
+        ScopedModification( TrackContext const& context ) : m_context( context ) { context.BeginModification(); }
+        ~ScopedModification() { m_context.EndModification(); }
 
     private:
 
@@ -119,13 +119,6 @@ namespace EE::Timeline
         inline IReflectedType* GetData() { return m_pData; }
         inline IReflectedType const* GetData() const { return m_pData; }
         TypeSystem::TypeInfo const* GetDataTypeInfo() const { return m_pData->GetTypeInfo(); }
-
-        // Dirty state
-        //-------------------------------------------------------------------------
-
-        inline bool IsDirty() const { return m_isDirty; }
-        inline void MarkDirty() { m_isDirty = true; }
-        inline void ClearDirty() { m_isDirty = false; }
 
         // Serialization
         //-------------------------------------------------------------------------
@@ -189,8 +182,8 @@ namespace EE::Timeline
         // What item types are allowed for this track
         virtual ItemType GetAllowedItemType() const { return ItemType::Duration; }
 
-        // Does this track have custom context menu options
-        virtual bool HasContextMenu() const { return false; }
+        // What item types are allowed for this track
+        inline ItemType GetActualItemType() const { return m_itemType; }
 
         // Track Info
         //-------------------------------------------------------------------------
@@ -221,8 +214,8 @@ namespace EE::Timeline
         // Get the desired track height (in pixels)
         virtual float GetTrackHeight() const { return 30.0f; }
 
-        // Draw the custom context menu options
-        virtual void DrawContextMenu( TrackContext const& context, TVector<Track*>& tracks, float playheadPosition ) {}
+        // Draw the custom context menu options - return true if you've made major changes to the the track i.e. deleted an item
+        virtual bool DrawContextMenu( TrackContext const& context, TVector<Track*>& tracks, float playheadPosition ) { return false; }
 
         // Draws an immediate item and returns the hover rect for the drawn item. This rect defines drag zone.
         virtual ImRect DrawImmediateItem( TrackContext const& context, ImDrawList* pDrawList, TrackItem* pItem, Float2 const& itemPos, ItemState itemState );
@@ -252,14 +245,20 @@ namespace EE::Timeline
         // Get the color for a given item
         virtual Color GetItemColor( TrackItem const* pItem ) const { return Color( 0xFFAAAAAA ); }
 
-        // Does this item have any custom context menu options
-        virtual bool HasItemContextMenu( TrackItem const* pItem ) const { return false; }
-
-        // Draw the custom context menu options for this item
-        virtual void DrawItemContextMenu( TrackItem* pItem ) {}
+        // Draw the custom context menu options for this item - return true if you've made major changes to the the track i.e. deleted an item
+        virtual bool DrawItemContextMenu( TrackContext const& context, TrackItem* pItem ) { return false; }
 
         // Can we create new items on this track (certain tracks have restrictions regarding this)
         virtual bool CanCreateNewItems() const { return true; }
+
+        // Utilities
+        //-------------------------------------------------------------------------
+
+        // Expand specified duration item to fill the gaps
+        void GrowItemToFillGap( TrackContext const& context, TrackItem const* pItem );
+
+        // Fill all gaps between duration items
+        void FillGapsForDurationItems( TrackContext const& context );
 
         // Serialization
         //-------------------------------------------------------------------------
@@ -272,6 +271,8 @@ namespace EE::Timeline
         virtual void DrawExtraHeaderWidgets( ImRect const& widgetsRect ) {}
 
         static Color GetItemBackgroundColor( ItemState itemState, bool isHovered );
+
+        int32_t GetItemIndex( TrackItem const* pItem ) const;
 
         void ResetStatusMessage() const { m_validationStatueMessage = "Track is Valid"; }
 
@@ -299,7 +300,7 @@ namespace EE::Timeline
         ItemType                    m_itemType = ItemType::Duration;
 
         // The actual items
-        TVector<TrackItem*>              m_items;
+        TVector<TrackItem*>         m_items;
 
         // String set via validation 
         mutable String              m_validationStatueMessage;
@@ -339,11 +340,11 @@ namespace EE::Timeline
         // Get the overall status for all tracks
         Track::Status GetValidationStatus() const;
 
-        // Get the overall time range for this timeline
-        EE_FORCE_INLINE FloatRange const& GetTimeRange() const { return m_timeRange; }
+        // Get the length for this timeline
+        EE_FORCE_INLINE float const& GetLength() const { return m_length; }
 
         // Set the overall time range for this timeline
-        inline void SetTimeRange( FloatRange const& inRange ) { EE_ASSERT( inRange.IsSetAndValid() ); m_timeRange = inRange; m_context.m_timelineRange = m_timeRange; }
+        inline void SetLength( float length ) { EE_ASSERT( length > 0.0f ); m_length = length; m_context.m_timelineLength = length; }
 
         // Tracks
         //-------------------------------------------------------------------------
@@ -399,15 +400,6 @@ namespace EE::Timeline
         // End an operation that modifies timeline data
         void EndModification();
 
-        // Dirty State
-        //-------------------------------------------------------------------------
-
-        // Did we modify this timeline
-        inline bool IsDirty() const { return m_isDirty; }
-
-        // Clear the dirty status
-        inline void ClearDirty() { m_isDirty = false; }
-
         // Serialization
         //-------------------------------------------------------------------------
 
@@ -417,14 +409,12 @@ namespace EE::Timeline
     protected:
 
         TVector<Track*>                             m_tracks;
-        FloatRange                                  m_timeRange = FloatRange( 0, 0 );
+        float                                       m_length = 0;
         TVector<TypeSystem::TypeInfo const*>        m_allowedTrackTypes;
 
         TrackContext                                m_context;
         TFunction<void()>                           m_onBeginModification;
         TFunction<void()>                           m_onEndModification;
         mutable int32_t                             m_beginModificationCallCount = 0;
-
-        bool                                        m_isDirty = false;
     };
 }

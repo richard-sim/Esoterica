@@ -329,32 +329,38 @@ namespace EE::Animation
 
     //-------------------------------------------------------------------------
 
-    void GraphInstance::ResetGraphState( SyncTrackTime initTime )
+    void GraphInstance::ResetGraphState( SyncTrackTime initTime, TVector<GraphLayerUpdateState> const* pLayerInitInfo )
     {
         if ( m_pRootNode->IsInitialized() )
         {
             m_pRootNode->Shutdown( m_graphContext );
         }
 
+        m_graphContext.m_pLayerInitializationInfo = pLayerInitInfo;
         m_pRootNode->Initialize( m_graphContext, initTime );
+        m_graphContext.m_pLayerInitializationInfo = nullptr;
     }
 
-
-    void GraphInstance::ResetGraphState_HACK( SyncTrackTime initTime, TInlineVector<GraphLayerInitInfo, 10> layerInitInfo )
+    void GraphInstance::GetUpdateStateForActiveLayers( TVector<GraphLayerUpdateState>& outRanges )
     {
-        if ( m_pRootNode->IsInitialized() )
+        for ( auto activeNodeIdx : m_activeNodes )
         {
-            m_pRootNode->Shutdown( m_graphContext );
-        }
+            auto pNodeSettings = m_pGraphVariation->GetDefinition()->m_nodeSettings[activeNodeIdx];
+            if ( IsOfType<GraphNodes::LayerBlendNode::Settings>( pNodeSettings ) )
+            {
+                auto& layerUpdateRange = outRanges.emplace_back();
+                layerUpdateRange.m_nodeIdx = activeNodeIdx;
 
-        m_graphContext.m_layerInitInfo = layerInitInfo;
-        m_pRootNode->Initialize( m_graphContext, initTime );
-        m_graphContext.m_layerInitInfo.clear();
+                auto pNode = static_cast<GraphNodes::LayerBlendNode*>( m_nodes[activeNodeIdx] );
+                pNode->GetSyncUpdateRangesForUnsynchronizedLayers( layerUpdateRange.m_updateRanges );
+            }
+        }
     }
 
-    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, bool resetGraphState )
+    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, SyncTrackTimeRange const* pUpdateRange, bool resetGraphState )
     {
         EE_PROFILE_SCOPE_ANIMATION( "Graph Instance: Evaluate Graph" );
+
         #if EE_DEVELOPMENT_TOOLS
         m_activeNodes.clear();
         m_rootMotionDebugger.StartCharacterUpdate( startWorldTransform );
@@ -379,47 +385,10 @@ namespace EE::Animation
 
         //-------------------------------------------------------------------------
 
-        auto result = m_pRootNode->Update( m_graphContext );
-        
+        auto result = m_pRootNode->Update( m_graphContext, pUpdateRange );
+
         #if EE_DEVELOPMENT_TOOLS
         RecordPostGraphEvaluateState( nullptr );
-        #endif
-
-        return result;
-    }
-
-    GraphPoseNodeResult GraphInstance::EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, SyncTrackTimeRange const& updateRange, bool resetGraphState )
-    {
-        EE_PROFILE_SCOPE_ANIMATION( "Graph Instance: Evaluate Graph" );
-
-        #if EE_DEVELOPMENT_TOOLS
-        m_activeNodes.clear();
-        m_rootMotionDebugger.StartCharacterUpdate( startWorldTransform );
-        RecordPreGraphEvaluateState( deltaTime, startWorldTransform );
-        #endif
-
-        //-------------------------------------------------------------------------
-
-        if ( m_pTaskSystem != nullptr )
-        {
-            m_pTaskSystem->Reset();
-        }
-
-        m_graphContext.Update( deltaTime, startWorldTransform, pPhysicsWorld );
-
-        //-------------------------------------------------------------------------
-
-        if ( resetGraphState || !m_pRootNode->IsInitialized() )
-        {
-            ResetGraphState();
-        }
-
-        //-------------------------------------------------------------------------
-
-        auto result = m_pRootNode->Update( m_graphContext, updateRange );
-
-        #if EE_DEVELOPMENT_TOOLS
-        RecordPostGraphEvaluateState( &updateRange );
         #endif
 
         return result;
@@ -716,19 +685,10 @@ namespace EE::Animation
             frameData.m_updateRange = *pRange;
         }
 
-        // Record the layer state
-        for ( auto activeNodeIdx : m_activeNodes )
-        {
-            auto pNodeSettings = m_pGraphVariation->GetDefinition()->m_nodeSettings[activeNodeIdx];
-            if ( IsOfType<GraphNodes::LayerBlendNode::Settings>( pNodeSettings ) )
-            {
-                auto& layerData = frameData.m_layerStates.emplace_back();
-                layerData.m_nodeIdx = activeNodeIdx;
+        // Record the layer update range info 
+        //-------------------------------------------------------------------------
 
-                auto pNode = static_cast<GraphNodes::LayerBlendNode*>( m_nodes[activeNodeIdx] );
-                pNode->GetSyncUpdateRangesForUnsynchronizedLayers( layerData.m_layerUpdateRanges );
-            }
-        }
+        GetUpdateStateForActiveLayers( frameData.m_layerUpdateStates );
     }
 
     void GraphInstance::SetToRecordedState( RecordedGraphState const& recordedState )
