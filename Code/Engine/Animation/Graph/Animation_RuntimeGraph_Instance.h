@@ -110,19 +110,18 @@ namespace EE::Animation
         bool IsInitialized() const { return m_pRootNode != nullptr && m_pRootNode->IsValid() && m_pRootNode->IsInitialized(); }
 
         // Reset the graph state with an initial time
-        void ResetGraphState( SyncTrackTime initTime = SyncTrackTime() );
-
-        // Reset the graph state with an initial time
-        void ResetGraphState_HACK( SyncTrackTime initTime, TInlineVector<GraphLayerInitInfo, 10> layerInitInfo );
+        void ResetGraphState( SyncTrackTime initTime = SyncTrackTime(), TVector<GraphLayerUpdateState> const* pLayerInitInfo = nullptr );
 
         // Get the current graph updateID
         inline uint32_t GetUpdateID() const { return m_graphContext.m_updateID; }
 
-        // Run the graph logic - returns the root motion delta for the update
-        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, bool resetGraphState = false );
+        // Get the current active layer states
+        void GetUpdateStateForActiveLayers( TVector<GraphLayerUpdateState>& outRanges );
 
-        // Run the graph logic synchronized (needed for external graph support) - returns the root motion delta for the update
-        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, SyncTrackTimeRange const& updateRange, bool resetGraphState = false );
+        // Run the graph logic
+        // If the sync track update range is set, this will perform a synchronized update
+        // If the sync track update range is not set, it will run unsynchronized and use the frame delta time instead
+        GraphPoseNodeResult EvaluateGraph( Seconds const deltaTime, Transform const& startWorldTransform, Physics::PhysicsWorld* pPhysicsWorld, SyncTrackTimeRange const* pUpdateRange, bool resetGraphState = false );
 
         // Execute any pre-physics pose tasks (assumes the character is at its final position for this frame)
         void ExecutePrePhysicsPoseTasks( Transform const& endWorldTransform );

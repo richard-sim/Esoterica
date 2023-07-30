@@ -268,7 +268,7 @@ namespace EE::Resource
         Resource::CompilationResult const compilationResult = pCompiler->Compile( m_compileContext );
 
         // Update database
-        if ( compilationResult == Resource::CompilationResult::Success )
+        if ( compilationResult == Resource::CompilationResult::Success || compilationResult == Resource::CompilationResult::SuccessWithWarnings )
         {
             Resource::CompiledResourceRecord record;
             record.m_resourceID = m_compileContext.m_resourceID;
@@ -473,5 +473,5 @@ int main( int argc, char* argv[] )
     //-------------------------------------------------------------------------
 
     Resource::ResourceCompilerApplication application( argParser, settings );
-    return (int32_t)application.Run();
+    return (int32_t) application.Run();
 }
