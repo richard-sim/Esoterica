@@ -3,8 +3,8 @@
 
 #include "Base/Memory/Pointers.h"
 #include "Base/Types/Arrays.h"
-#include "VulkanResource.h"
-#include "VulkanTexture.h"
+
+#include "Base/RHI/RHISwapchain.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -12,10 +12,11 @@ namespace EE::Render
 {
 	namespace Backend
 	{
-		class VulkanSurface;
 		class VulkanDevice;
+        class VulkanTexture;
+        class VulkanSemaphore;
 
-		class VulkanSwapchain
+		class VulkanSwapchain final : public RHI::RHISwapchain
 		{
 		public:
 
@@ -40,28 +41,21 @@ namespace EE::Render
 
 		public:
 
-			VulkanSwapchain( TSharedPtr<VulkanSurface> pSurface, TSharedPtr<VulkanDevice> pDevice );
-			VulkanSwapchain( InitConfig config, TSharedPtr<VulkanSurface> pSurface, TSharedPtr<VulkanDevice> pDevice );
-
-			VulkanSwapchain( VulkanSwapchain const& ) = delete;
-			VulkanSwapchain& operator=( VulkanSwapchain const& ) = delete;
-
-			VulkanSwapchain( VulkanSwapchain&& ) = default;
-			VulkanSwapchain& operator=( VulkanSwapchain&& ) = default;
+			VulkanSwapchain( TSharedPtr<VulkanDevice> pDevice );
+			VulkanSwapchain( InitConfig config, TSharedPtr<VulkanDevice> pDevice );
 
 			~VulkanSwapchain();
 
 		private:
 
-			TSharedPtr<VulkanSurface>				m_pSurface;
-			TSharedPtr<VulkanDevice>				m_pDevice;
+			TSharedPtr<VulkanDevice>				m_pDevice = nullptr;
 
 			VkSwapchainKHR							m_pHandle;
 			LoadFuncs								m_loadFuncs;
 
-			TVector<VulkanTexture>					m_images;
-			TVector<VulkanSemaphore>				m_imageAcquireSemaphores;
-			TVector<VulkanSemaphore>				m_renderCompleteSemaphores;
+			TVector<VulkanTexture*>					m_images;
+			TVector<VulkanSemaphore*>				m_imageAcquireSemaphores;
+			TVector<VulkanSemaphore*>				m_renderCompleteSemaphores;
 		};
 	}
 }

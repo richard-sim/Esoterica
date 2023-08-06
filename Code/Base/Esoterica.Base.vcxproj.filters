@@ -296,13 +296,10 @@
       <Filter>Threading\Platform</Filter>
     </ClCompile>
     <ClCompile Include="Encoding\Hash.cpp">
-      <Filter>Algorithm</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\TopologicalSort.cpp">
-      <Filter>Algorithm</Filter>
+      <Filter>Encoding</Filter>
     </ClCompile>
     <ClCompile Include="Encoding\Encoding.cpp">
-      <Filter>Algorithm</Filter>
+      <Filter>Encoding</Filter>
     </ClCompile>
     <ClCompile Include="FileSystem\FileSystemPath.cpp">
       <Filter>FileSystem</Filter>
@@ -358,15 +355,6 @@
     <ClCompile Include="Render\RenderResourceBarrier.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
-    <ClCompile Include="Render\RenderPipelineState.cpp" />
-    <ClCompile Include="TypeSystem\ReflectedType.cpp" />
-    <ClCompile Include="Math\Platform\Math_Win32.h" />
-    <ClCompile Include="ThirdParty\implot\implot.cpp" />
-    <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
-    <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
-    <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
-    <ClCompile Include="Logging\LoggingSystem.cpp" />
     <ClCompile Include="RenderGraph\RenderGraph.cpp">
       <Filter>RenderGraph</Filter>
     </ClCompile>
@@ -382,35 +370,74 @@
     <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp">
       <Filter>RenderGraph</Filter>
     </ClCompile>
+    <ClCompile Include="Render\RenderPipelineRegistry.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\RenderPipelineState.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Logging\LoggingSystem.cpp">
+      <Filter>Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Platform\Math_Win32.h">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\implot\implot.cpp">
+      <Filter>ThirdParty\implot</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\implot\implot_demo.cpp">
+      <Filter>ThirdParty\implot</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\implot\implot_items.cpp">
+      <Filter>ThirdParty\implot</Filter>
+    </ClCompile>
+    <ClCompile Include="TypeSystem\ReflectedType.cpp">
+      <Filter>TypeSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TopologicalSort.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Logging\Platform\Log_Win32.cpp">
+      <Filter>Logging\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\RHIDevice.cpp">
+      <Filter>RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\RHISwapchain.cpp">
+      <Filter>RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp">
+      <Filter>RHI\Resource</Filter>
+    </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanShader.cpp">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend\Platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -422,7 +449,6 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="IniFile.h" />
-    <ClInclude Include="Logging\Log.h" />
     <ClInclude Include="Profiling.h" />
     <ClInclude Include="Systems.h" />
     <ClInclude Include="Application\ApplicationGlobalState.h">
@@ -1439,12 +1465,6 @@
     <ClInclude Include="ThirdParty\concurrentqueue\lightweightsemaphore.h">
       <Filter>ThirdParty\concurrentqueue</Filter>
     </ClInclude>
-    <ClInclude Include="Render\RenderAPI.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\RenderBuffer.h">
-      <Filter>Render</Filter>
-    </ClInclude>
     <ClInclude Include="Render\RenderCoreResources.h">
       <Filter>Render</Filter>
     </ClInclude>
@@ -1761,16 +1781,13 @@
       <Filter>Threading</Filter>
     </ClInclude>
     <ClInclude Include="Encoding\Hash.h">
-      <Filter>Algorithm</Filter>
+      <Filter>Encoding</Filter>
     </ClInclude>
     <ClInclude Include="Encoding\Quantization.h">
-      <Filter>Algorithm</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\TopologicalSort.h">
-      <Filter>Algorithm</Filter>
+      <Filter>Encoding</Filter>
     </ClInclude>
     <ClInclude Include="Encoding\Encoding.h">
-      <Filter>Algorithm</Filter>
+      <Filter>Encoding</Filter>
     </ClInclude>
     <ClInclude Include="FileSystem\FileSystemUtils.h">
       <Filter>FileSystem</Filter>
@@ -1826,25 +1843,9 @@
     <ClInclude Include="Serialization\TypeSerialization.h">
       <Filter>Serialization</Filter>
     </ClInclude>
-    <ClInclude Include="Types\Variant.h" />
-    <ClInclude Include="Types\Atomic.h" />
-    <ClInclude Include="Types\RefCount.h" />
     <ClInclude Include="Render\RenderResourceBarrier.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="Types\WString.h" />
-    <ClInclude Include="Types\Set.h" />
-    <ClInclude Include="Render\RenderPipeline.h" />
-    <ClInclude Include="Render\RenderPipelineRegistry.h" />
-    <ClInclude Include="Utils\Sort.h" />
-    <ClInclude Include="TypeSystem\ReflectedType.h" />
-    <ClInclude Include="Utils\GlobalRegistryBase.h" />
-    <ClInclude Include="ThirdParty\implot\implot.h" />
-    <ClInclude Include="ThirdParty\implot\implot_internal.h" />
-    <ClInclude Include="Serialization\BitSerialization.h" />
-    <ClInclude Include="Imgui\ImguiFilteredCombo.h" />
-    <ClInclude Include="Platform\Platform.h" />
-    <ClInclude Include="Logging\LoggingSystem.h" />
     <!-- [Legacy] ClInclude Include="Math\MathStringHelpers.h" /-->
     <!-- [Legacy] ClInclude Include="Math\MathHelpers.h" /-->
     <ClInclude Include="RenderGraph\RenderGraph.h">
@@ -1862,41 +1863,125 @@
     <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h">
       <Filter>RenderGraph</Filter>
     </ClInclude>
+    <ClInclude Include="Render\RenderPipeline.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderPipelineRegistry.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderAPI.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderBuffer.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Types\Atomic.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Logging\Log.h">
+      <Filter>Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\Platform.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\implot\implot.h">
+      <Filter>ThirdParty\implot</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\implot\implot_internal.h">
+      <Filter>ThirdParty\implot</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\ImguiFilteredCombo.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Logging\LoggingSystem.h">
+      <Filter>Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="Types\Variant.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Types\WString.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Types\Set.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TypeSystem\ReflectedType.h">
+      <Filter>TypeSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\GlobalRegistryBase.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Sort.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\TopologicalSort.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialization\BitSerialization.h">
+      <Filter>Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="Types\RefCount.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\RHIDevice.h">
+      <Filter>RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\RHISwapchain.h">
+      <Filter>RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHIResource.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHIShader.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHISemaphore.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHITexture.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanShader.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h">
-      <Filter>Render\Platform\Vulkan</Filter>
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2117,9 +2202,6 @@
     <Filter Include="Threading\Platform">
       <UniqueIdentifier>{c2c4bd00-2e6a-46d5-b51e-ccdc35ca7a8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Algorithm">
-      <UniqueIdentifier>{f62ae861-d95c-4e97-aa8a-9d5b3a582cf7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="FileSystem">
       <UniqueIdentifier>{fd116ce6-13c9-4724-90f6-0ba64f0c53ab}</UniqueIdentifier>
     </Filter>
@@ -2137,6 +2219,33 @@
     </Filter>
     <Filter Include="Render\Platform\Vulkan">
       <UniqueIdentifier>{364f5d27-dcd6-47e1-8dfd-e720c67be72c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logging">
+      <UniqueIdentifier>{e56be7be-fe25-4e2a-893f-42e6d0bfc52f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\implot">
+      <UniqueIdentifier>{c8c0d77c-8af8-43af-a174-93858df0f3f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{44f5db2a-8245-4dc1-8351-694742f7682c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Encoding">
+      <UniqueIdentifier>{f62ae861-d95c-4e97-aa8a-9d5b3a582cf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logging\Platform">
+      <UniqueIdentifier>{cf6441ec-0a79-429a-9747-d1880ed3f1e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RHI">
+      <UniqueIdentifier>{3fc7afa0-5696-4d00-a947-5b2b8fef7dac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RHI\Resource">
+      <UniqueIdentifier>{a92f889b-86c7-4c48-98b8-c6e1c678c4f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\Vulkan\Backend">
+      <UniqueIdentifier>{8c0e4fef-13d2-4e1e-aa9b-9c5e4adeb39b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\Vulkan\Backend\Platform">
+      <UniqueIdentifier>{901c0ff1-37b7-47d5-a5c1-a1008abffced}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

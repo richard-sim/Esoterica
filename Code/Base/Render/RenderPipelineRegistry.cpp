@@ -127,7 +127,6 @@ namespace EE::Render
 		EE_ASSERT( m_isInitialized );
 
 		LoadPipelineShaders();
-
 	}
 
 	//-------------------------------------------------------------------------

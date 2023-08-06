@@ -9,6 +9,8 @@ namespace EE::Render
 	{
 		class VulkanCommandBuffer
 		{
+            friend class VulkanDevice;
+
 		public:
 
 			VulkanCommandBuffer() = default;
@@ -24,8 +26,6 @@ namespace EE::Render
 			inline VkCommandBuffer Raw() const { return m_pHandle; }
 
 		private:
-
-			friend class VulkanDevice;
 
 			VkCommandBuffer					m_pHandle;
 		};

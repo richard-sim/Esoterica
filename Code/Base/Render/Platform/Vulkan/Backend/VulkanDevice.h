@@ -6,7 +6,17 @@
 #include "VulkanResource.h"
 #include "VulkanTexture.h"
 
+#include "Base/RHI/RHIDevice.h"
+#include "Base/RHI/Resource/RHIResourceCreationCommons.h"
+
 #include <vulkan/vulkan_core.h>
+
+namespace EE::RHI
+{
+    class RHIShader;
+    class RHITexture;
+    class RHISemaphore;
+}
 
 namespace EE::Render
 {
@@ -49,7 +59,7 @@ namespace EE::Render
 			QueueFamily							m_queueFamily;
 		};
 
-		class VulkanDevice
+		class VulkanDevice final : public RHI::RHIDevice
 		{
 		public:
 
@@ -67,26 +77,19 @@ namespace EE::Render
 				TVector<VkExtensionProperties>		m_deviceExtensionProps;
 			};
 
-		public:
+        public:
 
 			// Only support single physical device for now.
-			VulkanDevice( TSharedPtr<VulkanInstance> pInstance, TSharedPtr<VulkanSurface> pSurface );
-			VulkanDevice( InitConfig config, TSharedPtr<VulkanInstance> pInstance, TSharedPtr<VulkanSurface> pSurface );
-
-			VulkanDevice( VulkanDevice const& ) = delete;
-			VulkanDevice& operator=( VulkanDevice const& ) = delete;
-
-			VulkanDevice( VulkanDevice&& ) = default;
-			VulkanDevice& operator=( VulkanDevice&& ) = default;
+			VulkanDevice();
+			VulkanDevice( InitConfig config );
 
 			~VulkanDevice();
 
 		public:
 
-			VulkanTexture CreateTexture( TextureDesc desc );
-			void DestroyTexture( VulkanTexture texture );
+            virtual RHI::RHITexture* CreateTexture( RHI::RHITextureCreateDesc const& createDesc ) override;
+            virtual void             DestroyTexture( RHI::RHITexture* pTexture ) override;
 
-			VulkanSemaphore CreateVSemaphore();
 			// TODO: design consideration.
 			// 
 			// 1. void DestroyVSemaphore( VulkanSemaphore& semaphore );
@@ -99,13 +102,20 @@ namespace EE::Render
 			// 
 			// It seems like that both ensure vulkan resource object being invalid after the destruction?
 			//
-			void DestroyVSemaphore( VulkanSemaphore& semaphore );
+			//VulkanSemaphore CreateVSemaphore();
+			//void DestroyVSemaphore( VulkanSemaphore& semaphore );
 
-			VulkanShader CreateShader( Blob const& byteCode );
-			void DestroyShader( VulkanShader& pShader );
+            virtual RHI::RHISemaphore* CreateSyncSemaphore( RHI::RHISemaphoreCreateDesc const& createDesc ) override;
+            virtual void DestroySyncSemaphore( RHI::RHISemaphore* pSemaphore ) override;
+
+            //-------------------------------------------------------------------------
+
+            virtual RHI::RHIShader* CreateShader( RHI::RHIShaderCreateDesc const& createDesc ) override;
+            virtual void            DestroyShader( RHI::RHIShader* pShader ) override;
 
 		private:
 
+            void PickPhysicalDeviceAndCreate( InitConfig const& config );
 			bool CheckAndCollectDeviceLayers( InitConfig const& config );
 			bool CheckAndCollectDeviceExtensions( InitConfig const& config );
 			bool CreateDevice( InitConfig const& config );
@@ -115,7 +125,8 @@ namespace EE::Render
 			friend class VulkanQueue;
 			friend class VulkanSwapchain;
 
-			TSharedPtr<VulkanInstance>			m_pInstance;
+			TSharedPtr<VulkanInstance>			m_pInstance = nullptr;
+            TSharedPtr<VulkanSurface>           m_pSurface = nullptr;
 
 			VkDevice							m_pHandle = nullptr;
 			CollectedInfo						m_collectInfos;

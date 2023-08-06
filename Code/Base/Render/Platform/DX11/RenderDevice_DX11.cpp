@@ -5,20 +5,17 @@
 #include "Base/Render/RenderCoreResources.h"
 #include "Base/IniFile.h"
 #include "Base/Profiling.h"
+#include "Base/RHI/Resource/RHIShader.h"
+#include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 
 #ifdef _WIN32
 #include "Base/Render/Platform/Windows/TextureLoader_Win32.h"
 #endif
 
+// TODO: move to RenderDevice_Vulkan
 #ifdef EE_VULKAN
-#include "Base/Render/Platform/Vulkan/Backend/VulkanInstance.h"
-#include "Base/Render/Platform/Vulkan/Backend/VulkanSurface.h"
-#include "Base/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
 #include "Base/Render/Platform/Vulkan/Backend/VulkanDevice.h"
 #include "Base/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
-#include "Base/Render/Platform/Vulkan/Backend/VulkanResource.h"
-
-#include <vulkan/vulkan.hpp>
 #endif
 
 //-------------------------------------------------------------------------
@@ -58,11 +55,9 @@ namespace EE::Render
     RenderDevice::RenderDevice()
     {
         #ifdef EE_VULKAN
-        m_pVkInstance = MakeShared<Backend::VulkanInstance>();
-        m_pVkSurface = MakeShared<Backend::VulkanSurface>( m_pVkInstance );
-
-        m_pVkDevice = MakeShared<Backend::VulkanDevice>( m_pVkInstance, m_pVkSurface );
-        m_pVkSwapchain = MakeShared<Backend::VulkanSwapchain>( m_pVkSurface, m_pVkDevice );
+        auto pVkRHIDevice = MakeShared<Backend::VulkanDevice>();
+        m_pRHIDevice = pVkRHIDevice;
+        m_pRHISwapchain = MakeShared<Backend::VulkanSwapchain>( pVkRHIDevice );
         #endif
     }
 
@@ -535,8 +530,9 @@ namespace EE::Render
         // TODO: temporary, move this to vulkan render device
         EE_ASSERT( IsInitialized() && !shader.IsValid() );
 
-        auto pShaderHandle = m_pVkDevice->CreateShader( shader.m_byteCode );
-        shader.m_shaderHandle.m_pData = pShaderHandle;
+        auto createDesc = RHI::RHIShaderCreateDesc{ shader.m_byteCode };
+        auto pShader = m_pRHIDevice->CreateShader( createDesc );
+        shader.m_shaderHandle.m_pData = pShader;
 
         // remove shader code to reduce some RAM usage.
         auto emptyBlob = Blob{};
@@ -549,8 +545,9 @@ namespace EE::Render
     {
         EE_ASSERT( IsInitialized() && shader.IsValid() );
 
-        auto& pShader = reinterpret_cast<Backend::VulkanShader&>( shader.m_shaderHandle.m_pData );
-        m_pVkDevice->DestroyShader( pShader );
+        RHI::RHIShader*& pShader = reinterpret_cast<RHI::RHIShader*&>( shader.m_shaderHandle.m_pData );
+        m_pRHIDevice->DestroyShader( pShader );
+        pShader = nullptr;
     }
 
     //-------------------------------------------------------------------------

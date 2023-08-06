@@ -1,27 +1,23 @@
 #pragma once
 #ifdef EE_VULKAN
 
+#include "Base/RHI/Resource/RHISemaphore.h"
+
 #include <vulkan/vulkan_core.h>
 
 namespace EE::Render
 {
 	namespace Backend
 	{
-		class VulkanSemaphore
+		class VulkanSemaphore final : public RHI::RHISemaphore
 		{
+			friend class VulkanDevice;
+
 		public:
 
 			VulkanSemaphore() = default;
 
-			VulkanSemaphore( VulkanSemaphore const& ) = delete;
-			VulkanSemaphore& operator=( VulkanSemaphore const& ) = delete;
-
-			VulkanSemaphore( VulkanSemaphore&& ) = default;
-			VulkanSemaphore& operator=( VulkanSemaphore&& ) = default;
-
 		private:
-
-			friend class VulkanDevice;
 
 			VkSemaphore						m_pHandle = nullptr;
 		};

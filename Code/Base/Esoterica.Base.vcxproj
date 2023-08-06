@@ -16,6 +16,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
+    <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h" />
+    <ClInclude Include="RHI\Resource\RHISemaphore.h" />
+    <ClInclude Include="RHI\Resource\RHIShader.h" />
+    <ClInclude Include="RHI\Resource\RHITexture.h" />
+    <ClInclude Include="RHI\RHISwapchain.h" />
+    <ClInclude Include="RHI\Resource\RHIResource.h" />
+    <ClInclude Include="RHI\RHIDevice.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
     <ClInclude Include="Encoding\Quantization.h" />
@@ -73,7 +81,6 @@
     <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanResource.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
@@ -524,6 +531,7 @@
     <ClInclude Include="Types\UUID.h" />
     <ClInclude Include="Types\Variant.h" />
     <ClInclude Include="Types\WString.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanShader.h" />
     <ClInclude Include="_Module\API.h" />
   </ItemGroup>
   <ItemGroup>
@@ -532,6 +540,9 @@
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Math\Platform\Math_Win32.h" />
     <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
+    <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp" />
+    <ClCompile Include="RHI\RHISwapchain.cpp" />
+    <ClCompile Include="RHI\RHIDevice.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
@@ -580,7 +591,6 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
@@ -672,6 +682,7 @@
     <ClCompile Include="Types\Tag.cpp" />
     <ClCompile Include="Types\UUID.cpp" />
     <ClCompile Include="Types\Platform\Types_Win32.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE" />

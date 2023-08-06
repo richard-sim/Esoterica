@@ -12,22 +12,16 @@
 //-------------------------------------------------------------------------
 
 namespace EE { class IniFile; }
+namespace EE::RHI
+{ 
+    class RHIDevice;
+    class RHISwapchain;
+}
 
 //-------------------------------------------------------------------------
 
 namespace EE::Render
 {
-    #ifdef EE_VULKAN
-    // temporary
-    namespace Backend
-    { 
-        class VulkanInstance;
-        class VulkanSurface;
-        class VulkanDevice;
-        class VulkanSwapchain;
-    }
-    #endif
-
     class EE_BASE_API RenderDevice
     {
 
@@ -123,26 +117,21 @@ namespace EE::Render
 
     private:
 
-        Int2                        m_resolution = Int2( 1280, 720 );
-        float                       m_refreshRate = 60;
-        bool                        m_isFullscreen = false;
+        Int2                                    m_resolution = Int2( 1280, 720 );
+        float                                   m_refreshRate = 60;
+        bool                                    m_isFullscreen = false;
 
         // Device Core 
-        ID3D11Device*               m_pDevice = nullptr;
-        IDXGIFactory*               m_pFactory = nullptr;
-        RenderWindow                m_primaryWindow;
-        RenderContext               m_immediateContext;
+        ID3D11Device*                           m_pDevice = nullptr;
+        IDXGIFactory*                           m_pFactory = nullptr;
+        RenderWindow                            m_primaryWindow;
+        RenderContext                           m_immediateContext;
 
-        #ifdef EE_VULKAN
-        // temporary
-        TSharedPtr<Backend::VulkanInstance>         m_pVkInstance = nullptr;
-        TSharedPtr<Backend::VulkanSurface>          m_pVkSurface = nullptr;
-        TSharedPtr<Backend::VulkanDevice>           m_pVkDevice = nullptr;
-        TSharedPtr<Backend::VulkanSwapchain>        m_pVkSwapchain = nullptr;
-        #endif
+        TSharedPtr<RHI::RHIDevice>              m_pRHIDevice = nullptr;
+        TSharedPtr<RHI::RHISwapchain>           m_pRHISwapchain = nullptr;
 
         // Lock to allow loading resources while rendering across different threads
-        Threading::RecursiveMutex   m_deviceMutex;
+        Threading::RecursiveMutex               m_deviceMutex;
     };
 }
 

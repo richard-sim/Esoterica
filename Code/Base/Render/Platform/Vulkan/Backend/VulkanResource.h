@@ -8,8 +8,7 @@ namespace EE::Render
 	namespace Backend
 	{
 		// re-export all vulkan resource handle
-		using VulkanShader = VkShaderModule;
-		using VulkanSemaphore = VkSemaphore;
+		//using VulkanSemaphore = VkSemaphore;
 		using VulkanPipeline = VkPipeline;
 	}
 }

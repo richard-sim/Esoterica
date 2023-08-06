@@ -3,6 +3,8 @@
 #include "VulkanCommonSettings.h"
 #include "VulkanInstance.h"
 #include "VulkanSurface.h"
+#include "VulkanShader.h"
+#include "VulkanSemaphore.h"
 #include "Base/Logging/Log.h"
 
 namespace EE::Render
@@ -42,27 +44,28 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanDevice::VulkanDevice( TSharedPtr<VulkanInstance> pInstance, TSharedPtr<VulkanSurface> pSurface )
-			: VulkanDevice( InitConfig::GetDefault( pInstance->IsEnableDebug() ), pInstance, pSurface )
-		{}
-
-		VulkanDevice::VulkanDevice( InitConfig config, TSharedPtr<VulkanInstance> pInstance, TSharedPtr<VulkanSurface> pSurface )
-			: m_pInstance( pInstance )
+		VulkanDevice::VulkanDevice()
 		{
-			auto pdDevices = pInstance->EnumeratePhysicalDevice();
+            m_pInstance = MakeShared<VulkanInstance>();
+            EE_ASSERT( m_pInstance != nullptr );
 
-			for ( auto& pd : pdDevices )
-			{
-				pd.CalculatePickScore( pSurface );
-			}
+            m_pSurface = MakeShared<VulkanSurface>( m_pInstance );
+            EE_ASSERT( m_pSurface != nullptr );
 
-			auto physicalDevice = PickMostSuitablePhysicalDevice( pdDevices );
-			m_physicalDevice = std::move( physicalDevice );
+            InitConfig const config = InitConfig::GetDefault( m_pInstance->IsEnableDebug() );
 
-			EE_ASSERT( CheckAndCollectDeviceLayers( config ) );
-			EE_ASSERT( CheckAndCollectDeviceExtensions( config ) );
+            PickPhysicalDeviceAndCreate( config );
+        }
 
-			EE_ASSERT( CreateDevice( config ) );
+		VulkanDevice::VulkanDevice( InitConfig config )
+		{
+            m_pInstance = MakeShared<VulkanInstance>();
+            EE_ASSERT( m_pInstance != nullptr );
+
+            m_pSurface = MakeShared<VulkanSurface>( m_pInstance );
+            EE_ASSERT( m_pSurface != nullptr );
+
+            PickPhysicalDeviceAndCreate( config );
 		}
 
 		VulkanDevice::~VulkanDevice()
@@ -75,51 +78,87 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanSemaphore VulkanDevice::CreateVSemaphore()
+        RHI::RHITexture* VulkanDevice::CreateTexture( RHI::RHITextureCreateDesc const& createDesc )
+        {
+            return nullptr;
+        }
+
+        void VulkanDevice::DestroyTexture( RHI::RHITexture* pTexture )
+        {
+
+        }
+
+        RHI::RHISemaphore* VulkanDevice::CreateSyncSemaphore( RHI::RHISemaphoreCreateDesc const& createDesc )
+        {
+            EE_ASSERT( createDesc.IsValid() );
+
+            VulkanSemaphore* pVkSemaphore = EE::New<VulkanSemaphore>();
+            VkSemaphoreCreateInfo semaphoreCI = {};
+            semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+            semaphoreCI.pNext = nullptr;
+            semaphoreCI.flags = VkFlags( 0 );
+
+            VK_SUCCEEDED( vkCreateSemaphore( m_pHandle, &semaphoreCI, nullptr, &(pVkSemaphore->m_pHandle) ) );
+
+            return pVkSemaphore;
+        }
+
+        void VulkanDevice::DestroySyncSemaphore( RHI::RHISemaphore* pShader )
+        {
+            EE_ASSERT( pShader != nullptr );
+            VulkanSemaphore* pVkSemaphore = static_cast<VulkanSemaphore*>( pShader );
+            EE_ASSERT( pVkSemaphore->m_pHandle != nullptr );
+
+            vkDestroySemaphore( m_pHandle, pVkSemaphore->m_pHandle, nullptr );
+            
+            EE::Delete( pVkSemaphore );
+        }
+
+        RHI::RHIShader* VulkanDevice::CreateShader( RHI::RHIShaderCreateDesc const& createDesc )
+        {
+            EE_ASSERT( createDesc.IsValid() );
+
+            VulkanShader* pVkShader = EE::New<VulkanShader>();
+            VkShaderModuleCreateInfo shaderModuleCI = {};
+            shaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            shaderModuleCI.pCode = reinterpret_cast<uint32_t const*>( createDesc.m_byteCode.data() );
+            shaderModuleCI.codeSize = createDesc.m_byteCode.size(); // Note: here is the size in bytes!!
+
+            VK_SUCCEEDED( vkCreateShaderModule( m_pHandle, &shaderModuleCI, nullptr, &(pVkShader->m_pModule) ) );
+
+            return pVkShader;
+        }
+
+		void VulkanDevice::DestroyShader( RHI::RHIShader* pResource )
 		{
-			VulkanSemaphore pSemaphore = {};
-			VkSemaphoreCreateInfo semaphoreCI = {};
-			semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-			semaphoreCI.pNext = nullptr;
-			semaphoreCI.flags = VkFlags( 0 );
+            EE_ASSERT( pResource != nullptr );
+            VulkanShader* pVkShader = static_cast<VulkanShader*>( pResource );
+            EE_ASSERT( pVkShader->m_pModule != nullptr );
 
-			VK_SUCCEEDED( vkCreateSemaphore( m_pHandle, &semaphoreCI, nullptr, &pSemaphore ) );
+            vkDestroyShaderModule( m_pHandle, pVkShader->m_pModule, nullptr );
 
-			return pSemaphore;
-		}
-
-		void VulkanDevice::DestroyVSemaphore( VulkanSemaphore& semaphore )
-		{
-			EE_ASSERT( semaphore != nullptr );
-
-			vkDestroySemaphore( m_pHandle, semaphore, nullptr );
-			semaphore = nullptr;
-		}
-
-		VulkanShader VulkanDevice::CreateShader( Blob const& byteCode )
-		{
-			EE_ASSERT( !byteCode.empty() );
-
-			VulkanShader pShader = {};
-			VkShaderModuleCreateInfo shaderModuleCI = {};
-			shaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			shaderModuleCI.pCode = reinterpret_cast<uint32_t const*>( byteCode.data() );
-			shaderModuleCI.codeSize = byteCode.size(); // Note: here is the size in bytes!!
-
-			VK_SUCCEEDED( vkCreateShaderModule( m_pHandle, &shaderModuleCI, nullptr, &pShader ) );
-
-			return pShader;
-		}
-
-		void VulkanDevice::DestroyShader( VulkanShader& pShader )
-		{
-			EE_ASSERT( pShader != nullptr );
-
-			vkDestroyShaderModule( m_pHandle, pShader, nullptr );
-			pShader = nullptr;
+            EE::Delete( pVkShader );
 		}
 
 		//-------------------------------------------------------------------------
+
+        void VulkanDevice::PickPhysicalDeviceAndCreate( InitConfig const& config )
+        {
+            auto pdDevices = m_pInstance->EnumeratePhysicalDevice();
+
+            for ( auto& pd : pdDevices )
+            {
+                pd.CalculatePickScore( m_pSurface );
+            }
+
+            auto physicalDevice = PickMostSuitablePhysicalDevice( pdDevices );
+            m_physicalDevice = std::move( physicalDevice );
+
+            EE_ASSERT( CheckAndCollectDeviceLayers( config ) );
+            EE_ASSERT( CheckAndCollectDeviceExtensions( config ) );
+
+            EE_ASSERT( CreateDevice( config ) );
+        }
 
 		bool VulkanDevice::CheckAndCollectDeviceLayers( InitConfig const& config )
 		{
