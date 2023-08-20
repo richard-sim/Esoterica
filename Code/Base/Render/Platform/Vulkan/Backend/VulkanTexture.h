@@ -1,11 +1,15 @@
 #pragma once
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 
 #include "Base/Math/Math.h"
 #include "Base/RHI/Resource/RHITexture.h"
+#include "VulkanCommonSettings.h"
 
 #include <optional>
 #include <vulkan/vulkan_core.h>
+#if VULKAN_USE_VMA_ALLOCATION
+#include <vma/vk_mem_alloc.h>
+#endif
 
 namespace EE::Render
 {
@@ -13,16 +17,22 @@ namespace EE::Render
 	{
 		class VulkanTexture : public RHI::RHITexture
 		{
-            friend class VulkanTexture;
+            friend class VulkanDevice;
 			friend class VulkanSwapchain;
 
 		public:
 
 			VulkanTexture() = default;
+            virtual ~VulkanTexture() = default;
 
 		private:
 
 			VkImage							m_pHandle = nullptr;
+            #if VULKAN_USE_VMA_ALLOCATION
+            VmaAllocation                   m_allocation = nullptr;
+            #else
+            VkDeviceMemory                  m_allocation = nullptr;
+            #endif // VULKAN_USE_VMA_ALLOCATION
 		};
 
 		struct ImageViewDesc

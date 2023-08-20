@@ -222,7 +222,7 @@ namespace EE
 
 		struct TextureSubresourceRange
 		{
-			TBitFlags<ImageAspectFlags>		m_aspectFlags;
+			TBitFlags<ImageAspectFlags>		    m_aspectFlags;
 			uint32_t							m_baseMipLevel;
 			uint32_t							m_levelCount;
 			uint32_t							m_baseArrayLayer;

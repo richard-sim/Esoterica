@@ -5,14 +5,14 @@
 
 namespace EE::RHI
 {
-    class RHITexture : public RHIResource
+    class RHIBuffer : public RHIResource
     {
     public:
 
-        virtual ~RHITexture() = default;
+        virtual ~RHIBuffer() = default;
 
     protected:
 
-        RHITextureCreateDesc                m_desc;
+        RHIBufferCreateDesc                m_desc;
     };
 }

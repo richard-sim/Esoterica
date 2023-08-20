@@ -13,6 +13,9 @@ namespace EE::Render
 	{
 		class VulkanInstance
 		{
+            friend class VulkanSurface;
+            friend class VulkanMemoryAllocator;
+
 		public:
 
 			struct InitConfig
@@ -67,8 +70,6 @@ namespace EE::Render
 			bool CreateDebugMessageer();
 
 		private:
-
-			friend class VulkanSurface;
 
 			bool									m_enableDebug;
 			VkDebugUtilsMessengerEXT				m_pDebugUtilsMessager = nullptr;

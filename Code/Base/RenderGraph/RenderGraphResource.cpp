@@ -1,21 +1,21 @@
 #include "RenderGraphResource.h"
 
-namespace EE
+namespace EE::RG
 {
-	namespace RG
-	{
+    namespace _Impl
+    {
 		RGResourceSlotID::RGResourceSlotID( uint32_t id )
 			: m_id( id )
 		{}
+    }
 
-		//-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 
-		RGResource::RGResource( RGBufferDesc const& bufferDesc )
-			: m_desc( bufferDesc )
-		{}
+	RGResource::RGResource( _Impl::RGBufferDesc const& bufferDesc )
+		: m_desc( bufferDesc )
+	{}
 
-		RGResource::RGResource( RGTextureDesc const& textureDesc )
-			: m_desc( textureDesc )
-		{}
-	}
+	RGResource::RGResource( _Impl::RGTextureDesc const& textureDesc )
+		: m_desc( textureDesc )
+	{}
 }

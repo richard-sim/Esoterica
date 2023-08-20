@@ -1,10 +1,14 @@
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 #include "VulkanDevice.h"
 #include "VulkanCommonSettings.h"
 #include "VulkanInstance.h"
 #include "VulkanSurface.h"
 #include "VulkanShader.h"
 #include "VulkanSemaphore.h"
+#include "VulkanUtils.h"
+#include "VulkanTexture.h"
+#include "VulkanBuffer.h"
+#include "RHIToVulkanSpecification.h"
 #include "Base/Logging/Log.h"
 
 namespace EE::Render
@@ -55,9 +59,11 @@ namespace EE::Render
             InitConfig const config = InitConfig::GetDefault( m_pInstance->IsEnableDebug() );
 
             PickPhysicalDeviceAndCreate( config );
+
+            m_globalMemoryAllcator.Initialize( this );
         }
 
-		VulkanDevice::VulkanDevice( InitConfig config )
+        VulkanDevice::VulkanDevice( InitConfig config )
 		{
             m_pInstance = MakeShared<VulkanInstance>();
             EE_ASSERT( m_pInstance != nullptr );
@@ -66,11 +72,15 @@ namespace EE::Render
             EE_ASSERT( m_pSurface != nullptr );
 
             PickPhysicalDeviceAndCreate( config );
+
+            m_globalMemoryAllcator.Initialize( this );
 		}
 
 		VulkanDevice::~VulkanDevice()
 		{
 			EE_ASSERT( m_pHandle != nullptr );
+
+            m_globalMemoryAllcator.Shutdown();
 
 			vkDestroyDevice( m_pHandle, nullptr );
 			m_pHandle = nullptr;
@@ -80,12 +90,220 @@ namespace EE::Render
 
         RHI::RHITexture* VulkanDevice::CreateTexture( RHI::RHITextureCreateDesc const& createDesc )
         {
-            return nullptr;
+            EE_ASSERT( createDesc.IsValid() );
+
+            VkImageCreateInfo imageCreateInfo = {};
+            imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageCreateInfo.pNext = nullptr;
+            imageCreateInfo.imageType = ToVulkanImageType( createDesc.m_type );
+            imageCreateInfo.format = ToVulkanFormat( createDesc.m_format );
+            imageCreateInfo.extent = { createDesc.m_width, createDesc.m_height, createDesc.m_depth };
+            imageCreateInfo.mipLevels = createDesc.m_mipmap;
+            imageCreateInfo.arrayLayers = createDesc.m_array;
+            imageCreateInfo.samples = ToVulkanSampleCountFlags( createDesc.m_sample );
+            imageCreateInfo.tiling = ToVulkanImageTiling( createDesc.m_tiling );
+            imageCreateInfo.usage = ToVulkanImageUsageFlags( createDesc.m_usage );
+            imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            imageCreateInfo.flags = ToVulkanImageCreateFlags( createDesc.m_flag );
+            // TODO: queue specified resource
+            imageCreateInfo.pQueueFamilyIndices = nullptr;
+            imageCreateInfo.queueFamilyIndexCount = 0;
+
+            bool bRequireDedicatedMemory = false;
+            uint32_t allcatedMemorySize = 0;
+
+            #if VULKAN_USE_VMA_ALLOCATION
+            VmaAllocationCreateInfo vmaAllocationCI = {};
+            vmaAllocationCI.requiredFlags = VMA_DEFRAGMENTATION_FLAG_ALGORITHM_BALANCED_BIT;
+            vmaAllocationCI.flags = VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT;
+            if ( createDesc.m_usage.AreAnyFlagsSet( RHI::ETextureUsage::Color, RHI::ETextureUsage::DepthStencil )
+                 && createDesc.m_width >= 512
+                 && createDesc.m_height >= 512 )
+            {
+                vmaAllocationCI.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+                bRequireDedicatedMemory = true;
+            }
+
+            // TODO: For now, all texture should be GPU Only.
+            vmaAllocationCI.usage = ToVmaMemoryUsage( createDesc.m_memoryUsage );
+
+            VulkanTexture* pVkTexture = EE::New<VulkanTexture>();
+            if ( pVkTexture )
+            {
+                VmaAllocationInfo allocInfo = {};
+                VK_SUCCEEDED( vmaCreateImage( m_globalMemoryAllcator.m_pHandle, &imageCreateInfo, &vmaAllocationCI, &(pVkTexture->m_pHandle), &(pVkTexture->m_allocation), &allocInfo ) );
+            
+                allcatedMemorySize = static_cast<uint32_t>( allocInfo.size );
+            }
+            else
+            {
+                EE::Delete( pVkTexture );
+            }
+            #else
+            VulkanTexture* pVkTexture = EE::New<VulkanTexture>();
+            if ( pVkTexture )
+            {
+                VK_SUCCEEDED( vkCreateImage( m_pHandle, &imageCreateInfo, nullptr, &(pVkTexture->m_pHandle) ) );
+            }
+            else
+            {
+                EE::Delete( pVkTexture );
+            }
+
+            VkMemoryRequirements memReqs = {};
+            vkGetImageMemoryRequirements( m_pHandle, pVkTexture->m_pHandle, &memReqs );
+
+            allcatedMemorySize = static_cast<uint32_t>( memReqs.size );
+
+            VkMemoryAllocateInfo memAllloc = {};
+            memAllloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memAllloc.allocationSize = memReqs.size;
+            GetMemoryType( memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, memAllloc.memoryTypeIndex );
+
+            vkAllocateMemory( m_pHandle, &memAllloc, nullptr, &(pVkTexture->m_allocation) );
+            vkBindImageMemory( m_pHandle, pVkTexture->m_pHandle, pVkTexture->m_allocation, 0);
+            #endif // VULKAN_USE_VMA_ALLOCATION
+
+            pVkTexture->m_desc = createDesc;
+            // TODO: [WARNING] User's observation is different before render resource is created.
+            // We modified or overwrite some property during creation, but user doesn't know it at all.
+            // This is no a good design i think.
+            if ( bRequireDedicatedMemory )
+            {
+                pVkTexture->m_desc.m_memoryFlag.SetFlag( RHI::ERenderResourceMemoryFlag::DedicatedMemory );
+            }
+            pVkTexture->m_desc.m_allocatedSize = allcatedMemorySize;
+
+            return pVkTexture;
         }
 
         void VulkanDevice::DestroyTexture( RHI::RHITexture* pTexture )
         {
+            EE_ASSERT( pTexture != nullptr );
+            VulkanTexture* pVkTexture = static_cast<VulkanTexture*>( pTexture );
+            EE_ASSERT( pVkTexture->m_pHandle != nullptr );
+        
+            #if VULKAN_USE_VMA_ALLOCATION
+            if ( pVkTexture->m_allocation )
+            {
+                vmaDestroyImage( m_globalMemoryAllcator.m_pHandle, pVkTexture->m_pHandle, pVkTexture->m_allocation );
+            }
+            #else
+            if ( pVkTexture->m_allocation != 0 )
+            {
+                vkDestroyImage( m_pHandle, pVkTexture->m_pHandle, nullptr);
+                vkFreeMemory( m_pHandle, pVkTexture->m_allocation, nullptr );
+            }
+            #endif // VULKAN_USE_VMA_ALLOCATION
 
+            EE::Delete( pTexture );
+        }
+
+        RHI::RHIBuffer* VulkanDevice::CreateBuffer( RHI::RHIBufferCreateDesc const& createDesc )
+        {
+            EE_ASSERT( createDesc.IsValid() );
+
+            VkDeviceSize bufferSize = createDesc.m_desireSize;
+
+            VkBufferCreateInfo bufferCreateInfo = {};
+            bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferCreateInfo.size = bufferSize;
+            bufferCreateInfo.usage = ToVulkanBufferUsageFlags( createDesc.m_usage );
+            bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            uint32_t allcatedMemorySize = 0;
+
+            #if VULKAN_USE_VMA_ALLOCATION
+            VmaAllocationCreateInfo vmaAllocationCI = {};
+            vmaAllocationCI.usage = ToVmaMemoryUsage( createDesc.m_memoryUsage );
+            vmaAllocationCI.flags = VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT;
+            if ( createDesc.m_memoryFlag.IsFlagSet(RHI::ERenderResourceMemoryFlag::DedicatedMemory) )
+                vmaAllocationCI.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            if ( createDesc.m_memoryFlag.IsFlagSet( RHI::ERenderResourceMemoryFlag::PersistentMapping ) )
+                vmaAllocationCI.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+            VulkanBuffer* pVkBuffer = EE::New<VulkanBuffer>();
+
+            if ( pVkBuffer )
+            {
+                VmaAllocationInfo allocInfo = {};
+                VK_SUCCEEDED( vmaCreateBuffer( m_globalMemoryAllcator.m_pHandle, &bufferCreateInfo, &vmaAllocationCI, &(pVkBuffer->m_pHandle), &(pVkBuffer->m_allocation), &allocInfo));
+            
+                allcatedMemorySize = static_cast<uint32_t>( allocInfo.size );
+                if ( createDesc.m_memoryFlag.IsFlagSet( RHI::ERenderResourceMemoryFlag::PersistentMapping ) )
+                {
+                    pVkBuffer->m_pMappedMemory = allocInfo.pMappedData;
+                }
+            }
+            else
+            {
+                EE::Delete( pVkBuffer );
+            }
+            #else
+            VulkanBuffer* pVkBuffer = EE::New<VulkanBuffer>();
+
+            if ( pVkBuffer )
+            {
+                VK_SUCCEEDED( vkCreateBuffer( m_pHandle, &bufferCreateInfo, nullptr, &(pVkBuffer->m_pHandle) ) );
+
+            }
+            else
+            {
+                EE::Delete( pVkBuffer );
+            }
+
+            VkMemoryRequirements memReqs;
+            vkGetBufferMemoryRequirements( m_pHandle, pVkBuffer->m_pHandle, &memReqs );
+            VkMemoryAllocateInfo memAlloc = {};
+            memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memAlloc.allocationSize = memReqs.size;
+
+            allcatedMemorySize = static_cast<uint32_t>( memReqs.size );
+
+            if ( createDesc.m_memoryUsage == RHI::ERenderResourceMemoryUsage::GPUOnly )
+            {
+                GetMemoryType( memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, memAlloc.memoryTypeIndex );
+            }
+            else if ( createDesc.m_memoryUsage == RHI::ERenderResourceMemoryUsage::CPUToGPU
+                      || createDesc.m_memoryUsage == RHI::ERenderResourceMemoryUsage::CPUOnly )
+            {
+                GetMemoryType( memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memAlloc.memoryTypeIndex );
+            }
+            else
+            {
+                EE_UNREACHABLE_CODE();
+            }
+
+            VK_SUCCEEDED( vkAllocateMemory( m_pHandle, &memAlloc, nullptr, &(pVkBuffer->m_allocation) ));
+            VK_SUCCEEDED( vkBindBufferMemory( m_pHandle, pVkBuffer->m_pHandle, pVkBuffer->m_allocation, 0));
+            #endif // VULKAN_USE_VMA_ALLOCATION
+
+            pVkBuffer->m_desc.m_allocatedSize = allcatedMemorySize;
+
+            return pVkBuffer;
+        }
+
+        void VulkanDevice::DestroyBuffer( RHI::RHIBuffer* pBuffer )
+        {
+            EE_ASSERT( pBuffer != nullptr );
+            VulkanBuffer* pVkBuffer = static_cast<VulkanBuffer*>( pBuffer );
+            EE_ASSERT( pVkBuffer->m_pHandle != nullptr );
+
+            #if VULKAN_USE_VMA_ALLOCATION
+            if ( pVkBuffer->m_allocation )
+            {
+                vmaDestroyBuffer( m_globalMemoryAllcator.m_pHandle, pVkBuffer->m_pHandle, pVkBuffer->m_allocation );
+            }
+            #else
+            if ( pVkBuffer->m_allocation != 0 )
+            {
+                vkDestroyBuffer( m_pHandle, pVkBuffer->m_pHandle, nullptr );
+                vkFreeMemory( m_pHandle, pVkBuffer->m_allocation, nullptr );
+            }
+            #endif // VULKAN_USE_VMA_ALLOCATION
+
+            EE::Delete( pVkBuffer );
         }
 
         RHI::RHISemaphore* VulkanDevice::CreateSyncSemaphore( RHI::RHISemaphoreCreateDesc const& createDesc )
@@ -315,7 +533,29 @@ namespace EE::Render
 
 			return true;
 		}
-	}
+
+        // Utility functions
+        //-------------------------------------------------------------------------
+
+        bool VulkanDevice::GetMemoryType( uint32_t typeBits, VkMemoryPropertyFlags properties, uint32_t& OutProperties ) const
+        {
+            for ( uint32_t i = 0; i < m_physicalDevice.m_memoryProps.memoryTypeCount; i++ )
+            {
+                if ( ( typeBits & 1 ) == 1 )
+                {
+                    if ( ( m_physicalDevice.m_memoryProps.memoryTypes[i].propertyFlags & properties ) == properties )
+                    {
+                        OutProperties = i;
+                        return true;
+                    }
+                }
+                typeBits >>= 1;
+            }
+
+            OutProperties = 0;
+            return false;
+        }
+    }
 }
 
 #endif

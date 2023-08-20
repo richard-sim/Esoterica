@@ -158,8 +158,9 @@ namespace EE::Render
 		TaskSystem*														m_pTaskSystem = nullptr;
 		Resource::ResourceSystem*										m_pResourceSystem = nullptr;
 
-		TIDVector<PipelineHandle, TSharedPtr<RasterPipelineEntry>>		m_rasterPipelineStates;
-		THashMap<RasterPipelineDesc, PipelineHandle>					m_rasterPipelineHandles;
+        // TODO: may be extract to single pipeline cache class
+		TIDVector<PipelineHandle, TSharedPtr<RasterPipelineEntry>>		m_rasterPipelineStatesCache;
+		THashMap<RasterPipelineDesc, PipelineHandle>					m_rasterPipelineHandlesCache;
 
 		TIDVector<PipelineHandle, ComputePipelineEntry>					m_computePipelineStates;
 		//THashMap<ComputePipelineDesc, PipelineHandle>					m_computePipelineHandles;

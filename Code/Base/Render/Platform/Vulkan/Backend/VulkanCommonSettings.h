@@ -1,5 +1,5 @@
 #pragma once
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 
 #include "Base/Types/Arrays.h"
 
@@ -16,5 +16,8 @@ namespace EE::Render
 		TVector<char const*> GetEngineVulkanDeviceRequiredExtensions();
 	}
 }
+
+// TODO: be configurable
+#define VULKAN_USE_VMA_ALLOCATION 1
 
 #endif

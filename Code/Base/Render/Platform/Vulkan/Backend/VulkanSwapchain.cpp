@@ -1,4 +1,4 @@
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 #include "VulkanSwapchain.h"
 #include "VulkanCommonSettings.h"
 #include "VulkanInstance.h"
@@ -187,7 +187,7 @@ namespace EE::Render
 
 			for ( uint32_t i = 0; i < swapchainImageCount; ++i )
 			{
-                auto desc = RHI::RHITextureCreateDesc::New2D( extent.m_x, extent.m_y, RHI::EPixelFormat::RGBA8Float );
+                auto desc = RHI::RHITextureCreateDesc::New2D( extent.m_x, extent.m_y, RHI::EPixelFormat::RGBA8Unorm );
                 // TODO: fill in image usage flags
 				//desc.m_usage = swapchainCI.imageUsage;
 

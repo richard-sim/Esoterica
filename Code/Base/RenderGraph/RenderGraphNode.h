@@ -4,77 +4,79 @@
 
 #include "RenderGraphResource.h"
 #include "Base/Render/RenderResourceBarrier.h"
+#include "Base/Render/RenderPipelineRegistry.h"
 #include "Base/Types/Arrays.h"
 #include "Base/Types/String.h"
 
 #include <limits>
 
-namespace EE
+namespace EE::RG
 {
-	namespace RG
+	class EE_BASE_API RGNodeResource
 	{
-		class EE_BASE_API RGNodeResource
-		{
-		public:
+        friend class RenderGraph;
 
-			RGNodeResource() = default;
-			RGNodeResource( RGResourceSlotID slotID, Render::RenderResourceAccessState access );
+	public:
 
-		private:
+		RGNodeResource() = default;
+		RGNodeResource( _Impl::RGResourceSlotID slotID, Render::RenderResourceAccessState access );
 
-			RGResourceSlotID							m_slotID;
-			Render::RenderResourceAccessState			m_passAccess;
-		};
+	private:
 
-		template <typename Tag, RGResourceViewType RVT>
-		class RGNodeResourceRef
-		{
-			static_assert( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+        _Impl::RGResourceSlotID					    m_slotID;
+		Render::RenderResourceAccessState			m_passAccess;
+	};
 
-			typedef typename Tag::DescType DescType;
-			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
+	template <typename Tag, RGResourceViewType RVT>
+	class RGNodeResourceRef
+	{
+		static_assert( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
 
-		public:
+		typedef typename Tag::DescType DescType;
+		typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
 
-			RGNodeResourceRef( DescCVType desc, RGResourceSlotID slotID );
+	public:
 
-			inline DescCVType GetDesc() const { return m_desc; }
+		RGNodeResourceRef( DescCVType desc, _Impl::RGResourceSlotID slotID );
 
-		private:
+		inline DescCVType GetDesc() const { return m_desc; }
 
-			friend class RenderGraph;
+	private:
 
-			// Safety: This reference always holded by RenderGraph during the life time of RGNodeResourceRef.
-			DescCVType							m_desc;
-			RGResourceSlotID					m_slotID;
-		};
+		friend class RenderGraph;
 
-		typedef uint32_t NodeID;
+		// Safety: This reference is always held by RenderGraph during the life time of RGNodeResourceRef.
+		DescCVType							m_desc;
+		_Impl::RGResourceSlotID				m_slotID;
+	};
 
-		class EE_BASE_API RGNode
-		{
-		public:
+	typedef uint32_t NodeID;
 
-			RGNode();
-			RGNode( String const& nodeName, NodeID id );
+	class EE_BASE_API RGNode
+	{
+	public:
 
-		private:
+		RGNode();
+		RGNode( String const& nodeName, NodeID id );
 
-			friend class RenderGraph;
-			friend class RGNodeBuilder;
+	private:
 
-			TVector<RGNodeResource>					m_pInputs;
-			TVector<RGNodeResource>					m_pOutputs;
+		friend class RenderGraph;
+		friend class RGNodeBuilder;
 
-			String									m_passName;
-			NodeID									m_id;
-		};
+		TVector<RGNodeResource>					m_pInputs;
+		TVector<RGNodeResource>					m_pOutputs;
 
-		//-------------------------------------------------------------------------
+		String									m_passName;
+		NodeID									m_id;
 
-		template<typename Tag, RGResourceViewType RVT>
-		RGNodeResourceRef<Tag, RVT>::RGNodeResourceRef( DescCVType desc, RGResourceSlotID slotID )
-			: m_desc( desc ), m_slotID( slotID )
-		{}
-	}
+        Render::PipelineHandle                  m_pipelineHandle;
+	};
+
+	//-------------------------------------------------------------------------
+
+	template<typename Tag, RGResourceViewType RVT>
+	RGNodeResourceRef<Tag, RVT>::RGNodeResourceRef( DescCVType desc, _Impl::RGResourceSlotID slotID )
+		: m_desc( desc ), m_slotID( slotID )
+	{}
 }

@@ -9,6 +9,7 @@ namespace EE::RHI
     class RHIShader;
     class RHISemaphore;
     class RHITexture;
+    class RHIBuffer;
 
     class RHIDevice
     {
@@ -27,6 +28,9 @@ namespace EE::RHI
 
         virtual RHITexture* CreateTexture( RHITextureCreateDesc const& createDesc ) = 0;
         virtual void        DestroyTexture( RHITexture* pTexture ) = 0;
+
+        virtual RHIBuffer* CreateBuffer( RHIBufferCreateDesc const& createDesc ) = 0;
+        virtual void       DestroyBuffer( RHIBuffer* pBuffer ) = 0;
 
         virtual RHIShader* CreateShader( RHIShaderCreateDesc const& createDesc ) = 0;
         virtual void       DestroyShader( RHIShader* pShader ) = 0;

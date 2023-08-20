@@ -133,85 +133,6 @@ namespace EE
             return false;
         }
 
-        // Create and initialize render device
-        //-------------------------------------------------------------------------
-
-        m_pRenderDevice = EE::New<Render::RenderDevice>();
-        if ( !m_pRenderDevice->Initialize( iniFile ) )
-        {
-            EE_LOG_ERROR( "Render", nullptr, "Failed to create render device" );
-            EE::Delete( m_pRenderDevice );
-            return false;
-        }
-
-        auto bufferDesc = RG::BufferDesc{};
-        bufferDesc.m_count = 3;
-        auto handle0 = m_renderGraph.CreateResource( bufferDesc );
-        EE_ASSERT( handle0.GetDesc().m_count == 3 );
-
-        bufferDesc.m_count = 233;
-        auto handle1 = m_renderGraph.CreateResource( bufferDesc );
-        EE_ASSERT( handle1.GetDesc().m_count == 233 );
-
-        auto textureDesc = RG::TextureDesc{};
-        textureDesc.m_factor = 2.14f;
-        textureDesc.m_isEnable = true;
-        auto handle2 = m_renderGraph.CreateResource( textureDesc );
-
-        {
-            auto node = m_renderGraph.AddNode( "Clear Color RT" );
-            auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
-            auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
-
-            //node.RegisterPipeline();
-
-            EE_ASSERT( handle0_ref.GetDesc().m_count == 3 );
-            EE_ASSERT( handle1_ref.GetDesc().m_count == 233 );
-        }
-
-        {
-            auto node = m_renderGraph.AddNode( "Draw Shadow" );
-            auto handle2_ref = node.CommonWrite( handle2, Render::RenderResourceBarrierState::ColorAttachmentWrite );
-            auto handle1_ref = node.RasterRead( handle1, Render::RenderResourceBarrierState::ColorAttachmentRead );
-
-            EE_ASSERT( handle2_ref.GetDesc().m_isEnable );
-            EE_ASSERT( handle1_ref.GetDesc().m_count == 233 );
-        }
-
-        //m_renderGraph.AddNode( "Draw Opache" );
-        //m_renderGraph.AddNode( "Draw Transparent" );
-        //m_renderGraph.AddNode( "Post Processing" );
-        //m_renderGraph.AddNode( "Draw Debug" );
-
-        m_renderGraph.LogGraphNodes();
-
-        if ( Trait::IsPointerIncludeSmartPointer<TSharedPtr<int>>::value )
-        {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is a smart pointer!" );
-        }
-        else
-        {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is not a smart pointer!" );
-        }
-
-        if ( Trait::IsPointerIncludeSmartPointer<int*>::value )
-        {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is a smart pointer!" );
-        }
-        else
-        {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is not a smart pointer!" );
-        }
-
-        if ( Trait::IsPointerIncludeSmartPointer<TUniquePtr<RG::BufferDesc>>::value )
-        {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is a smart pointer!" );
-        }
-        else
-        {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is not a smart pointer!" );
-        }
-
         // Initialize core systems
         //-------------------------------------------------------------------------
 
@@ -224,6 +145,14 @@ namespace EE
         #if EE_ENABLE_NAVPOWER
         Navmesh::NavPower::Initialize();
         #endif
+
+        m_pRenderDevice = EE::New<Render::RenderDevice>();
+        if ( !m_pRenderDevice->Initialize( iniFile ) )
+        {
+            EE_LOG_ERROR( "Render", nullptr, "Failed to create render device" );
+            EE::Delete( m_pRenderDevice );
+            return false;
+        }
 
         #if EE_DEVELOPMENT_TOOLS
         m_imguiSystem.Initialize( m_pRenderDevice, &m_inputSystem, true );
@@ -415,12 +344,81 @@ namespace EE
         //-------------------------------------------------------------------------
 
         m_renderPipelineRegistry.Initialize( m_systemRegistry );
+        m_renderGraph.AttachToPipelineRegistry( m_renderPipelineRegistry );
 
-        Render::RasterPipelineDesc pipelineDesc = {};
-        pipelineDesc.AddShader( Render::PipelineShaderDesc( Render::PipelineStage::Vertex, ResourcePath( "data://shaders/imgui/imgui.vsdr" ) ) );
-        pipelineDesc.AddShader( Render::PipelineShaderDesc( Render::PipelineStage::Pixel, ResourcePath( "data://shaders/imgui/imgui.psdr" ) ) );
+        auto bufferDesc = RG::BufferDesc::NewSize( 512 );
+        auto handle0 = m_renderGraph.CreateResource( bufferDesc );
+        EE_ASSERT( handle0.GetDesc().m_desc.m_desireSize == 512 );
 
-        m_renderPipelineRegistry.RegisterRasterPipeline( pipelineDesc );
+        bufferDesc.m_desc.m_desireSize = 256;
+        auto handle1 = m_renderGraph.CreateResource( bufferDesc );
+        EE_ASSERT( handle1.GetDesc().m_desc.m_desireSize == 256 );
+
+        auto textureDesc = RG::TextureDesc::New2D( 512, 512, RHI::EPixelFormat::RGBA8Unorm );
+        auto handle2 = m_renderGraph.CreateResource( textureDesc );
+
+        {
+            auto node = m_renderGraph.AddNode( "Clear Color RT" );
+            auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
+            auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
+
+            auto pipelineDesc = Render::RasterPipelineDesc{};
+            pipelineDesc.AddShader( Render::PipelineShaderDesc{ Render::PipelineStage::Vertex, ResourcePath( "data://shaders/imgui/imgui.vsdr" ) });
+            pipelineDesc.AddShader( Render::PipelineShaderDesc{ Render::PipelineStage::Pixel, ResourcePath( "data://shaders/imgui/imgui.psdr" ) });
+            node.RegisterRasterPipeline( std::move( pipelineDesc ) );
+
+            EE_ASSERT( handle0_ref.GetDesc().m_desc.m_desireSize == 512 );
+            EE_ASSERT( handle1_ref.GetDesc().m_desc.m_desireSize == 256 );
+        }
+
+        {
+            auto node = m_renderGraph.AddNode( "Draw Shadow" );
+            auto handle1_ref = node.RasterRead( handle1, Render::RenderResourceBarrierState::ColorAttachmentRead );
+            auto handle2_ref = node.CommonWrite( handle2, Render::RenderResourceBarrierState::ColorAttachmentWrite );
+
+            EE_ASSERT( handle2_ref.GetDesc().m_desc.m_width == 512 );
+            EE_ASSERT( handle2_ref.GetDesc().m_desc.m_height == 512 );
+            EE_ASSERT( handle2_ref.GetDesc().m_desc.m_format == RHI::EPixelFormat::RGBA8Unorm );
+        }
+
+        //m_renderGraph.AddNode( "Draw Opache" );
+        //m_renderGraph.AddNode( "Draw Transparent" );
+        //m_renderGraph.AddNode( "Post Processing" );
+        //m_renderGraph.AddNode( "Draw Debug" );
+
+        m_renderGraph.LogGraphNodes();
+
+        m_renderGraph.Compile();
+        m_renderGraph.Execute();
+
+        if ( Trait::IsPointerIncludeSmartPointer<TSharedPtr<int>>::value )
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is a smart pointer!" );
+        }
+        else
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is not a smart pointer!" );
+        }
+
+        if ( Trait::IsPointerIncludeSmartPointer<int*>::value )
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is a smart pointer!" );
+        }
+        else
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is not a smart pointer!" );
+        }
+
+        if ( Trait::IsPointerIncludeSmartPointer<TUniquePtr<RG::BufferDesc>>::value )
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is a smart pointer!" );
+        }
+        else
+        {
+            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is not a smart pointer!" );
+        }
+
+        //-------------------------------------------------------------------------
 
         m_moduleInitialized = true;
 
@@ -430,6 +428,8 @@ namespace EE
     void EngineModule::ShutdownModule()
     {
         EE_ASSERT( m_pRenderDevice != nullptr );
+
+        //-------------------------------------------------------------------------
 
         m_renderPipelineRegistry.Shutdown();
 

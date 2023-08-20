@@ -160,7 +160,7 @@ namespace EE::Render
 
         TSet<PipelineShaderDesc>                        m_shaderDescs;
         RenderpassHandle                                m_pRenderpass;
-        // TODO: refactor this, since it contain unneccesary data.
+        // TODO: refactor this, since it contain unnecessary data.
         RasterizerState                                 m_rasterizerState;
         BlendState                                      m_blendState;
 

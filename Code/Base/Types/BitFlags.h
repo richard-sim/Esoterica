@@ -56,7 +56,7 @@ namespace EE
         template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
         EE_FORCE_INLINE void SetFlag( T enumValue )
         {
-            SetFlag( (uint8_t)enumValue );
+            SetFlag( (uint8_t) enumValue );
         }
 
         EE_FORCE_INLINE void SetFlag( uint8_t flag, bool value )
@@ -68,7 +68,7 @@ namespace EE
         template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
         EE_FORCE_INLINE void SetFlag( T enumValue, bool value )
         {
-            SetFlag( (uint8_t)enumValue, value );
+            SetFlag( (uint8_t) enumValue, value );
         }
 
         EE_FORCE_INLINE void SetAllFlags()
@@ -87,7 +87,7 @@ namespace EE
         template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
         EE_FORCE_INLINE bool IsFlagCleared( T enumValue )
         {
-            return IsFlagCleared( (uint8_t)enumValue );
+            return IsFlagCleared( (uint8_t) enumValue );
         }
 
         EE_FORCE_INLINE void ClearFlag( uint8_t flag )
@@ -99,7 +99,7 @@ namespace EE
         template<typename T>
         EE_FORCE_INLINE void ClearFlag( T enumValue )
         {
-            ClearFlag( (uint8_t)enumValue );
+            ClearFlag( (uint8_t) enumValue );
         }
 
         EE_FORCE_INLINE void ClearAllFlags()
@@ -118,7 +118,7 @@ namespace EE
         template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
         EE_FORCE_INLINE void FlipFlag( T enumValue )
         {
-            FlipFlag( (uint8_t)enumValue );
+            FlipFlag( (uint8_t) enumValue );
         }
 
 
@@ -165,7 +165,7 @@ namespace EE
 
         using BitFlags::BitFlags;
 
-        inline explicit TBitFlags( T value ) 
+        inline explicit TBitFlags( T value )
             : BitFlags( GetFlagMask( (uint8_t) value ) )
         {
             EE_ASSERT( (uint32_t) value < MaxFlags );
@@ -173,7 +173,8 @@ namespace EE
 
         inline TBitFlags( TBitFlags<T> const& flags )
             : BitFlags( flags.m_flags )
-        {}
+        {
+        }
 
         template<typename... Args, class Enable = std::enable_if_t<( ... && std::is_convertible_v<Args, T> )>>
         TBitFlags( Args&&... args )

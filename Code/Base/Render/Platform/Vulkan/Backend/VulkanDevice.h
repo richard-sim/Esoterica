@@ -1,10 +1,10 @@
 #pragma once
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 
 #include "Base/Memory/Pointers.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanResource.h"
-#include "VulkanTexture.h"
+#include "VulkanMemoryAllocator.h"
 
 #include "Base/RHI/RHIDevice.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
@@ -14,6 +14,7 @@
 namespace EE::RHI
 {
     class RHIShader;
+    class RHIBuffer;
     class RHITexture;
     class RHISemaphore;
 }
@@ -61,7 +62,11 @@ namespace EE::Render
 
 		class VulkanDevice final : public RHI::RHIDevice
 		{
-		public:
+            friend class VulkanMemoryAllocator;
+            friend class VulkanQueue;
+            friend class VulkanSwapchain;
+
+        public:
 
 			struct InitConfig
 			{
@@ -90,20 +95,8 @@ namespace EE::Render
             virtual RHI::RHITexture* CreateTexture( RHI::RHITextureCreateDesc const& createDesc ) override;
             virtual void             DestroyTexture( RHI::RHITexture* pTexture ) override;
 
-			// TODO: design consideration.
-			// 
-			// 1. void DestroyVSemaphore( VulkanSemaphore& semaphore );
-			// 
-			//	Accept a reference to a vulkan resource object, destroy will set its inner pointer to nullptr.
-			// 
-			// 2. void DestroyVSemaphore( VulkanSemaphore semaphore );
-			// 
-			// Since vulkan resource objects are noncopyable, user have to call std::move on outer resource to destroy resource.
-			// 
-			// It seems like that both ensure vulkan resource object being invalid after the destruction?
-			//
-			//VulkanSemaphore CreateVSemaphore();
-			//void DestroyVSemaphore( VulkanSemaphore& semaphore );
+            virtual RHI::RHIBuffer* CreateBuffer( RHI::RHIBufferCreateDesc const& createDesc ) override;
+            virtual void            DestroyBuffer( RHI::RHIBuffer* pBuffer ) override;
 
             virtual RHI::RHISemaphore* CreateSyncSemaphore( RHI::RHISemaphoreCreateDesc const& createDesc ) override;
             virtual void DestroySyncSemaphore( RHI::RHISemaphore* pSemaphore ) override;
@@ -119,20 +112,23 @@ namespace EE::Render
 			bool CheckAndCollectDeviceLayers( InitConfig const& config );
 			bool CheckAndCollectDeviceExtensions( InitConfig const& config );
 			bool CreateDevice( InitConfig const& config );
+
+            // Utility functions
+            //-------------------------------------------------------------------------
 		
+            bool VulkanDevice::GetMemoryType( uint32_t typeBits, VkMemoryPropertyFlags properties, uint32_t& memTypeFound ) const;
+
 		private:
 
-			friend class VulkanQueue;
-			friend class VulkanSwapchain;
+			TSharedPtr<VulkanInstance>			    m_pInstance = nullptr;
+            TSharedPtr<VulkanSurface>               m_pSurface = nullptr;
 
-			TSharedPtr<VulkanInstance>			m_pInstance = nullptr;
-            TSharedPtr<VulkanSurface>           m_pSurface = nullptr;
+			VkDevice							    m_pHandle = nullptr;
+			CollectedInfo						    m_collectInfos;
+			VulkanPhysicalDevice				    m_physicalDevice;
 
-			VkDevice							m_pHandle = nullptr;
-			CollectedInfo						m_collectInfos;
-			VulkanPhysicalDevice				m_physicalDevice;
-
-			VulkanQueue							m_globalGraphicQueue;
+			VulkanQueue							    m_globalGraphicQueue;
+            VulkanMemoryAllocator                   m_globalMemoryAllcator;
 		};
 	}
 }

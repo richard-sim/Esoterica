@@ -4,7 +4,7 @@
 
 namespace EE
 {
-    enum class LoadingStatus
+    enum class LoadingStatus : uint8_t
     {
         Unloaded = 0,
         Loading,

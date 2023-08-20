@@ -14,7 +14,7 @@ namespace EE
 
 		//-------------------------------------------------------------------------
 
-		RGNodeResource::RGNodeResource( RGResourceSlotID slotID, Render::RenderResourceAccessState access )
+		RGNodeResource::RGNodeResource( _Impl::RGResourceSlotID slotID, Render::RenderResourceAccessState access )
 			: m_slotID( slotID ), m_passAccess( access )
 		{}
 

@@ -12,7 +12,7 @@
 namespace EE::Render
 {
     // Specified the texel usage aspect.
-    enum class ImageAspectFlags
+    enum class ImageAspectFlags : uint8_t
     {
         Color = 0, // Used as color attachment.
         Depth, // Used as depth attachment.

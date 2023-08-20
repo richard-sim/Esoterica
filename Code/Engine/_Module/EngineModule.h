@@ -91,9 +91,6 @@ namespace EE
         SystemRegistry                                  m_systemRegistry;
         Input::InputSystem                              m_inputSystem;
 
-        RG::RenderGraph                                 m_renderGraph;
-        Render::PipelineRegistry                        m_renderPipelineRegistry;
-
         // Resource
         Resource::ResourceProvider*                     m_pResourceProvider = nullptr;
         Resource::ResourceSystem                        m_resourceSystem = Resource::ResourceSystem( m_taskSystem );
@@ -108,6 +105,9 @@ namespace EE
         EntityModel::EntityCollectionLoader             m_entityCollectionLoader;
 
         // Rendering
+        RG::RenderGraph                                 m_renderGraph;
+        Render::PipelineRegistry                        m_renderPipelineRegistry;
+
         Render::RenderDevice*                           m_pRenderDevice = nullptr;
         Render::MeshLoader                              m_renderMeshLoader;
         Render::ShaderLoader                            m_shaderLoader;

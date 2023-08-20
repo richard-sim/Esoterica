@@ -400,9 +400,6 @@
     <ClCompile Include="Logging\Platform\Log_Win32.cpp">
       <Filter>Logging\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="RHI\RHIDevice.cpp">
-      <Filter>RHI</Filter>
-    </ClCompile>
     <ClCompile Include="RHI\RHISwapchain.cpp">
       <Filter>RHI</Filter>
     </ClCompile>
@@ -439,6 +436,7 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp">
       <Filter>Render\Platform\Vulkan\Backend\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1959,7 +1957,7 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h">
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.h">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h">
@@ -1983,6 +1981,9 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
+    <ClInclude Include="RHI\Resource\RHIBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

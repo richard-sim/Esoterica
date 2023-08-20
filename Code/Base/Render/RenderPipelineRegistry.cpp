@@ -12,8 +12,8 @@ namespace EE::Render
 
 	PipelineRegistry::~PipelineRegistry()
 	{
-		EE_ASSERT( m_rasterPipelineStates.empty() );
-		EE_ASSERT( m_rasterPipelineHandles.empty() );
+		EE_ASSERT( m_rasterPipelineStatesCache.empty() );
+		EE_ASSERT( m_rasterPipelineHandlesCache.empty() );
 	}
 
 	//-------------------------------------------------------------------------
@@ -22,7 +22,7 @@ namespace EE::Render
 	{
 		EE_ASSERT( !m_isInitialized );
 
-		m_pTaskSystem = systemRegistry.GetSystem<TaskSystem>();
+        //m_pTaskSystem = systemRegistry.GetSystem<TaskSystem>();
 		m_pResourceSystem = systemRegistry.GetSystem<Resource::ResourceSystem>();
 
 		EE_ASSERT( m_pResourceSystem != nullptr );
@@ -51,8 +51,8 @@ namespace EE::Render
 		// Already exists, immediately return
 		//-------------------------------------------------------------------------
 
-		auto iter = m_rasterPipelineHandles.find( rasterPipelineDesc );
-		if ( iter != m_rasterPipelineHandles.end() )
+		auto iter = m_rasterPipelineHandlesCache.find( rasterPipelineDesc );
+		if ( iter != m_rasterPipelineHandlesCache.end() )
 		{
 			return iter->second;
 		}
@@ -60,7 +60,7 @@ namespace EE::Render
 		// Not exists, create new entry
 		//-------------------------------------------------------------------------
 
-		auto nextId = static_cast<uint32_t>( m_rasterPipelineStates.size() ) + 1;
+		auto nextId = static_cast<uint32_t>( m_rasterPipelineStatesCache.size() ) + 1;
 		PipelineHandle newHandle = PipelineHandle( PipelineType::Raster, nextId );
 
 		auto pEntry = MakeShared<RasterPipelineEntry>();
@@ -100,10 +100,10 @@ namespace EE::Render
 				}
 			}
 
-			m_rasterPipelineStates.Add( pEntry );
-			m_rasterPipelineHandles.insert( { rasterPipelineDesc, newHandle } );
+			m_rasterPipelineStatesCache.Add( pEntry );
+			m_rasterPipelineHandlesCache.insert( { rasterPipelineDesc, newHandle } );
 
-			EE_ASSERT( m_rasterPipelineStates.size() == m_rasterPipelineHandles.size() );
+			EE_ASSERT( m_rasterPipelineStatesCache.size() == m_rasterPipelineHandlesCache.size() );
 
 			m_waitToSubmitRasterPipelines.emplace_back( pEntry );
 
@@ -207,12 +207,16 @@ namespace EE::Render
 		//	};
 		//}
 
+        // Update all loading pipelines and check to see if loading has success
+        //-------------------------------------------------------------------------
+
 		if ( !m_waitToLoadRasterPipelines.empty() )
 		{
 			for ( auto beg = m_waitToLoadRasterPipelines.begin(); beg != m_waitToLoadRasterPipelines.end(); ++beg )
 			{
 				auto const& pEntry = *beg;
 
+                // TODO: If not successfully loaded? check HasLoadFailed().
 				if ( pEntry->m_vertexShader.IsLoaded() && pEntry->m_pixelShader.IsLoaded() )
 				{
 					if ( m_waitToLoadRasterPipelines.size() == 1 )
@@ -232,9 +236,9 @@ namespace EE::Render
 	void PipelineRegistry::UnloadAllPipelineShaders()
 	{
 		EE_ASSERT( m_pResourceSystem );
-		EE_ASSERT( m_rasterPipelineStates.size() == m_rasterPipelineHandles.size() );
+		EE_ASSERT( m_rasterPipelineStatesCache.size() == m_rasterPipelineHandlesCache.size() );
 
-		for ( auto const& pPipeline : m_rasterPipelineStates )
+		for ( auto const& pPipeline : m_rasterPipelineStatesCache )
 		{
 			if ( pPipeline->m_vertexShader.IsLoaded() )
 			{
@@ -246,8 +250,8 @@ namespace EE::Render
 				m_pResourceSystem->UnloadResource( pPipeline->m_pixelShader, Resource::ResourceRequesterID( pPipeline->GetID().m_ID ) );
 			}
 		}
-		m_rasterPipelineStates.clear();
-		m_rasterPipelineHandles.clear();
+		m_rasterPipelineStatesCache.clear();
+		m_rasterPipelineHandlesCache.clear();
 	}
 }
 

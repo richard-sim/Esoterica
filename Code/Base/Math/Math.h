@@ -222,10 +222,16 @@ namespace EE
             return isnan( n ) || isinf( n );
         }
 
+        template<typename T>
+        EE_FORCE_INLINE typename std::enable_if_t<std::is_unsigned_v<T>, T> MinValueAlignTo( T value, T alignment )
+        {
+            return ( ( value + alignment - 1 ) / alignment ) * alignment;
+        }
+
         //-------------------------------------------------------------------------
 
         // Note: returns true for 0
-        EE_FORCE_INLINE bool IsPowerOf2( int32_t x ) { return ( x & ( x - 1 ) ) == 0; }
+        EE_FORCE_INLINE bool IsPowerOfTwo( int32_t x ) { return ( x & ( x - 1 ) ) == 0; }
 
         EE_FORCE_INLINE uint32_t GetClosestPowerOfTwo( uint32_t x )
         {

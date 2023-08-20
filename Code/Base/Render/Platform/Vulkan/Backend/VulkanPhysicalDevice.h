@@ -48,6 +48,10 @@ namespace EE::Render
 
 		class VulkanPhysicalDevice
 		{
+            friend class VulkanDevice;
+            friend class VulkanSwapchain;
+            friend class VulkanMemoryAllocator;
+
 		public:
 
 			typedef int GPUPickScore;
@@ -67,9 +71,6 @@ namespace EE::Render
 			void CalculatePickScore( TSharedPtr<VulkanSurface> const& pSurface );
 
 		private:
-
-			friend class VulkanDevice;
-			friend class VulkanSwapchain;
 
 			VkPhysicalDevice					m_pHandle = nullptr;
 

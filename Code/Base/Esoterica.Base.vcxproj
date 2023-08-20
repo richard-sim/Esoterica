@@ -16,7 +16,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
+    <ClInclude Include="RHI\Resource\RHIBuffer.h" />
     <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h" />
     <ClInclude Include="RHI\Resource\RHISemaphore.h" />
     <ClInclude Include="RHI\Resource\RHIShader.h" />
@@ -86,7 +89,7 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllcator.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
@@ -540,9 +543,9 @@
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Math\Platform\Math_Win32.h" />
     <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" />
     <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp" />
     <ClCompile Include="RHI\RHISwapchain.cpp" />
-    <ClCompile Include="RHI\RHIDevice.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
