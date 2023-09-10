@@ -217,6 +217,8 @@ namespace EE::Render
         None,
     };
 
+    constexpr static size_t NumPipelineStages = static_cast<size_t>( PipelineStage::None );
+
     struct ScissorRect
     {
         int32_t m_left;

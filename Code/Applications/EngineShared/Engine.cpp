@@ -366,7 +366,7 @@ namespace EE
                 //-------------------------------------------------------------------------
 
                 {
-                    m_pRenderPipelineResgistry->LoadAndUpdatePipelines();
+                    m_pRenderPipelineResgistry->LoadAndUpdatePipelines( m_pRenderDevice->GetRHIDevice() );
                 }
 
                 //-------------------------------------------------------------------------

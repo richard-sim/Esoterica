@@ -28,6 +28,8 @@ namespace EE::Physics
     //-------------------------------------------------------------------------
     // Serialized physical material settings
 
+    #pragma warning( push )
+    #pragma warning( disable:5267 ) // IReflectedType has user-defined destructor and MaterialSettings needs to has user-defined ctor, too. (Rule Of Three)
     struct EE_ENGINE_API MaterialSettings : public IReflectedType
     {
         EE_REFLECT_TYPE( MaterialSettings );
@@ -65,6 +67,7 @@ namespace EE::Physics
         EE_REFLECT();
         CombineMode                             m_restitutionCombineMode = CombineMode::Average;
     };
+    #pragma warning( pop )
 
     // Empty resource - acts as a placeholder for the actual data being loaded - see PhysicsMaterialDatabaseLoader for details
     class EE_ENGINE_API MaterialDatabase final : public Resource::IResource

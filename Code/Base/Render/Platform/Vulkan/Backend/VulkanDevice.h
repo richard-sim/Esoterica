@@ -1,11 +1,13 @@
 #pragma once
 #if defined(EE_VULKAN)
 
-#include "Base/Memory/Pointers.h"
 #include "VulkanPhysicalDevice.h"
-#include "VulkanResource.h"
 #include "VulkanMemoryAllocator.h"
-
+#include "VulkanSampler.h"
+#include "Base/Types/Map.h"
+#include "Base/Types/HashMap.h"
+#include "Base/Memory/Pointers.h"
+#include "Base/Resource/ResourcePtr.h"
 #include "Base/RHI/RHIDevice.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 
@@ -19,12 +21,15 @@ namespace EE::RHI
     class RHISemaphore;
 }
 
+//-------------------------------------------------------------------------
+
 namespace EE::Render
 {
 	namespace Backend
 	{
 		class VulkanInstance;
 		class VulkanSurface;
+        class VulkanPipelineState;
 
 		class VulkanQueue
 		{
@@ -98,37 +103,68 @@ namespace EE::Render
             virtual RHI::RHIBuffer* CreateBuffer( RHI::RHIBufferCreateDesc const& createDesc ) override;
             virtual void            DestroyBuffer( RHI::RHIBuffer* pBuffer ) override;
 
-            virtual RHI::RHISemaphore* CreateSyncSemaphore( RHI::RHISemaphoreCreateDesc const& createDesc ) override;
-            virtual void DestroySyncSemaphore( RHI::RHISemaphore* pSemaphore ) override;
-
-            //-------------------------------------------------------------------------
-
             virtual RHI::RHIShader* CreateShader( RHI::RHIShaderCreateDesc const& createDesc ) override;
             virtual void            DestroyShader( RHI::RHIShader* pShader ) override;
 
+            virtual RHI::RHISemaphore* CreateSyncSemaphore( RHI::RHISemaphoreCreateDesc const& createDesc ) override;
+            virtual void               DestroySyncSemaphore( RHI::RHISemaphore* pSemaphore ) override;
+
+            //-------------------------------------------------------------------------
+
+            virtual RHI::RHIPipelineState* CreateRasterPipelineState( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders ) override;
+            virtual void                   DestroyRasterPipelineState( RHI::RHIPipelineState* pPipelineState ) override;
+
 		private:
+
+            using CombinedShaderBindingLayout = TMap<uint32_t, Render::Shader::ResourceBinding>;
+            using CombinedShaderSetLayout = TFixedMap<uint32_t, CombinedShaderBindingLayout, Render::NumMaxShaderResourceSetLayout>;
+
+            struct VulkanDescriptorSetLayoutInfos
+            {
+                TFixedVector<VkDescriptorSetLayout, Render::NumMaxShaderResourceSetLayout>                  m_vkDescriptorSetLayouts;
+                TFixedVector<TMap<uint32_t, VkDescriptorType>, Render::NumMaxShaderResourceSetLayout>       m_SetLayoutsVkDescriptorTypes;
+            };
+
+            constexpr static uint32_t BindlessDescriptorSetDesiredSampledImageCount = 1024;
+            constexpr static uint32_t DescriptorSetReservedSampledImageCount = 32;
 
             void PickPhysicalDeviceAndCreate( InitConfig const& config );
 			bool CheckAndCollectDeviceLayers( InitConfig const& config );
 			bool CheckAndCollectDeviceExtensions( InitConfig const& config );
 			bool CreateDevice( InitConfig const& config );
 
-            // Utility functions
+            // Pipeline State
+            //-------------------------------------------------------------------------
+
+            bool CreatePipelineStateLayout( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders, VulkanPipelineState* pPipelineState );
+            CombinedShaderSetLayout CombinedAllShaderSetLayouts( CompiledShaderArray const& compiledShaders );
+            TPair<VkDescriptorSetLayout, TMap<uint32_t, VkDescriptorType>> CreateDescriptorSetLayout( uint32_t set, CombinedShaderBindingLayout const& combinedSetBindingLayout, VkShaderStageFlags stage );
+
+            // Static Resources
+            //-------------------------------------------------------------------------
+            
+            void CreateStaticSamplers();
+            void DestroyStaticSamplers();
+
+            // Utility Functions
             //-------------------------------------------------------------------------
 		
             bool VulkanDevice::GetMemoryType( uint32_t typeBits, VkMemoryPropertyFlags properties, uint32_t& memTypeFound ) const;
+            uint32_t GetMaxBindlessDescriptorSampledImageCount() const;
 
 		private:
 
-			TSharedPtr<VulkanInstance>			    m_pInstance = nullptr;
-            TSharedPtr<VulkanSurface>               m_pSurface = nullptr;
+			TSharedPtr<VulkanInstance>			            m_pInstance = nullptr;
+            TSharedPtr<VulkanSurface>                       m_pSurface = nullptr;
 
-			VkDevice							    m_pHandle = nullptr;
-			CollectedInfo						    m_collectInfos;
-			VulkanPhysicalDevice				    m_physicalDevice;
+			VkDevice							            m_pHandle = nullptr;
+			CollectedInfo						            m_collectInfos;
+			VulkanPhysicalDevice				            m_physicalDevice;
 
-			VulkanQueue							    m_globalGraphicQueue;
-            VulkanMemoryAllocator                   m_globalMemoryAllcator;
+			VulkanQueue							            m_globalGraphicQueue;
+            VulkanMemoryAllocator                           m_globalMemoryAllcator;
+
+            THashMap<VulkanStaticSamplerDesc, VkSampler>    m_immutableSamplers;
 		};
 	}
 }

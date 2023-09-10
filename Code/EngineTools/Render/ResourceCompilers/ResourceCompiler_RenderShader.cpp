@@ -243,6 +243,32 @@ namespace EE::Render
         return true;
     }
 
+    static Shader::ReflectedBindingCount GetBindingCount( spirv_cross::SPIRType const& spirvType )
+    {
+        Shader::ReflectedBindingCount bindingCount;
+        if ( spirvType.array.empty() )
+        {
+            bindingCount.m_type = Shader::BindingCountType::One;
+            bindingCount.m_count = 1;
+        }
+        else
+        {
+            size_t const count = static_cast<size_t>( spirvType.array[0] );
+
+            if ( count != 0 )
+            {
+                bindingCount.m_type = Shader::BindingCountType::Static;
+                bindingCount.m_count = count;
+            }
+            else
+            {
+                bindingCount.m_type = Shader::BindingCountType::Dynamic;
+                bindingCount.m_count = std::numeric_limits<size_t>::max();
+            }
+        }
+        return bindingCount;
+    }
+
     static bool GetResourceBindingDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<TVector<Shader::ResourceBinding>>& resourceBindings )
     {
         auto shaderResources = spirvCompiler.get_shader_resources();
@@ -254,8 +280,12 @@ namespace EE::Render
             char const* name = spirvCompiler.get_name( ubo.id ).c_str();
             auto const set = spirvCompiler.get_decoration( ubo.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( ubo.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( ubo.type_id );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+            auto bindingCount = GetBindingCount( spirvType );
+            Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::UniformBuffer;
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
         }
 
         for ( auto& sbo : shaderResources.storage_buffers )
@@ -263,8 +293,12 @@ namespace EE::Render
             char const* name = spirvCompiler.get_name( sbo.id ).c_str();
             auto const set = spirvCompiler.get_decoration( sbo.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( sbo.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( sbo.type_id );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+            auto bindingCount = GetBindingCount( spirvType );
+            Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::StorageBuffer;
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
         }
 
         for ( auto& img : shaderResources.sampled_images )
@@ -272,8 +306,12 @@ namespace EE::Render
             char const* name = spirvCompiler.get_name( img.id ).c_str();
             auto const set = spirvCompiler.get_decoration( img.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( img.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( img.type_id );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+            auto bindingCount = GetBindingCount( spirvType );
+            Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::CombinedImageSampler;
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
         }
 
         for ( auto& img : shaderResources.separate_images )
@@ -281,8 +319,21 @@ namespace EE::Render
             char const* name = spirvCompiler.get_name( img.id ).c_str();
             auto const set = spirvCompiler.get_decoration( img.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( img.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( img.type_id );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+            auto bindingCount = GetBindingCount( spirvType );
+
+            Shader::ReflectedBindingResourceType resourceType;
+            if ( spirvType.image.dim == spv::DimBuffer )
+            {
+                resourceType = Shader::ReflectedBindingResourceType::UniformTexelBuffer;
+            }
+            else
+            {
+                resourceType = Shader::ReflectedBindingResourceType::SampledImage;
+            }
+            
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
         }
 
         for ( auto& img : shaderResources.storage_images )
@@ -290,8 +341,20 @@ namespace EE::Render
             char const* name = spirvCompiler.get_name( img.id ).c_str();
             auto const set = spirvCompiler.get_decoration( img.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( img.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( img.type_id );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+            Shader::ReflectedBindingResourceType resourceType;
+            auto bindingCount = GetBindingCount( spirvType );
+            if ( spirvType.image.dim == spv::DimBuffer )
+            {
+                resourceType = Shader::ReflectedBindingResourceType::StorageTexelBuffer;
+            }
+            else
+            {
+                resourceType = Shader::ReflectedBindingResourceType::StorageImage;
+            }
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
         }
 
         for ( auto& sampler : shaderResources.separate_samplers )
@@ -299,18 +362,22 @@ namespace EE::Render
             char const* name = spirvCompiler.get_name( sampler.id ).c_str();
             auto const set = spirvCompiler.get_decoration( sampler.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( sampler.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( sampler.type_id );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+            auto bindingCount = GetBindingCount( spirvType );
+            Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::Sampler;
+
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
         }
 
-        for ( auto& acc : shaderResources.acceleration_structures )
-        {
-            char const* name = spirvCompiler.get_name( acc.id ).c_str();
-            auto const set = spirvCompiler.get_decoration( acc.id, spv::DecorationDescriptorSet );
-            auto const binding = spirvCompiler.get_decoration( acc.id, spv::DecorationBinding );
+        //for ( auto& acc : shaderResources.acceleration_structures )
+        //{
+        //    char const* name = spirvCompiler.get_name( acc.id ).c_str();
+        //    auto const set = spirvCompiler.get_decoration( acc.id, spv::DecorationDescriptorSet );
+        //    auto const binding = spirvCompiler.get_decoration( acc.id, spv::DecorationBinding );
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
-        }
+        //    bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding } );
+        //}
 
         VectorSort( bindings, [] ( auto const& lhs, auto const& rhs )
         {
@@ -333,9 +400,30 @@ namespace EE::Render
         return true;
     }
 
+    static bool GetPushConstantsSpirv( spirv_cross::Compiler& spirvCompiler, Shader::PushConstants& pushConstants  )
+    {
+        auto shaderResources = spirvCompiler.get_shader_resources();
+
+        for ( auto& pc : shaderResources.push_constant_buffers )
+        {
+            char const* name = spirvCompiler.get_name( pc.id ).c_str();
+            auto const& spirvType = spirvCompiler.get_type( pc.type_id );
+
+            pushConstants.m_ID = Hash::GetHash32(name);
+            pushConstants.m_size = static_cast<uint32_t>( spirvCompiler.get_declared_struct_size( spirvType ) );
+            // TODO: offset?
+            pushConstants.m_offset = 0;
+
+            // Note: only take the first one for now.
+            break;
+        }
+
+        return true;
+    }
+
     //-------------------------------------------------------------------------
 
-    Resource::CompilationResult Render::ShaderCompiler::CompileShader( Resource::CompileContext const& ctx, int32_t compilerVersion ) const
+    Resource::CompilationResult ShaderCompiler::CompileShader( Resource::CompileContext const& ctx, int32_t compilerVersion ) const
     {
         ShaderResourceDescriptor resourceDescriptor;
         if ( !Resource::ResourceDescriptor::TryReadFromFile( *m_pTypeRegistry, ctx.m_inputFilePath, resourceDescriptor ) )
@@ -349,7 +437,20 @@ namespace EE::Render
         }
         else if ( resourceDescriptor.m_shaderBackendLanguage == ShaderBackendLanguage::Vulkan )
         {
-            return CompileVulkanShader( ctx, resourceDescriptor, compilerVersion );
+            TSharedPtr<Shader> pShader = nullptr;
+            Resource::CompilationResult result = CompileVulkanShader( ctx, resourceDescriptor, pShader );
+            if ( result == Resource::CompilationResult::Failure )
+            {
+                return result;
+            }
+
+            result = ReflectVulkanShader( ctx, pShader );
+            if ( result == Resource::CompilationResult::Failure )
+            {
+                return result;
+            }
+
+            return WriteShaderToFile( ctx, pShader, compilerVersion );
         }
         else
         {
@@ -487,7 +588,7 @@ namespace EE::Render
         }
     }
 
-    Resource::CompilationResult ShaderCompiler::CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const
+    Resource::CompilationResult ShaderCompiler::CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, TSharedPtr<Shader>& OutShader ) const
     {
         uint32_t shaderCompileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
         #ifdef EE_DEBUG
@@ -542,35 +643,35 @@ namespace EE::Render
             return Resource::CompilationResult::Failure;
         }
 
-        // Shader reflection
-        //-------------------------------------------------------------------------
+        OutShader = pShader;
+        return Resource::CompilationResult::Success;
+    }
 
-        spirv_cross::Compiler spirvCompiler( reinterpret_cast<uint32_t const*>( pShader->m_byteCode.data() ), pShader->m_byteCode.size() / sizeof(uint32_t) );
-        
+    Resource::CompilationResult ShaderCompiler::ReflectVulkanShader( Resource::CompileContext const& ctx, TSharedPtr<Shader>& pShader ) const
+    {
+        EE_ASSERT( !pShader->m_byteCode.empty() );
+        spirv_cross::Compiler spirvCompiler( reinterpret_cast<uint32_t const*>( pShader->m_byteCode.data() ), pShader->m_byteCode.size() / sizeof( uint32_t ) );
+
         if ( !GetCBufferDescsSpirv( spirvCompiler, pShader->m_cbuffers ) )
         {
-            return Error( "Failed to get cbuffer descs" );
+            return Error( "Failed to get cbuffer!" );
         }
 
         if ( !GetResourceBindingDescsSpirv( spirvCompiler, pShader->m_resourceBindings ) )
         {
-            return Error( "Failed to get resource binding descs" );
+            return Error( "Failed to get resource bindings!" );
         }
 
-        // If vertex shader
-        //if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
-        //{
-        //    auto pVertexShader = reinterpret_cast<VertexShader*>( pShader.get() );
-        //    // Get vertex buffer input element descs
-        //    if ( !GetInputLayoutDesc( pShaderReflection, pVertexShader->m_vertexLayoutDesc ) )
-        //    {
-        //        return Error( "Failed to get input element descs for vertex buffer" );
-        //    }
-        //}
+        if ( !GetPushConstantsSpirv( spirvCompiler, pShader->m_pushConstants ) )
+        {
+            return Error( "Failed to get push constants!" );
+        }
+        
+        return Resource::CompilationResult::Success;
+    }
 
-        // Output shader resource
-        //-------------------------------------------------------------------------
-
+    Resource::CompilationResult ShaderCompiler::WriteShaderToFile( Resource::CompileContext const& ctx, TSharedPtr<Shader> const& pShader, int32_t compilerVersion ) const
+    {
         Serialization::BinaryOutputArchive archive;
 
         if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
@@ -597,44 +698,46 @@ namespace EE::Render
         {
             return CompilationFailed( ctx );
         }
+
+        return Resource::CompilationResult::Success;
     }
 
     //-------------------------------------------------------------------------
 
     VertexShaderCompiler::VertexShaderCompiler()
-        : ShaderCompiler( "VertexShaderCompiler", s_version )
+        : ShaderCompiler( "VertexShaderCompiler", ShaderCompiler::s_version )
     {
         m_outputTypes.push_back( VertexShader::GetStaticResourceTypeID() );
     }
 
     Resource::CompilationResult VertexShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
     {
-        return CompileShader( ctx, s_version );
+        return CompileShader( ctx, ShaderCompiler::s_version );
     }
 
     //-------------------------------------------------------------------------
 
     PixelShaderCompiler::PixelShaderCompiler()
-        : ShaderCompiler( "PixelShaderCompiler", s_version )
+        : ShaderCompiler( "PixelShaderCompiler", ShaderCompiler::s_version )
     {
         m_outputTypes.push_back( PixelShader::GetStaticResourceTypeID() );
     }
 
     Resource::CompilationResult PixelShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
     {
-        return CompileShader( ctx, s_version );
+        return CompileShader( ctx, ShaderCompiler::s_version );
     }
 
     //-------------------------------------------------------------------------
 
     ComputeShaderCompiler::ComputeShaderCompiler()
-        : ShaderCompiler( "ComputeShaderCompiler", s_version )
+        : ShaderCompiler( "ComputeShaderCompiler", ShaderCompiler::s_version )
     {
         m_outputTypes.push_back( ComputeShader::GetStaticResourceTypeID() );
     }
 
     Resource::CompilationResult ComputeShaderCompiler::Compile( Resource::CompileContext const& ctx ) const
     {
-        return CompileShader( ctx, s_version );
+        return CompileShader( ctx, ShaderCompiler::s_version );
     }
 }

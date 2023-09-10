@@ -17,9 +17,12 @@
   <ItemGroup>
     <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
     <ClInclude Include="RHI\Resource\RHIBuffer.h" />
+    <ClInclude Include="RHI\Resource\RHIPipelineState.h" />
     <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h" />
     <ClInclude Include="RHI\Resource\RHISemaphore.h" />
     <ClInclude Include="RHI\Resource\RHIShader.h" />
@@ -27,6 +30,7 @@
     <ClInclude Include="RHI\RHISwapchain.h" />
     <ClInclude Include="RHI\Resource\RHIResource.h" />
     <ClInclude Include="RHI\RHIDevice.h" />
+    <ClInclude Include="Types\Map.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
     <ClInclude Include="Encoding\Quantization.h" />
@@ -587,7 +591,6 @@
     <ClCompile Include="RenderGraph\RenderGraph.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphContext.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphNode.cpp" />
-    <ClCompile Include="RenderGraph\RenderGraphResource.cpp" />
     <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp" />
     <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" />

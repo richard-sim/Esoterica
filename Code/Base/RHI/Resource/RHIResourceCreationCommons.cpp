@@ -1,4 +1,3 @@
-#if defined(EE_VULKAN)
 #include "RHIResourceCreationCommons.h"
 
 #include "Base/Math/Math.h"
@@ -104,28 +103,30 @@ namespace EE::RHI
 
 	bool RHITextureCreateDesc::IsValid() const
 	{
-        bool result = m_height != 0
+        bool isValid = m_height != 0
             && m_width != 0
             && m_depth != 0
             && m_mipmap != 0
             && m_array != 0;
 
-        if ( !result )
-            return result;
+        if ( !isValid )
+        {
+            return isValid;
+        }
 
         switch ( m_type )
         {
-            case EE::RHI::ETextureType::T1D:
+            case ETextureType::T1D:
             break;
-            case EE::RHI::ETextureType::T1DArray:
+            case ETextureType::T1DArray:
             break;
-            case EE::RHI::ETextureType::T2D:
+            case ETextureType::T2D:
             break;
-            case EE::RHI::ETextureType::T2DArray:
+            case ETextureType::T2DArray:
             break;
-            case EE::RHI::ETextureType::T3D:
+            case ETextureType::T3D:
             break;
-            case EE::RHI::ETextureType::TCubemap:
+            case ETextureType::TCubemap:
             {
                 return m_array == 6
                     && m_width == m_height
@@ -137,7 +138,12 @@ namespace EE::RHI
             break;
         }
 
-        return true;
+        isValid = !(m_memoryUsage == ERenderResourceMemoryUsage::CPUCopy
+            || m_memoryUsage == ERenderResourceMemoryUsage::CPUCopy
+            || m_memoryUsage == ERenderResourceMemoryUsage::CPUToGPU
+            || m_memoryUsage == ERenderResourceMemoryUsage::GPUToCPU);
+
+        return isValid;
 	}
 
     //-------------------------------------------------------------------------
@@ -154,7 +160,8 @@ namespace EE::RHI
 
         RHIBufferCreateDesc bufferDesc = {};
         bufferDesc.m_desireSize = sizeInByte;
-        bufferDesc.m_memoryUsage = ERenderResourceMemoryUsage::CPUOnly;
+        bufferDesc.m_usage.SetFlag(EBufferUsage::Uniform);
+        bufferDesc.m_memoryUsage = ERenderResourceMemoryUsage::CPUToGPU;
         return bufferDesc;
     }
 
@@ -166,7 +173,8 @@ namespace EE::RHI
 
         RHIBufferCreateDesc bufferDesc = {};
         bufferDesc.m_desireSize = aligned;
-        bufferDesc.m_memoryUsage = ERenderResourceMemoryUsage::CPUOnly;
+        bufferDesc.m_usage.SetFlag( EBufferUsage::Uniform );
+        bufferDesc.m_memoryUsage = ERenderResourceMemoryUsage::CPUToGPU;
         return bufferDesc;
     }
 
@@ -205,5 +213,12 @@ namespace EE::RHI
         return bufferDesc;
     }
 
+    //-------------------------------------------------------------------------
+
+    RHIPipelineShader::RHIPipelineShader( ResourcePath shaderPath, String entryName )
+        : m_entryName( entryName )
+    {
+        SetShaderPath( shaderPath );
+        EE_ASSERT( m_shaderPath.IsValid() && m_shaderPath.IsFile() );
+    }
 }
-#endif

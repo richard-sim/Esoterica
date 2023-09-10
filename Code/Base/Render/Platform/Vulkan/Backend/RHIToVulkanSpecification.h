@@ -23,10 +23,14 @@ namespace EE::Render
         VkImageType ToVulkanImageType( RHI::ETextureType type );
         VkSampleCountFlagBits ToVulkanSampleCountFlags( TBitFlags<RHI::ETextureSampleCount> sample );
         VkImageUsageFlagBits ToVulkanImageUsageFlags( TBitFlags<RHI::ETextureUsage> usage );
-        VkImageLayout ToVulkanImageLayout();
+        //VkImageLayout ToVulkanImageLayout();
         VkImageTiling ToVulkanImageTiling( RHI::ETextureMemoryTiling tiling );
         VkImageCreateFlagBits ToVulkanImageCreateFlags( TBitFlags<RHI::ETextureCreateFlag> createFlag );
         VkBufferUsageFlagBits ToVulkanBufferUsageFlags( TBitFlags<RHI::EBufferUsage> usage );
+
+        //-------------------------------------------------------------------------
+
+        VkDescriptorType ToVulkanDescriptorType( Render::Shader::ReflectedBindingResourceType reflectedBindingType );
     }
 }
 

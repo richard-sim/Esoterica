@@ -52,7 +52,7 @@ namespace EE::Render
 
     public:
 
-        EE_REFLECT() ShaderType                      m_shaderType = ShaderType::Vertex;
+        EE_REFLECT() ShaderType                        m_shaderType = ShaderType::Vertex;
         EE_REFLECT() ShaderBackendLanguage             m_shaderBackendLanguage = ShaderBackendLanguage::DX11;
         EE_REFLECT() ShaderLanguage                    m_shaderLanguage = ShaderLanguage::Hlsl;
         EE_REFLECT() ResourcePath                      m_shaderPath;

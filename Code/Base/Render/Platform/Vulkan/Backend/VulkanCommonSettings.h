@@ -3,7 +3,7 @@
 
 #include "Base/Types/Arrays.h"
 
-#define VK_SUCCEEDED(func) do { if ( ((VkResult) func) != VK_SUCCESS ) { EE_TRACE_MSG( "Vulkan Failed At: (" EE_FILE_LINE ")" ); EE_HALT(); } } while(0)
+#define VK_SUCCEEDED(func) do { if ( ((VkResult) func) != VK_SUCCESS ) { EE_LOG_ERROR("Vulkan", EE_FILE_LINE, "Vulkan Failure."); } } while(0)
 
 namespace EE::Render
 {

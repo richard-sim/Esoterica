@@ -32,6 +32,7 @@ namespace EE::Render
             switch ( format )
             {
                 case RHI::EPixelFormat::RGBA8Unorm: return VK_FORMAT_R8G8B8A8_UNORM;
+                case RHI::EPixelFormat::BGRA8Unorm: return VK_FORMAT_B8G8R8A8_UNORM;
                 default:
                 break;
             }
@@ -195,6 +196,29 @@ namespace EE::Render
                 flag |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
             }
             return VkBufferUsageFlagBits( flag );
+		}
+
+        //-------------------------------------------------------------------------
+
+		VkDescriptorType ToVulkanDescriptorType( Render::Shader::ReflectedBindingResourceType reflectedBindingType )
+		{
+            // TODO: support dynamic uniform buffer and storage buffer
+            switch ( reflectedBindingType )
+            {
+                case EE::Render::Shader::ReflectedBindingResourceType::Sampler: return VK_DESCRIPTOR_TYPE_SAMPLER;
+                case EE::Render::Shader::ReflectedBindingResourceType::CombinedImageSampler: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                case EE::Render::Shader::ReflectedBindingResourceType::SampledImage: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+                case EE::Render::Shader::ReflectedBindingResourceType::StorageImage: return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                case EE::Render::Shader::ReflectedBindingResourceType::UniformTexelBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+                case EE::Render::Shader::ReflectedBindingResourceType::StorageTexelBuffer: return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+                case EE::Render::Shader::ReflectedBindingResourceType::UniformBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                case EE::Render::Shader::ReflectedBindingResourceType::StorageBuffer: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                case EE::Render::Shader::ReflectedBindingResourceType::InputAttachment: return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+                default:
+                EE_UNREACHABLE_CODE();
+                break;
+            }
+            return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		}
 	}
 }

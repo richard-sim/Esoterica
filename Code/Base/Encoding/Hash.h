@@ -128,4 +128,19 @@ namespace EE::Hash
     {
         return XXHash::GetHash64( data.data(), data.size() );
     }
+
+    EE_FORCE_INLINE uint64_t GetHash64( size_t const& data )
+    {
+        return XXHash::GetHash64( &data, sizeof(size_t) );
+    }
+
+    EE_FORCE_INLINE uint64_t GetHash64( uint32_t const& data )
+    {
+        return XXHash::GetHash64( &data, sizeof( uint32_t ) );
+    }
+
+    EE_FORCE_INLINE uint64_t GetHash64( uint16_t const& data )
+    {
+        return XXHash::GetHash64( &data, sizeof( uint16_t ) );
+    }
 }

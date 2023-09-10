@@ -364,9 +364,6 @@
     <ClCompile Include="RenderGraph\RenderGraphNode.cpp">
       <Filter>RenderGraph</Filter>
     </ClCompile>
-    <ClCompile Include="RenderGraph\RenderGraphResource.cpp">
-      <Filter>RenderGraph</Filter>
-    </ClCompile>
     <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp">
       <Filter>RenderGraph</Filter>
     </ClCompile>
@@ -436,7 +433,9 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp">
       <Filter>Render\Platform\Vulkan\Backend\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1981,9 +1980,23 @@
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
-    <ClInclude Include="RHI\Resource\RHIBuffer.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHIPipelineState.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHIBuffer.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Types\Map.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

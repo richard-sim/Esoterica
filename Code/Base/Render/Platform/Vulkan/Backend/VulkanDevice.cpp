@@ -10,6 +10,8 @@
 #include "VulkanBuffer.h"
 #include "RHIToVulkanSpecification.h"
 #include "Base/Logging/Log.h"
+#include "Base/Types/HashMap.h"
+#include "Base/Resource/ResourcePtr.h"
 
 namespace EE::Render
 {
@@ -61,6 +63,8 @@ namespace EE::Render
             PickPhysicalDeviceAndCreate( config );
 
             m_globalMemoryAllcator.Initialize( this );
+
+            CreateStaticSamplers();
         }
 
         VulkanDevice::VulkanDevice( InitConfig config )
@@ -74,12 +78,15 @@ namespace EE::Render
             PickPhysicalDeviceAndCreate( config );
 
             m_globalMemoryAllcator.Initialize( this );
+
+            CreateStaticSamplers();
 		}
 
 		VulkanDevice::~VulkanDevice()
 		{
 			EE_ASSERT( m_pHandle != nullptr );
 
+            DestroyStaticSamplers();
             m_globalMemoryAllcator.Shutdown();
 
 			vkDestroyDevice( m_pHandle, nullptr );
@@ -115,11 +122,10 @@ namespace EE::Render
 
             #if VULKAN_USE_VMA_ALLOCATION
             VmaAllocationCreateInfo vmaAllocationCI = {};
-            vmaAllocationCI.requiredFlags = VMA_DEFRAGMENTATION_FLAG_ALGORITHM_BALANCED_BIT;
             vmaAllocationCI.flags = VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT;
             if ( createDesc.m_usage.AreAnyFlagsSet( RHI::ETextureUsage::Color, RHI::ETextureUsage::DepthStencil )
-                 && createDesc.m_width >= 512
-                 && createDesc.m_height >= 512 )
+                 && createDesc.m_width >= 1024
+                 && createDesc.m_height >= 1024 )
             {
                 vmaAllocationCI.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
                 bRequireDedicatedMemory = true;
@@ -358,6 +364,18 @@ namespace EE::Render
             EE::Delete( pVkShader );
 		}
 
+        //-------------------------------------------------------------------------
+
+        RHI::RHIPipelineState* VulkanDevice::CreateRasterPipelineState( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders )
+        {
+            return nullptr;
+        }
+
+        void VulkanDevice::DestroyRasterPipelineState( RHI::RHIPipelineState* pPipelineState )
+        {
+
+        }
+
 		//-------------------------------------------------------------------------
 
         void VulkanDevice::PickPhysicalDeviceAndCreate( InitConfig const& config )
@@ -534,6 +552,229 @@ namespace EE::Render
 			return true;
 		}
 
+        //-------------------------------------------------------------------------
+
+        bool VulkanDevice::CreatePipelineStateLayout( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders, VulkanPipelineState* pPipelineState )
+        {
+            EE_ASSERT( pPipelineState );
+            EE_ASSERT( !createDesc.m_pipelineShaders.empty() );
+
+            CombinedShaderSetLayout combinedSetLayouts = CombinedAllShaderSetLayouts( compiledShaders );
+
+            return true;
+        }
+
+        VulkanDevice::CombinedShaderSetLayout VulkanDevice::CombinedAllShaderSetLayouts( CompiledShaderArray const& compiledShaders )
+        {
+            CombinedShaderSetLayout combinedSetLayouts;
+
+            for ( auto const& compiledShader : compiledShaders )
+            {
+                if ( compiledShader )
+                {
+                    auto const& resourceBindingSetLayout = compiledShader->GetResourceBindingSetLayout();
+
+                    // initialize combinedSetLayouts 
+                    for ( uint32_t i = 0; i < static_cast<uint32_t>( resourceBindingSetLayout.size() ); ++i )
+                    {
+                        if ( combinedSetLayouts.find( i ) == combinedSetLayouts.end() )
+                        {
+                            combinedSetLayouts.insert( i );
+                        }
+                    }
+
+                    // for each binding in set
+                    for ( uint32_t i = 0; i < static_cast<uint32_t>( resourceBindingSetLayout.size() ); ++i )
+                    {
+                        auto& setLayout = resourceBindingSetLayout[i];
+                        auto& combinedBindingLayout = combinedSetLayouts.at( i );
+
+                        for ( Render::Shader::ResourceBinding const& binding : setLayout )
+                        {
+                            auto combinedBinding = combinedBindingLayout.find( binding.m_slot );
+                            if ( combinedBinding == combinedBindingLayout.end() )
+                            {
+                                combinedBindingLayout.insert_or_assign( binding.m_slot, binding );
+                            }
+                            else
+                            {
+                                // do check
+                                Render::Shader::ResourceBinding const& existsBinding = combinedBinding->second;
+                                EE_ASSERT( existsBinding.m_ID == binding.m_ID );
+                                EE_ASSERT( existsBinding.m_slot == binding.m_slot );
+                                EE_ASSERT( existsBinding.m_bindingCount == binding.m_bindingCount );
+                                EE_ASSERT( existsBinding.m_bindingResourceType == binding.m_bindingResourceType );
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            return combinedSetLayouts;
+        }
+
+        TPair<VkDescriptorSetLayout, TMap<uint32_t, VkDescriptorType>> VulkanDevice::CreateDescriptorSetLayout( uint32_t set, CombinedShaderBindingLayout const& combinedSetBindingLayout, VkShaderStageFlags stage )
+        {
+            TVector<VkDescriptorSetLayoutBinding> vkBindings;
+            vkBindings.reserve( combinedSetBindingLayout.size() );
+
+            // Enable partially binding.
+            // Note for VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT: 
+            // If a descriptor has no memory access by shader, it can be invalid descriptor.
+            TVector<VkDescriptorBindingFlags> vkBindingFlags;
+            vkBindingFlags.resize( combinedSetBindingLayout.size() );
+            for ( VkDescriptorBindingFlags& flag : vkBindingFlags )
+            {
+                flag = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+            }
+
+            VkDescriptorSetLayoutCreateFlags vkSetLayoutCreateFlag = 0;
+
+            for ( auto const& bindingLayout : combinedSetBindingLayout )
+            {
+                auto bindingResourceType = bindingLayout.second.m_bindingResourceType;
+                VkDescriptorType vkDescriptorType = ToVulkanDescriptorType( bindingLayout.second.m_bindingResourceType );
+
+                switch ( bindingResourceType )
+                {
+                    case EE::Render::Shader::ReflectedBindingResourceType::SampledImage:
+                    {
+                        uint32_t descriptorCount = static_cast<uint32_t>( bindingLayout.second.m_bindingCount.m_count );
+
+                        if ( bindingLayout.second.m_bindingCount.m_type == Render::Shader::BindingCountType::Dynamic )
+                        {
+                            // Bindless descriptor can only be used at the end of this set.
+                            EE_ASSERT( bindingLayout.first == static_cast<uint32_t>( combinedSetBindingLayout.size() - 1 ) );
+
+                            // Enable all bindless descriptor flags.
+                            // This binding can be updated as long as it is not dynamically used by any shader invocations.
+                            // Note: dynamically used by any shader invocations means any shader invocation executes an instruction that performs any memory access using this descriptor.
+                            vkBindingFlags[bindingLayout.first] |= VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+                                | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT
+                                | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+
+                            // Indicate that the descriptors inside this descriptor pool can be updated after binding.
+                            vkSetLayoutCreateFlag |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+
+                            descriptorCount = GetMaxBindlessDescriptorSampledImageCount();
+                        }
+
+                        VkDescriptorSetLayoutBinding newBinding = {};
+                        newBinding.binding = bindingLayout.first;
+                        newBinding.descriptorCount = descriptorCount;
+                        newBinding.descriptorType = vkDescriptorType;
+                        newBinding.pImmutableSamplers = nullptr;
+                        newBinding.stageFlags = stage;
+
+                        vkBindings.push_back( newBinding );
+
+                        break;
+                    }
+                    case EE::Render::Shader::ReflectedBindingResourceType::StorageTexelBuffer:
+                    case EE::Render::Shader::ReflectedBindingResourceType::StorageImage:
+                    case EE::Render::Shader::ReflectedBindingResourceType::UniformTexelBuffer:
+                    case EE::Render::Shader::ReflectedBindingResourceType::UniformBuffer:
+                    case EE::Render::Shader::ReflectedBindingResourceType::StorageBuffer:
+                    {
+                        if ( bindingLayout.second.m_bindingCount.m_type == Render::Shader::BindingCountType::Dynamic )
+                        {
+                            EE_LOG_ERROR( "Render", "Vulkan Device", "StorageImage/UniformTexelBuffer/UniformBuffer/StorageBuffer doesn't support bindless descriptor set!");
+                            EE_ASSERT( false );
+                        }
+
+                        VkDescriptorSetLayoutBinding newBinding = {};
+                        newBinding.binding = bindingLayout.first;
+                        newBinding.descriptorCount = static_cast<uint32_t>( bindingLayout.second.m_bindingCount.m_count );
+                        newBinding.descriptorType = vkDescriptorType;
+                        newBinding.pImmutableSamplers = nullptr;
+                        newBinding.stageFlags = stage;
+
+                        vkBindings.push_back( newBinding );
+
+                        break;
+                    }
+                    case EE::Render::Shader::ReflectedBindingResourceType::Sampler:
+                    {
+                        EE_UNIMPLEMENTED_FUNCTION();
+                        break;
+                    }
+                    case EE::Render::Shader::ReflectedBindingResourceType::CombinedImageSampler:
+                    case EE::Render::Shader::ReflectedBindingResourceType::InputAttachment:
+                    {
+                        EE_UNIMPLEMENTED_FUNCTION();
+                        break;
+                    }
+                    default:
+                    EE_UNREACHABLE_CODE();
+                    break;
+                }
+            }
+
+            EE_UNREACHABLE_CODE();
+            return {};
+        }
+
+        // Static Resources
+        //-------------------------------------------------------------------------
+
+        void VulkanDevice::CreateStaticSamplers()
+        {
+            #define SIZE_OF_ARRAY(arr) (sizeof(arr) / sizeof(arr[0]))
+
+            VkFilter const allFilters[] = { VK_FILTER_LINEAR, VK_FILTER_NEAREST };
+            VkSamplerMipmapMode const allMipmapModes[] = { VK_SAMPLER_MIPMAP_MODE_LINEAR, VK_SAMPLER_MIPMAP_MODE_NEAREST };
+            VkSamplerAddressMode const allAddressModes[] = {
+                VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+                VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+                VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
+            };
+
+            for ( uint32_t filter = 0; filter < SIZE_OF_ARRAY( allFilters ); ++filter )
+            {
+                for ( uint32_t mipmap = 0; mipmap < SIZE_OF_ARRAY( allMipmapModes ); ++mipmap )
+                {
+                    for ( uint32_t address = 0; address < SIZE_OF_ARRAY( allAddressModes ); ++address )
+                    {
+                        VkSamplerCreateInfo samplerCreateInfo = {};
+                        samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+                        samplerCreateInfo.minFilter = allFilters[filter];
+                        samplerCreateInfo.magFilter = allFilters[filter];
+                        samplerCreateInfo.mipmapMode = allMipmapModes[mipmap];
+                        samplerCreateInfo.addressModeU = allAddressModes[address];
+                        samplerCreateInfo.addressModeV = allAddressModes[address];
+                        samplerCreateInfo.addressModeW = allAddressModes[address];
+                        samplerCreateInfo.maxLod = VK_LOD_CLAMP_NONE;
+                        samplerCreateInfo.maxAnisotropy = 16.0f;
+                        samplerCreateInfo.anisotropyEnable = allFilters[filter] == VK_FILTER_LINEAR;
+
+                        VulkanStaticSamplerDesc desc{ allFilters[filter], allMipmapModes[mipmap], allAddressModes[address] };
+                        //VulkanStaticSamplerDesc desc{ .filter = allFilters[filter], .mipmap = allMipmapModes[mipmap], .address = allAddressModes[address] };
+
+                        VkSampler newSampler = nullptr;
+                        VK_SUCCEEDED( vkCreateSampler( m_pHandle, &samplerCreateInfo, nullptr, &newSampler ) );
+
+                        m_immutableSamplers[desc] = newSampler;
+                    }
+                }
+            }
+
+            #undef SIZE_OF_ARRAY
+        }
+
+        void VulkanDevice::DestroyStaticSamplers()
+        {
+            for ( auto& sampler : m_immutableSamplers )
+            {
+                EE_ASSERT( sampler.second != nullptr );
+                vkDestroySampler( m_pHandle, sampler.second, nullptr );
+            }
+
+            m_immutableSamplers.clear();
+        }
+
         // Utility functions
         //-------------------------------------------------------------------------
 
@@ -554,6 +795,14 @@ namespace EE::Render
 
             OutProperties = 0;
             return false;
+        }
+
+        uint32_t VulkanDevice::GetMaxBindlessDescriptorSampledImageCount() const
+        {
+            return Math::Min(
+                m_physicalDevice.m_props.limits.maxPerStageDescriptorSampledImages - DescriptorSetReservedSampledImageCount,
+                BindlessDescriptorSetDesiredSampledImageCount
+                );
         }
     }
 }

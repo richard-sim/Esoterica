@@ -3,6 +3,7 @@
 #include "Base/Resource/ResourceRequesterID.h"
 #include "Base/Threading/Threading.h"
 #include "Base/Threading/TaskSystem.h"
+#include "Base/RHI/RHIDevice.h"
 
 namespace EE::Render
 {
@@ -16,7 +17,7 @@ namespace EE::Render
 		EE_ASSERT( m_rasterPipelineHandlesCache.empty() );
 	}
 
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
 	void PipelineRegistry::Initialize( SystemRegistry const& systemRegistry )
 	{
@@ -42,7 +43,7 @@ namespace EE::Render
 
 	//-------------------------------------------------------------------------
 
-	PipelineHandle PipelineRegistry::RegisterRasterPipeline( RasterPipelineDesc const& rasterPipelineDesc )
+	PipelineHandle PipelineRegistry::RegisterRasterPipeline( RHI::RHIRasterPipelineStateCreateDesc const& rasterPipelineDesc )
 	{
 		EE_ASSERT( Threading::IsMainThread() );
 		EE_ASSERT( m_isInitialized );
@@ -67,22 +68,21 @@ namespace EE::Render
 		if ( pEntry )
 		{
 			pEntry->m_handle = newHandle;
-			pEntry->m_blendState = rasterPipelineDesc.m_blendState;
-			pEntry->m_rasterizerState = rasterPipelineDesc.m_rasterizerState;
+            pEntry->m_desc = rasterPipelineDesc;
 
-			for ( auto const& shaderDesc : rasterPipelineDesc.m_shaderDescs )
+			for ( auto const& piplineShader : rasterPipelineDesc.m_pipelineShaders )
 			{
-				switch ( shaderDesc.m_stage )
+				switch ( piplineShader.m_stage )
 				{
 					case PipelineStage::Vertex:
 					{
-						pEntry->m_vertexShader = ResourceID( shaderDesc.m_shaderPath );
+						pEntry->m_vertexShader = ResourceID( piplineShader.m_shaderPath );
 						EE_ASSERT( pEntry->m_vertexShader.IsSet() );
 						break;
 					}
 					case PipelineStage::Pixel:
 					{
-						pEntry->m_pixelShader = ResourceID( shaderDesc.m_shaderPath );
+						pEntry->m_pixelShader = ResourceID( piplineShader.m_shaderPath );
 						EE_ASSERT( pEntry->m_pixelShader.IsSet() );
 						break;
 					}
@@ -121,12 +121,22 @@ namespace EE::Render
 		return PipelineHandle();
 	}
 
-	void PipelineRegistry::LoadAndUpdatePipelines()
+	void PipelineRegistry::LoadAndUpdatePipelines( TSharedPtr<RHI::RHIDevice> const& pDevice )
 	{
 		EE_ASSERT( Threading::IsMainThread() );
 		EE_ASSERT( m_isInitialized );
+        EE_ASSERT( pDevice != nullptr );
 
 		LoadPipelineShaders();
+
+        for ( auto const& rasterEntry : m_waitToRegisteredRasterPipelines )
+        {
+            // Double checked again in case pipeline entry is unloaded by chance.
+            if ( rasterEntry->IsReadyToCreatePipelineLayout() )
+            {
+                CreateRasterPipelineStateLayout( rasterEntry, pDevice );
+            }
+        }
 	}
 
 	//-------------------------------------------------------------------------
@@ -217,15 +227,17 @@ namespace EE::Render
 				auto const& pEntry = *beg;
 
                 // TODO: If not successfully loaded? check HasLoadFailed().
-				if ( pEntry->m_vertexShader.IsLoaded() && pEntry->m_pixelShader.IsLoaded() )
+				if ( pEntry->IsReadyToCreatePipelineLayout() )
 				{
 					if ( m_waitToLoadRasterPipelines.size() == 1 )
 					{
+                        m_waitToRegisteredRasterPipelines.push_back( pEntry );
 						m_waitToLoadRasterPipelines.clear();
 						break;
 					}
 					else
 					{
+                        m_waitToRegisteredRasterPipelines.push_back( pEntry );
 						beg = m_waitToLoadRasterPipelines.erase_unsorted( beg );
 					}
 				}
@@ -253,5 +265,18 @@ namespace EE::Render
 		m_rasterPipelineStatesCache.clear();
 		m_rasterPipelineHandlesCache.clear();
 	}
+
+    void PipelineRegistry::CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, TSharedPtr<RHI::RHIDevice> const& pDevice )
+    {
+        EE_ASSERT( Threading::IsMainThread() );
+
+        // Safety: We make sure raster pipeline state layout will only be created by single thread,
+        //         and it ResourcePtr is loaded and will not be changed by RHIDevice.
+        RHI::RHIDevice::CompiledShaderArray compiledShaders;
+        compiledShaders.push_back( rasterEntry->m_vertexShader.GetPtr() );
+        compiledShaders.push_back( rasterEntry->m_pixelShader.GetPtr() );
+        pDevice->CreateRasterPipelineState( rasterEntry->m_desc, compiledShaders );
+    }
+
 }
 

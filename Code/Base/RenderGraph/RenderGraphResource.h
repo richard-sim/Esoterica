@@ -10,6 +10,11 @@
 
 #include <limits>
 
+namespace EE::RHI
+{
+    class RHIResource;
+}
+
 //-------------------------------------------------------------------------
 //	Render graph resource lifetime.
 // 
@@ -37,17 +42,19 @@ namespace EE::RG
 
     namespace _Impl
     {
-		struct EE_BASE_API RGResourceSlotID
+		struct EE_BASE_API RGResourceID
 		{
 		public:
 
-			RGResourceSlotID() = default;
-			RGResourceSlotID( uint32_t id );
+			RGResourceID() = default;
+			RGResourceID( uint32_t id )
+                : m_id( id )
+            {}
 
 			inline bool IsValid() const { return m_id != std::numeric_limits<uint32_t>::max(); }
 
-			inline bool operator==( RGResourceSlotID const& rhs ) const { return m_id == rhs.m_id && m_generation == rhs.m_generation; }
-			inline bool operator!=( RGResourceSlotID const& rhs ) const { return m_id != rhs.m_id && m_generation != rhs.m_generation; }
+			inline bool operator==( RGResourceID const& rhs ) const { return m_id == rhs.m_id && m_generation == rhs.m_generation; }
+			inline bool operator!=( RGResourceID const& rhs ) const { return m_id != rhs.m_id && m_generation != rhs.m_generation; }
 
 			inline void Expire()
 			{ 
@@ -66,6 +73,7 @@ namespace EE::RG
 		};
     }
 
+    // forward declarations
     namespace _Impl
     {
 	    struct RGBufferDesc;
@@ -137,30 +145,32 @@ namespace EE::RG
 
     //-------------------------------------------------------------------------
 
-	template <typename SelfType, typename DescType = typename SelfType::DescType>
-	struct RGResourceDesc
-	{
-		using SelfCVType = typename std::add_lvalue_reference_t<std::add_const_t<SelfType>>;
-		using DescCVType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>;
-
-		inline DescCVType GetDesc() const
-		{
-			return reinterpret_cast<SelfCVType>( *this ).GetDesc();
-		}
-	};
-
     namespace _Impl
     {
+        // CRTP type to provide common static polymorphic interface.
+	    template <typename SelfType, typename DescType = typename SelfType::DescType>
+	    struct RGResourceDesc
+	    {
+		    using SelfCVType = typename std::add_lvalue_reference_t<std::add_const_t<SelfType>>;
+		    using DescCVType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>;
+
+		    inline DescCVType GetDesc() const
+		    {
+			    return static_cast<SelfCVType>( *this ).m_desc;
+		    }
+
+            inline SelfCVType GetRGDesc() const
+            {
+                return static_cast<SelfCVType>( *this );
+            }
+	    };
+
 	    struct RGBufferDesc final : public RGResourceDesc<RGBufferDesc, BufferDesc>
 	    {
 	    public:
 
 		    typedef BufferDesc DescType;
 		    typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
-
-	    public:
-
-		    inline DescCVType GetDesc() const { return m_desc; }
 
         public:
 
@@ -174,18 +184,15 @@ namespace EE::RG
 		    typedef TextureDesc DescType;
 		    typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
 
-	    public:
-
-		    inline DescCVType GetDesc() const { return m_desc; }
-
         public:
 
 		    DescType				m_desc;
 	    };
     }
 
+    // CRTP type to provide common static polymorphic interface.
 	template <typename Tag>
-	struct RGResourceTypeBase
+	struct RGResourceTagTypeBase
 	{
 		constexpr inline static RGResourceType GetRGResourceType()
 		{
@@ -193,7 +200,7 @@ namespace EE::RG
 		}
 	};
 
-	struct RGResourceTagBuffer : public RGResourceTypeBase<RGResourceTagBuffer>
+	struct RGResourceTagBuffer : public RGResourceTagTypeBase<RGResourceTagBuffer>
 	{
 		typedef _Impl::RGBufferDesc RGDescType;
 		typedef BufferDesc          DescType;
@@ -204,7 +211,7 @@ namespace EE::RG
 		}
 	};
 
-	struct RGResourceTagTexture : public RGResourceTypeBase<RGResourceTagTexture>
+	struct RGResourceTagTexture : public RGResourceTagTypeBase<RGResourceTagTexture>
 	{
 		typedef _Impl::RGTextureDesc RGDescType;
 		typedef TextureDesc          DescType;
@@ -227,6 +234,7 @@ namespace EE::RG
 
 	struct RGLazyCreateResource
 	{
+        RHI::RHIResource*                       m_pRhiResource = nullptr;
 	};
 
 	struct RGImportedResource
@@ -235,33 +243,36 @@ namespace EE::RG
 		RGResourceBarrierState					m_currentAccess;
 	};
 
-	//typedef RGResourceDesc<RGBufferDesc> BufferDescBaseType;
-	//typedef RGResourceDesc<RGTextureDesc> TextureDescBaseType;
-
 	class EE_BASE_API RGResource
 	{
         friend class RenderGraph;
 
 	public:
 
-		RGResource( _Impl::RGBufferDesc const& bufferDesc );
-		RGResource( _Impl::RGTextureDesc const& textureDesc );
+        template <typename RGDescType, typename DescType>
+        RGResource( _Impl::RGResourceDesc<RGDescType, DescType> const& desc );
 
 	public:
 
 		template <typename Tag,
 			typename DescType = typename Tag::DescType,
-			typename DescCVType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>
+			typename DescConstRefType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>
 		>
-		DescCVType GetDesc() const;
+		DescConstRefType GetDesc() const;
+
+        inline RGLazyCreateResource&       GetLazyCreateResource()       { return eastl::get<LazyCreateResourceVariantIndex>( m_resource); }
+        inline RGLazyCreateResource const& GetLazyCreateResource() const { return eastl::get<LazyCreateResourceVariantIndex>( m_resource); }
+
+        inline RGImportedResource&       GetImportedResource()       { return eastl::get<ImportedResourceVariantIndex>( m_resource ); }
+        inline RGImportedResource const& GetImportedResource() const { return eastl::get<ImportedResourceVariantIndex>( m_resource ); }
 
         inline RGResourceType GetResourceType() const
         {
-            if ( m_desc.index() == RGBufferDescVariantIndex )
+            if ( m_desc.index() == BufferDescVariantIndex )
             {
                 return RGResourceType::Buffer;
             }
-            else if ( m_desc.index() == RGTextureDescVariantIndex )
+            else if ( m_desc.index() == TextureDescVariantIndex )
             {
                 return RGResourceType::Texture;
             }
@@ -271,10 +282,15 @@ namespace EE::RG
             }
         }
 
+        inline bool IsLazyCreateResource() const { return m_resource.index() == LazyCreateResourceVariantIndex; }
+
     private:
 
-        static constexpr size_t RGBufferDescVariantIndex = 0;
-        static constexpr size_t RGTextureDescVariantIndex = 1;
+        static constexpr size_t BufferDescVariantIndex = 0;
+        static constexpr size_t TextureDescVariantIndex = 1;
+
+        static constexpr size_t LazyCreateResourceVariantIndex = 0;
+        static constexpr size_t ImportedResourceVariantIndex = 1;
 
 	private:
 
@@ -286,12 +302,17 @@ namespace EE::RG
 		TVariant<RGLazyCreateResource, RGImportedResource>		m_resource;
 	};
 
-	template <typename Tag, typename DescType, typename DescCVType>
-	DescCVType RGResource::GetDesc() const
-	{
-		static_assert( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+    template <typename RGDescType, typename DescType>
+    RGResource::RGResource( _Impl::RGResourceDesc<RGDescType, DescType> const& desc )
+        : m_desc( desc.GetRGDesc() )
+    {}
 
-		constexpr uint8_t const index = static_cast<uint8_t>( Tag::GetRGResourceType() );
+	template <typename Tag, typename DescType, typename DescConstRefType>
+	DescConstRefType RGResource::GetDesc() const
+	{
+		static_assert( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+
+		constexpr size_t const index = static_cast<size_t>( Tag::GetRGResourceType() );
 		return eastl::get<index>( m_desc ).GetDesc();
 	}
 }

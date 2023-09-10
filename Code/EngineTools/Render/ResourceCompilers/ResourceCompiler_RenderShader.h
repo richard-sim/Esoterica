@@ -3,6 +3,7 @@
 #include "EngineTools/Resource/ResourceCompiler.h"
 
 #include "EngineTools/Render/ResourceDescriptors/ResourceDescriptor_RenderShader.h"
+#include "Base/Memory/Pointers.h"
 #include "Base/Render/RenderShader.h"
 
 //-------------------------------------------------------------------------
@@ -14,7 +15,7 @@ namespace EE::Render
     class ShaderCompiler : public Resource::Compiler
     {
         EE_REFLECT_TYPE( ShaderCompiler );
-        static const int32_t s_version = 1;
+        static const int32_t s_version = 2;
 
     protected:
 
@@ -27,7 +28,11 @@ namespace EE::Render
     private:
 
         Resource::CompilationResult CompileDX11Shader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const;
-        Resource::CompilationResult CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const;
+
+        Resource::CompilationResult CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, TSharedPtr<Shader>& OutShader ) const;
+        Resource::CompilationResult ReflectVulkanShader( Resource::CompileContext const& ctx, TSharedPtr<Shader>& pShader ) const;
+
+        Resource::CompilationResult WriteShaderToFile( Resource::CompileContext const& ctx, TSharedPtr<Shader> const& pShader, int32_t compilerVersion ) const;
     };
 
     //-------------------------------------------------------------------------
@@ -35,7 +40,6 @@ namespace EE::Render
     class VertexShaderCompiler final : public ShaderCompiler
     {
         EE_REFLECT_TYPE( VertexShaderCompiler );
-        static const int32_t s_version = 1;
 
     public:
 
@@ -50,7 +54,6 @@ namespace EE::Render
     class PixelShaderCompiler final : public ShaderCompiler
     {
         EE_REFLECT_TYPE( PixelShaderCompiler );
-        static const int32_t s_version = 1;
 
     public:
 
@@ -65,7 +68,6 @@ namespace EE::Render
     class ComputeShaderCompiler final : public ShaderCompiler
     {
         EE_REFLECT_TYPE( ComputeShaderCompiler );
-        static const int32_t s_version = 1;
 
     public:
 

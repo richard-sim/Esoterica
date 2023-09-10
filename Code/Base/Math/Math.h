@@ -4,7 +4,7 @@
 #include "MathConstants.h"
 #include "Base/Serialization/BinarySerialization.h"
 #include "Base/Esoterica.h"
-#include <math.h>
+#include <cmath>
 
 // Compiler Specific Math Functions
 //-------------------------------------------------------------------------
@@ -115,13 +115,13 @@ namespace EE
         template<typename T>
         EE_FORCE_INLINE bool IsNearEqual( T value, T comparand, float epsilon = Epsilon )
         {
-            return abs( (double) value - comparand ) <= epsilon;
+            return Math::Abs( value - comparand ) <= epsilon;
         }
 
         template<typename T>
         EE_FORCE_INLINE bool IsNearZero( T value, float epsilon = Epsilon )
         {
-            return abs( value ) <= epsilon;
+            return Math::Abs( value ) <= epsilon;
         }
 
         EE_FORCE_INLINE float Ceiling( float value )
@@ -156,7 +156,7 @@ namespace EE
 
         inline int32_t GreatestCommonDivisor( int32_t a, int32_t b )
         {
-            return ( b == 0 ) ? Abs( a ) : GreatestCommonDivisor( b, a % b );
+            return ( b == 0 ) ? Math::Abs( a ) : GreatestCommonDivisor( b, a % b );
         }
 
         inline int32_t LowestCommonMultiple( int32_t a, int32_t b )
@@ -695,11 +695,11 @@ namespace EE
         {
             Clamp360();
 
-            float delta = 180 - Math::Abs( m_value );
-            if ( delta < 0 )
+            float delta = 180.0f - Math::Abs( m_value );
+            if ( delta < 0.0f )
             {
-                delta += 180;
-                m_value = ( m_value < 0 ) ? delta : -delta;
+                delta += 180.0f;
+                m_value = ( m_value < 0.0f ) ? delta : -delta;
             }
         }
 

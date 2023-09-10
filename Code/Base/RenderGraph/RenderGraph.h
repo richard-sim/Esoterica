@@ -6,9 +6,15 @@
 #include "Base/Threading/Threading.h"
 #include "Base/Types/Arrays.h"
 #include "Base/Types/String.h"
-#include "Base/Render/RenderPipelineState.h"
+#include "Base/Memory/Pointers.h"
+#include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 #include "Base/Render/RenderResourceBarrier.h"
 #include "Base/Render/RenderPipelineRegistry.h"
+
+namespace EE::RHI
+{
+    class RHIDevice;
+}
 
 namespace EE
 {
@@ -22,7 +28,7 @@ namespace EE
 			friend class RenderGraph;
 			friend class RGNodeBuilder;
 
-			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!");
+			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!");
 
 		public:
 
@@ -45,7 +51,7 @@ namespace EE
 		private:
 
 			DescType						m_desc;
-            _Impl::RGResourceSlotID			m_slotID;
+            _Impl::RGResourceID			    m_slotID;
 		};
 
 		class EE_BASE_API RenderGraph
@@ -76,28 +82,42 @@ namespace EE
             // Compilation Stage
             //-------------------------------------------------------------------------
 
-            void Compile();
+            void Compile( TSharedPtr<RHI::RHIDevice> const& pRhiDevice );
+            // Use RGDescType to fetch internal RHIResourceDesc and create actual RHIResource.
+            // Created transient rhi resources will be cached in transient resource cache.
+            void CreateRHIResource( TSharedPtr<RHI::RHIDevice> const& pRhiDevice );
 
             // Execution Stage
             //-------------------------------------------------------------------------
 
             void Execute();
 
+            // Cleanup Stage
+            //-------------------------------------------------------------------------
+
+            void ClearAllRHIResources( TSharedPtr<RHI::RHIDevice> const& pRhiDevice );
+
 		private:
 
 			template <typename RGDescType, typename RGDescCVType = typename std::add_lvalue_reference_t<std::add_const_t<RGDescType>>>
-            _Impl::RGResourceSlotID CreateResourceImpl( RGDescCVType rgDesc );
+            _Impl::RGResourceID CreateResourceImpl( RGDescCVType rgDesc );
 
             // Pipeline Registration (Defer creating actual RHI pipeline)
             //-------------------------------------------------------------------------
 
-            [[nodiscard]] inline Render::PipelineHandle RegisterRasterPipeline( Render::RasterPipelineDesc const& rasterPipelineDesc ) const
+            [[nodiscard]] inline Render::PipelineHandle RegisterRasterPipeline( RHI::RHIRasterPipelineStateCreateDesc const& rasterPipelineDesc ) const
             {
                 // TODO: multi-thread safety
                 return m_pRenderPipelineRegistry->RegisterRasterPipeline( rasterPipelineDesc );
             }
 
             //-------------------------------------------------------------------------
+
+            inline RGResource& GetRGResource( RGNodeResource const& nodeResource )
+            {
+                EE_ASSERT( nodeResource.m_slotID.IsValid() && nodeResource.m_slotID.m_id < m_graphResources.size() );
+                return m_graphResources[nodeResource.m_slotID.m_id];
+            }
 
             inline RGResource const& GetRGResource( RGNodeResource const& nodeResource ) const
             {
@@ -115,6 +135,8 @@ namespace EE
 			// TODO: use a real graph
 			TVector<RGNode>							m_graph;
 			TVector<RGResource>						m_graphResources;
+
+            TVector<RGExecutableNode>               m_executableGraph;
 		};
 
 		// Helper class to build a render graph node.
@@ -134,7 +156,7 @@ namespace EE
 			// node render pipeline registration
 			//-------------------------------------------------------------------------
 			
-			void RegisterRasterPipeline( Render::RasterPipelineDesc pipelineDesc );
+			void RegisterRasterPipeline( RHI::RHIRasterPipelineStateCreateDesc pipelineDesc );
 			void RegisterComputePipeline( Render::ComputePipelineDesc pipelineDesc );
 
 			// Node resource read and write operations
@@ -172,7 +194,7 @@ namespace EE
 		template <typename DescType, typename RTTag>
 		RGHandle<RTTag> RenderGraph::CreateResource( DescType const& desc )
 		{
-			static_assert( std::is_base_of<RGResourceTypeBase<RTTag>, RTTag>::value, "Invalid render graph resource tag!" );
+			static_assert( std::is_base_of<RGResourceTagTypeBase<RTTag>, RTTag>::value, "Invalid render graph resource tag!" );
 			typedef typename RTTag::RGDescType RGDescType;
 
 			EE_ASSERT( Threading::IsMainThread() );
@@ -180,7 +202,7 @@ namespace EE
 			RGDescType rgDesc = {};
 			rgDesc.m_desc = desc;
 
-			_Impl::RGResourceSlotID const id = CreateResourceImpl<RGDescType>( rgDesc );
+			_Impl::RGResourceID const id = CreateResourceImpl<RGDescType>( rgDesc );
 			RGHandle<RTTag> handle;
 			handle.m_slotID = id;
 			handle.m_desc = desc;
@@ -190,12 +212,12 @@ namespace EE
 		//-------------------------------------------------------------------------
 	
 		template <typename RGDescType, typename RGDescCVType>
-		_Impl::RGResourceSlotID RenderGraph::CreateResourceImpl( RGDescCVType rgDesc )
+		_Impl::RGResourceID RenderGraph::CreateResourceImpl( RGDescCVType rgDesc )
 		{
 			size_t slotID = m_graphResources.size();
 			EE_ASSERT( slotID >= 0 && slotID < std::numeric_limits<uint32_t>::max() );
 
-            _Impl::RGResourceSlotID id( static_cast<uint32_t>( slotID ) );
+            _Impl::RGResourceID id( static_cast<uint32_t>( slotID ) );
 			m_graphResources.emplace_back( rgDesc );
 			return id;
 		}
@@ -243,7 +265,7 @@ namespace EE
 		template <typename Tag, RGResourceViewType RVT>
 		RGNodeResourceRef<Tag, RVT> RGNodeBuilder::ReadImpl( RGHandle<Tag> const& pResource, Render::RenderResourceBarrierState access )
 		{
-			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
+			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 
 			typedef typename Tag::DescType DescType;
 			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
@@ -263,7 +285,7 @@ namespace EE
 		template <typename Tag, RGResourceViewType RVT>
 		RGNodeResourceRef<Tag, RVT> RGNodeBuilder::WriteImpl( RGHandle<Tag>& pResource, Render::RenderResourceBarrierState access )
 		{
-			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
+			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 
 			typedef typename Tag::DescType DescType;
 			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
@@ -278,7 +300,7 @@ namespace EE
 			DescCVType desc = m_graph.m_graphResources[pResource.m_slotID.m_id].GetDesc<Tag>();
 
 			// After write operation, this resource consider as new resource
-            _Impl::RGResourceSlotID newSlotID = pResource.m_slotID;
+            _Impl::RGResourceID newSlotID = pResource.m_slotID;
 			newSlotID.Expire();
 
 			// return a life time limited reference to it

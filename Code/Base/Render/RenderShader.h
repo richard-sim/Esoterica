@@ -12,6 +12,8 @@ namespace EE
     {
         //-------------------------------------------------------------------------
 
+        static constexpr size_t NumMaxShaderResourceSetLayout = 4;
+
         class EE_BASE_API Shader : public Resource::IResource
         {
             friend class RenderDevice;
@@ -19,10 +21,51 @@ namespace EE
             friend class ShaderLoader;
             friend class PipelineRegistry;
 
-            EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode, m_shaderEntryName );
+            EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode, m_shaderEntryName, m_pushConstants );
             EE_RESOURCE( 'shdr', "Render Shader" );
 
         public:
+
+            enum class BindingCountType
+            {
+                // Exact one resource binding.
+                // Example:
+                // StructuredBuffer<uint> buffer;
+                One,
+                // Compile-determined sized resource bindings.
+                // Example:
+                // StructuredBuffer<uint> buffer[2];
+                Static,
+                // Variable number of resource bindings.
+                // Used inside bindless descriptors;
+                // Example:
+                // StructuredBuffer<uint> buffer[];
+                Dynamic
+            };
+
+            struct ReflectedBindingCount
+            {
+                BindingCountType            m_type;
+                size_t                      m_count;
+
+                inline friend bool operator==( ReflectedBindingCount const& lhs, ReflectedBindingCount const& rhs )
+                {
+                    return lhs.m_type == rhs.m_type && lhs.m_count == rhs.m_count;
+                }
+            };
+
+            enum class ReflectedBindingResourceType
+            {
+                Sampler = 0,
+                CombinedImageSampler,
+                SampledImage,
+                StorageImage,
+                UniformTexelBuffer,
+                StorageTexelBuffer,
+                UniformBuffer,
+                StorageBuffer,
+                InputAttachment
+            };
 
             struct ResourceBinding
             {
@@ -30,11 +73,27 @@ namespace EE
 
                 ResourceBinding() : m_slot( 0 ) {}
                 ResourceBinding( uint32_t ID, uint32_t slot ) : m_ID( ID ), m_slot( slot ) {}
+                ResourceBinding( uint32_t ID, uint32_t slot, ReflectedBindingCount bindingCount, ReflectedBindingResourceType resourceType )
+                    : m_ID( ID ), m_slot( slot ), m_bindingCount( bindingCount ), m_bindingResourceType( resourceType ) {}
 
                 inline bool operator<( ResourceBinding const& rhs ) const { return m_slot < rhs.m_slot; }
 
-                uint32_t                 m_ID;
-                uint32_t                 m_slot;
+                uint32_t                            m_ID;
+                uint32_t                            m_slot;
+
+                ReflectedBindingCount               m_bindingCount;
+                ReflectedBindingResourceType        m_bindingResourceType;
+            };
+
+            using ResourceBindingSetLayout = TVector<TVector<ResourceBinding>>;
+
+            struct PushConstants
+            {
+                EE_SERIALIZE( m_ID, m_size, m_offset );
+
+                uint32_t                m_ID;
+                uint32_t                m_size;
+                uint32_t                m_offset;
             };
 
         public:
@@ -46,6 +105,7 @@ namespace EE
             inline ShaderHandle const& GetShaderHandle() const { return m_shaderHandle; }
             inline uint32_t GetNumConstBuffers() const { return (uint32_t) m_cbuffers.size(); }
             inline RenderBuffer const& GetConstBuffer( uint32_t i ) const { EE_ASSERT( i < m_cbuffers.size() ); return m_cbuffers[i]; }
+            inline ResourceBindingSetLayout const& GetResourceBindingSetLayout() const { return m_resourceBindings; }
 
             inline bool operator==( Shader const& rhs ) const { return m_shaderHandle.m_pData == rhs.m_shaderHandle.m_pData; }
             inline bool operator!=( Shader const& rhs ) const { return m_shaderHandle.m_pData != rhs.m_shaderHandle.m_pData; }
@@ -59,9 +119,10 @@ namespace EE
 
             ShaderHandle                        m_shaderHandle;
             String                              m_shaderEntryName;
-            Blob                                m_byteCode;
             TVector<RenderBuffer>               m_cbuffers;
-            TVector<TVector<ResourceBinding>>   m_resourceBindings;
+            ResourceBindingSetLayout            m_resourceBindings;
+            Blob                                m_byteCode;
+            PushConstants                       m_pushConstants;
             PipelineStage                       m_pipelineStage;
         };
 
@@ -125,7 +186,7 @@ namespace EE
 
         public:
 
-            GeometryShader() : Shader( PipelineStage::Pixel ) {}
+            GeometryShader() : Shader( PipelineStage::Geometry ) {}
             GeometryShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers );
 
             virtual bool IsValid() const override { return m_shaderHandle.IsValid(); }

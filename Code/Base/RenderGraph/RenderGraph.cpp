@@ -1,6 +1,9 @@
 #include "RenderGraph.h"
 #include "Base/Logging/Log.h"
 #include "Base/Threading/Threading.h"
+#include "Base/RHI/RHIDevice.h"
+#include "Base/RHI/Resource/RHIBuffer.h"
+#include "Base/RHI/Resource/RHITexture.h"
 
 namespace EE
 {
@@ -10,7 +13,7 @@ namespace EE
 			: m_graph( graph ), m_node( node )
 		{}
 
-		void RGNodeBuilder::RegisterRasterPipeline( Render::RasterPipelineDesc pipelineDesc )
+		void RGNodeBuilder::RegisterRasterPipeline( RHI::RHIRasterPipelineStateCreateDesc pipelineDesc )
 		{
 			EE_ASSERT( Threading::IsMainThread() );
 			//EE_ASSERT( pipelineDesc.IsValid() );
@@ -66,46 +69,82 @@ namespace EE
         // Compilation Stage
         //-------------------------------------------------------------------------
 
-        void RenderGraph::Compile()
+        void RenderGraph::Compile( TSharedPtr<RHI::RHIDevice> const& pRhiDevice )
         {
+            if ( pRhiDevice == nullptr )
+            {
+                EE_LOG_WARNING("RenderGraph", "RenderGraph::Compile()", "RHI Device missing! Cannot compile render graph!");
+                return;
+            }
+
             // Create actual RHI Resources
             //-------------------------------------------------------------------------
 
-            for ( auto const& node : m_graph )
-            {
-                for ( auto const& input : node.m_pInputs )
-                {
-                    RGResource const& resource = GetRGResource( input );
-                    
-                    switch ( resource.GetResourceType() )
-                    {
-                        case RGResourceType::Buffer:
-                        {
-                            auto const& desc = resource.GetDesc<RGResourceTagBuffer>();
-                            EE_LOG_MESSAGE( "RenderGraph", "RenderGraphCompilation", "Buffer Desired Size = %d", desc.m_desc.m_desireSize );
-                            EE_LOG_MESSAGE( "RenderGraph", "RenderGraphCompilation", "Buffer Allocated Size = %d", desc.m_desc.m_desireSize );
-                        }
-                        break;
-
-                        case RGResourceType::Texture:
-                        {
-                            auto const& desc = resource.GetDesc<RGResourceTagTexture>();
-                            EE_LOG_MESSAGE( "RenderGraph", "RenderGraphCompilation", "Texture Width = %d", desc.m_desc.m_width );
-                        }
-                        break;
-
-                        case RGResourceType::Unknown:
-                        default:
-                        EE_LOG_ERROR( "Render Graph", "Compilation", "Unknown type of render graph resource has been used in pass %s", node.m_passName );
-                        EE_ASSERT( false );
-                        break;
-                    }
-                }
-            }
+            CreateRHIResource( pRhiDevice );
 
             // Compile and Analyze graph nodes to populate an execution sequence
             //-------------------------------------------------------------------------
+        }
 
+        void RenderGraph::CreateRHIResource( TSharedPtr<RHI::RHIDevice> const& pRhiDevice )
+        {
+            auto CreateRHILazyResource = [pRhiDevice] ( RGResource& rgResource )
+            {
+                switch ( rgResource.GetResourceType() )
+                {
+                    case RGResourceType::Buffer:
+                    {
+                        BufferDesc const& desc = rgResource.GetDesc<RGResourceTagBuffer>();
+
+                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Desired Size = %d", desc.m_desc.m_desireSize );
+                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Allocated Size = %d", desc.m_desc.m_desireSize );
+
+                        if ( rgResource.IsLazyCreateResource() )
+                        {
+                            RGLazyCreateResource& rhiResource = rgResource.GetLazyCreateResource();
+                            rhiResource.m_pRhiResource = pRhiDevice->CreateBuffer( desc.m_desc );
+                            EE_ASSERT( rhiResource.m_pRhiResource != nullptr );
+                        }
+                    }
+                    break;
+
+                    case RGResourceType::Texture:
+                    {
+                        TextureDesc const& desc = rgResource.GetDesc<RGResourceTagTexture>();
+
+                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Width = %d", desc.m_desc.m_width );
+                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Height = %d", desc.m_desc.m_height );
+
+                        if ( rgResource.IsLazyCreateResource() )
+                        {
+                            RGLazyCreateResource& rhiResource = rgResource.GetLazyCreateResource();
+                            rhiResource.m_pRhiResource = pRhiDevice->CreateTexture( desc.m_desc );
+                            EE_ASSERT( rhiResource.m_pRhiResource != nullptr );
+                        }
+                    }
+                    break;
+
+                    case RGResourceType::Unknown:
+                    default:
+                    EE_LOG_ERROR( "Render Graph", "RenderGraph::Compile()", "Unknown type of render graph resource!" );
+                    EE_ASSERT( false );
+                    break;
+                }
+            };
+
+            for ( auto& rgResource : m_graphResources )
+            {
+                CreateRHILazyResource( rgResource );
+            }
+
+            // Compile nodes into executable nodes
+            // TODO: graph dependency analyze
+            //-------------------------------------------------------------------------
+
+            for ( RGNode const& node : m_graph )
+            {
+                
+            }
         }
 
         // Execution Stage
@@ -114,6 +153,47 @@ namespace EE
         void RenderGraph::Execute()
         {
 
+        }
+
+        // Cleanup Stage
+        //-------------------------------------------------------------------------
+
+        void RenderGraph::ClearAllRHIResources( TSharedPtr<RHI::RHIDevice> const& pRhiDevice )
+        {
+            for ( auto& resource : m_graphResources )
+            {
+                switch ( resource.GetResourceType() )
+                {
+                    case RGResourceType::Buffer:
+                    {
+                        if ( resource.IsLazyCreateResource() )
+                        {
+                            auto& rhiResource = resource.GetLazyCreateResource();
+                            RHI::RHIBuffer* pRhiBuffer = static_cast<RHI::RHIBuffer*>( rhiResource.m_pRhiResource );
+                            pRhiDevice->DestroyBuffer( pRhiBuffer );
+                            rhiResource.m_pRhiResource = nullptr;
+                        }
+                    }
+                    break;
+
+                    case RGResourceType::Texture:
+                    {
+                        auto& rhiResource = resource.GetLazyCreateResource();
+                        RHI::RHITexture* pRhiTexture = static_cast<RHI::RHITexture*>( rhiResource.m_pRhiResource );
+                        pRhiDevice->DestroyTexture( pRhiTexture );
+                        rhiResource.m_pRhiResource = nullptr;
+                    }
+                    break;
+
+                    case RGResourceType::Unknown:
+                    default:
+                    EE_LOG_ERROR( "Render Graph", "Compilation", "Unknown type of render graph resource!" );
+                    EE_ASSERT( false );
+                    break;
+                }
+            }
+
+            m_graphResources.clear();
         }
 
         #endif

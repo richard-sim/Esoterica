@@ -30,6 +30,11 @@ namespace EE::Render
         RenderDevice();
         ~RenderDevice();
 
+        // Temporary
+        //-------------------------------------------------------------------------
+
+        inline TSharedPtr<RHI::RHIDevice> GetRHIDevice() { return m_pRHIDevice; }
+
         //-------------------------------------------------------------------------
 
         bool IsInitialized() const;

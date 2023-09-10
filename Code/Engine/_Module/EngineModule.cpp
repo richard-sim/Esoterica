@@ -354,7 +354,7 @@ namespace EE
         auto handle1 = m_renderGraph.CreateResource( bufferDesc );
         EE_ASSERT( handle1.GetDesc().m_desc.m_desireSize == 256 );
 
-        auto textureDesc = RG::TextureDesc::New2D( 512, 512, RHI::EPixelFormat::RGBA8Unorm );
+        auto textureDesc = RG::TextureDesc::New2D( 512, 512, RHI::EPixelFormat::BGRA8Unorm );
         auto handle2 = m_renderGraph.CreateResource( textureDesc );
 
         {
@@ -362,9 +362,9 @@ namespace EE
             auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
             auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
 
-            auto pipelineDesc = Render::RasterPipelineDesc{};
-            pipelineDesc.AddShader( Render::PipelineShaderDesc{ Render::PipelineStage::Vertex, ResourcePath( "data://shaders/imgui/imgui.vsdr" ) });
-            pipelineDesc.AddShader( Render::PipelineShaderDesc{ Render::PipelineStage::Pixel, ResourcePath( "data://shaders/imgui/imgui.psdr" ) });
+            auto pipelineDesc = RHI::RHIRasterPipelineStateCreateDesc{};
+            pipelineDesc.AddShader( RHI::RHIPipelineShader( ResourcePath( "data://shaders/imgui/imgui.vsdr" ) ));
+            pipelineDesc.AddShader( RHI::RHIPipelineShader( ResourcePath( "data://shaders/imgui/imgui.psdr" ) ));
             node.RegisterRasterPipeline( std::move( pipelineDesc ) );
 
             EE_ASSERT( handle0_ref.GetDesc().m_desc.m_desireSize == 512 );
@@ -378,7 +378,7 @@ namespace EE
 
             EE_ASSERT( handle2_ref.GetDesc().m_desc.m_width == 512 );
             EE_ASSERT( handle2_ref.GetDesc().m_desc.m_height == 512 );
-            EE_ASSERT( handle2_ref.GetDesc().m_desc.m_format == RHI::EPixelFormat::RGBA8Unorm );
+            EE_ASSERT( handle2_ref.GetDesc().m_desc.m_format == RHI::EPixelFormat::BGRA8Unorm );
         }
 
         //m_renderGraph.AddNode( "Draw Opache" );
@@ -388,7 +388,7 @@ namespace EE
 
         m_renderGraph.LogGraphNodes();
 
-        m_renderGraph.Compile();
+        m_renderGraph.Compile( m_pRenderDevice->GetRHIDevice() );
         m_renderGraph.Execute();
 
         if ( Trait::IsPointerIncludeSmartPointer<TSharedPtr<int>>::value )
@@ -431,6 +431,7 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
+        m_renderGraph.ClearAllRHIResources( m_pRenderDevice->GetRHIDevice() );
         m_renderPipelineRegistry.Shutdown();
 
         // Unregister resource loaders
