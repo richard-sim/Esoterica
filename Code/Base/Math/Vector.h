@@ -24,7 +24,6 @@ namespace EE
 
         EE_CUSTOM_SERIALIZE_WRITE_FUNCTION( archive )
         {
-
             Float4 const f4 = ToFloat4();
             archive << f4;
             return archive;

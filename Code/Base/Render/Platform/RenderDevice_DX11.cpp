@@ -1,9 +1,32 @@
+#if defined(_WIN32) && defined(EE_DX11)
+
 #include "RenderDevice_DX11.h"
+<<<<<<<< HEAD:Code/Base/Render/Platform/DX11/RenderDevice_DX11.cpp
+#include "System/Render/RenderCoreResources.h"
+#include "System/IniFile.h"
+#include "System/Profiling.h"
+========
 #include "TextureLoader_Win32.h"
 #include "Base/Render/RenderCoreResources.h"
 #include "Base/IniFile.h"
 #include "Base/Profiling.h"
+>>>>>>>> heads/upstream:Code/Base/Render/Platform/RenderDevice_DX11.cpp
 
+
+#ifdef _WIN32
+#include "System/Render/Platform/Windows/TextureLoader_Win32.h"
+#endif
+
+#ifdef EE_VULKAN
+#include "System/Render/Platform/Vulkan/Backend/VulkanInstance.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanSurface.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanPhysicalDevice.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanDevice.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
+#include "System/Render/Platform/Vulkan/Backend/VulkanResource.h"
+
+#include <vulkan/vulkan.hpp>
+#endif
 
 //-------------------------------------------------------------------------
 
@@ -39,6 +62,17 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
+    RenderDevice::RenderDevice()
+    {
+        #ifdef EE_VULKAN
+        m_pVkInstance = MakeShared<Backend::VulkanInstance>();
+        m_pVkSurface = MakeShared<Backend::VulkanSurface>( m_pVkInstance );
+
+        m_pVkDevice = MakeShared<Backend::VulkanDevice>( m_pVkInstance, m_pVkSurface );
+        m_pVkSwapchain = MakeShared<Backend::VulkanSwapchain>( m_pVkSurface, m_pVkDevice );
+        #endif
+    }
+
     RenderDevice::~RenderDevice()
     {
         EE_ASSERT( RenderContext::s_pDepthTestingReadOnly == nullptr );
@@ -62,7 +96,7 @@ namespace EE::Render
 
         m_resolution.m_x = iniFile.GetIntOrDefault( "Render:ResolutionX", 1280 );
         m_resolution.m_y = iniFile.GetIntOrDefault( "Render:ResolutionX", 720 );
-        m_refreshRate = iniFile.GetFloatOrDefault( "Render:ResolutionX", 60 );
+        m_refreshRate = iniFile.GetFloatOrDefault( "Render:RefreshRate", 60 );
         m_isFullscreen = iniFile.GetBoolOrDefault( "Render:Fullscreen", false );
 
         //-------------------------------------------------------------------------
@@ -501,6 +535,29 @@ namespace EE::Render
             DestroyBuffer( cbuffer );
         }
         shader.m_cbuffers.clear();
+    }
+
+    void RenderDevice::CreateVkShader( Shader& shader )
+    {
+        // TODO: temporary, move this to vulkan render device
+        EE_ASSERT( IsInitialized() && !shader.IsValid() );
+
+        auto pShaderHandle = m_pVkDevice->CreateShader( shader.m_byteCode );
+        shader.m_shaderHandle.m_pData = pShaderHandle;
+
+        // remove shader code to reduce some RAM usage.
+        auto emptyBlob = Blob{};
+        std::swap( shader.m_byteCode, emptyBlob );
+
+        EE_ASSERT( shader.m_byteCode.capacity() == 0 );
+    }
+
+    void RenderDevice::DestroyVkShader( Shader& shader )
+    {
+        EE_ASSERT( IsInitialized() && shader.IsValid() );
+
+        auto& pShader = reinterpret_cast<Backend::VulkanShader&>( shader.m_shaderHandle.m_pData );
+        m_pVkDevice->DestroyShader( pShader );
     }
 
     //-------------------------------------------------------------------------
@@ -1273,3 +1330,5 @@ namespace EE::Render
         return pickingID;
     }
 }
+
+#endif

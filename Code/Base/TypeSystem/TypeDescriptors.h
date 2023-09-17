@@ -81,7 +81,7 @@ namespace EE::TypeSystem
     public:
 
         PropertyPath                                                m_path;
-        Blob                                            m_byteValue;
+        Blob                                                        m_byteValue;
 
         // Not-serialized - used in tooling
         #if EE_DEVELOPMENT_TOOLS
@@ -268,10 +268,10 @@ namespace EE::TypeSystem
     public:
 
         TVector<TypeDescriptor>                                     m_descriptors;
-        int32_t                                                       m_totalRequiredSize = -1;
-        int32_t                                                       m_requiredAlignment = -1;
+        int32_t                                                     m_totalRequiredSize = -1;
+        int32_t                                                     m_requiredAlignment = -1;
         TVector<TypeInfo const*>                                    m_typeInfos;
-        TVector<uint32_t>                                             m_typeSizes;
-        TVector<uint32_t>                                             m_typePaddings;
+        TVector<uint32_t>                                           m_typeSizes;
+        TVector<uint32_t>                                           m_typePaddings;
     };
 }

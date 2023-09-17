@@ -5,11 +5,42 @@
 #include "Base/Resource/IResource.h"
 #include "Base/Serialization/BinarySerialization.h"
 #include "Base/Math/Math.h"
+#include "Base/Types/BitFlags.h"
 
 //-------------------------------------------------------------------------
 
 namespace EE::Render
 {
+    // Specified the texel usage aspect.
+    enum class ImageAspectFlags : uint8_t
+    {
+        Color = 0, // Used as color attachment.
+        Depth, // Used as depth attachment.
+        Stencil, // Used as stencil attachment.
+        Metadata, // Used as metadata to store information about other data.
+    };
+
+    struct TextureSubresourceRange
+    {
+        TBitFlags<ImageAspectFlags>		m_aspectFlags;
+        uint32_t							m_baseMipLevel;
+        uint32_t							m_levelCount;
+        uint32_t							m_baseArrayLayer;
+        uint32_t							m_layerCount;
+    };
+
+    enum class ImageMemoryLayout
+    {
+        /// Choose the most optimal layout for each usage. Performs layout transitions as appropriate for the access.
+        Optimal,
+        /// Layout accessible by all Vulkan access types on a device - no layout transitions except for presentation
+        General,
+        /// Similar to `General`, but also allows presentation engines to access it - no layout transitions.
+        /// Requires `VK_KHR_shared_presentable_image` to be enabled, and this can only be used for shared presentable
+        /// images (i.e. single-buffered swap chains).
+        GeneralAndPresentation,
+    };
+
     enum class TextureFormat : uint8_t
     {
         Raw,
@@ -33,7 +64,7 @@ namespace EE::Render
         TextureAddressMode      m_addressModeV = TextureAddressMode::Wrap;
         TextureAddressMode      m_addressModeW = TextureAddressMode::Wrap;
         Float4                  m_borderColor = Float4(0.0f);
-        uint32_t                  m_maxAnisotropyValue = 1;
+        uint32_t                m_maxAnisotropyValue = 1;
         float                   m_LODBias = 0;
         float                   m_minLOD = -FLT_MAX;
         float                   m_maxLOD = FLT_MAX;

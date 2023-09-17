@@ -54,7 +54,8 @@ namespace EE::Render
         VertexBuffer                    m_vertexBuffer;
         Texture                         m_fontTexture;
 
-        PipelineState                   m_PSO;
+        // TODO: we change the origin PipelineState to RasterPipelineState
+        RasterPipelineState             m_PSO;
         bool                            m_initialized = false;
     };
 }

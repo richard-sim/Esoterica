@@ -197,6 +197,11 @@ namespace EE::Render
         ViewRT,
         ViewDS,
 
+        CommandBuffer,
+        Renderpass,
+
+        Semaphore,
+
         numTypes,
     };
 
@@ -211,6 +216,8 @@ namespace EE::Render
 
         None,
     };
+
+    constexpr static size_t NumPipelineStages = static_cast<size_t>( PipelineStage::None );
 
     struct ScissorRect
     {
@@ -264,8 +271,16 @@ namespace EE::Render
     typedef ObjectHandle<ResourceType::BlendState>            BlendStateHandle;
     typedef ObjectHandle<ResourceType::RasterizerState>       RasterizerStateHandle;
     typedef ObjectHandle<ResourceType::SamplerState>          SamplerStateHandle;
+    typedef ObjectHandle<ResourceType::CommandBuffer>         CommandBufferHandle;
     typedef ObjectHandle<ResourceType::ViewUAV>               ViewUAVHandle;
     typedef ObjectHandle<ResourceType::ViewSRV>               ViewSRVHandle;
     typedef ObjectHandle<ResourceType::ViewRT>                ViewRTHandle;
     typedef ObjectHandle<ResourceType::ViewDS>                ViewDSHandle;
+    typedef ObjectHandle<ResourceType::Renderpass>            RenderpassHandle;
+
+    // Synchronization Primitives (Not available in older graphics api, such as DX11, OpenGL)
+    //-------------------------------------------------------------------------
+
+    typedef ObjectHandle<ResourceType::Semaphore>             SemaphoreHandle;
+
 }

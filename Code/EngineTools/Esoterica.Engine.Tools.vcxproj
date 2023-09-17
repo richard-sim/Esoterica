@@ -140,6 +140,7 @@
     <ClCompile Include="Physics\Workspaces\Workspace_CollisionMesh.cpp" />
     <ClCompile Include="Physics\Workspaces\Workspace_Ragdoll.cpp" />
     <ClCompile Include="Core\PropertyGrid\PropertyGrid.cpp" />
+    <ClCompile Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.cpp" />
     <ClCompile Include="RawAssets\Formats\FBX.cpp" />
     <ClCompile Include="RawAssets\Formats\GLTF.cpp" />
     <ClCompile Include="Render\ResourceCompilers\ResourceCompiler_RenderMaterial.cpp" />
@@ -262,6 +263,7 @@
     <ClInclude Include="Physics\Workspaces\Workspace_CollisionMesh.h" />
     <ClInclude Include="Physics\Workspaces\Workspace_Ragdoll.h" />
     <ClInclude Include="Core\PropertyGrid\PropertyGrid.h" />
+    <ClInclude Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.h" />
     <ClInclude Include="RawAssets\Formats\FBX.h" />
     <ClInclude Include="RawAssets\Formats\GLTF.h" />
     <ClInclude Include="Render\ResourceCompilers\ResourceCompiler_RenderMaterial.h" />

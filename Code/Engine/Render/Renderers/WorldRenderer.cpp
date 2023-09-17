@@ -323,11 +323,13 @@ namespace EE::Render
         m_pipelinePrecomputeBRDF.m_pComputeShader = &m_precomputeDFGComputeShader;
 
         // TODO create on directional light add and destroy on remove
-        m_pRenderDevice->CreateTexture( m_shadowMap, DataFormat::Float_X32, Float2( 1536, 1536 ), USAGE_SRV | USAGE_RT_DS );
+        m_pRenderDevice->CreateTexture( m_shadowMap, DataFormat::Float_X32, Float2( 2048, 2048 ), USAGE_SRV | USAGE_RT_DS );
 
+        // Dispatch brdf lut computation once
+        //-------------------------------------------------------------------------
         {
             auto const& renderContext = m_pRenderDevice->GetImmediateContext();
-            renderContext.SetPipelineState( m_pipelinePrecomputeBRDF );
+            renderContext.SetComputePipelineState( m_pipelinePrecomputeBRDF );
             renderContext.SetUnorderedAccess( PipelineStage::Compute, 0, m_precomputedBRDF.GetUnorderedAccessView() );
             renderContext.Dispatch( 512 / 16, 512 / 16, 1 );
             renderContext.ClearUnorderedAccess( PipelineStage::Compute, 0 );
@@ -527,10 +529,10 @@ namespace EE::Render
         // Set primary render state and clear the render buffer
         //-------------------------------------------------------------------------
 
-        PipelineState* pPipelineState = renderTarget.HasPickingRT() ? &m_pipelineStateStaticPicking : &m_pipelineStateStatic;
+        RasterPipelineState* pPipelineState = renderTarget.HasPickingRT() ? &m_pipelineStateStaticPicking : &m_pipelineStateStatic;
         SetupRenderStates( viewport, pPipelineState->m_pPixelShader, data );
 
-        renderContext.SetPipelineState( *pPipelineState );
+        renderContext.SetRasterPipelineState( *pPipelineState );
         renderContext.SetShaderInputBinding( m_inputBindingStatic );
         renderContext.SetPrimitiveTopology( Topology::TriangleList );
 
@@ -595,10 +597,10 @@ namespace EE::Render
         // Set primary render state and clear the render buffer
         //-------------------------------------------------------------------------
 
-        PipelineState* pPipelineState = renderTarget.HasPickingRT() ? &m_pipelineStateSkeletalPicking : &m_pipelineStateSkeletal;
+        RasterPipelineState* pPipelineState = renderTarget.HasPickingRT() ? &m_pipelineStateSkeletalPicking : &m_pipelineStateSkeletal;
         SetupRenderStates( viewport, pPipelineState->m_pPixelShader, data );
 
-        renderContext.SetPipelineState( *pPipelineState );
+        renderContext.SetRasterPipelineState( *pPipelineState );
         renderContext.SetShaderInputBinding( m_inputBindingSkeletal );
         renderContext.SetPrimitiveTopology( Topology::TriangleList );
 
@@ -681,7 +683,7 @@ namespace EE::Render
             Matrix const skyboxTransform = Matrix( Quaternion::Identity, viewport.GetViewPosition(), Vector::One ) * data.m_transforms.m_viewprojTransform;
 
             renderContext.SetViewport( Float2( viewport.GetDimensions() ), Float2( viewport.GetTopLeftPosition() ), Float2( 1, 1 )/*TODO: fix for inv z*/ );
-            renderContext.SetPipelineState( m_pipelineSkybox );
+            renderContext.SetRasterPipelineState( m_pipelineSkybox );
             renderContext.SetShaderInputBinding( ShaderInputBindingHandle() );
             renderContext.SetPrimitiveTopology( Topology::TriangleStrip );
             renderContext.WriteToBuffer( m_vertexShaderSkybox.GetConstBuffer( 0 ), &skyboxTransform, sizeof( Matrix ) );
@@ -713,7 +715,7 @@ namespace EE::Render
         // Static Meshes
         //-------------------------------------------------------------------------
 
-        renderContext.SetPipelineState( m_pipelineStateStaticShadow );
+        renderContext.SetRasterPipelineState( m_pipelineStateStaticShadow );
         renderContext.SetShaderInputBinding( m_inputBindingStatic );
         renderContext.SetPrimitiveTopology( Topology::TriangleList );
 
@@ -738,7 +740,7 @@ namespace EE::Render
         // Skeletal Meshes
         //-------------------------------------------------------------------------
 
-        renderContext.SetPipelineState( m_pipelineStateSkeletalShadow );
+        renderContext.SetRasterPipelineState( m_pipelineStateSkeletalShadow );
         renderContext.SetShaderInputBinding( m_inputBindingSkeletal );
         renderContext.SetPrimitiveTopology( Topology::TriangleList );
 

@@ -149,7 +149,7 @@ namespace EE
     inline Radians Quaternion::Distance( Quaternion const& q0, Quaternion const& q1 )
     {
         float const dot = Math::Clamp( Dot( q0, q1 ).ToFloat(), -1.0f, 1.0f );
-        return Radians( 2 * Math::ACos( Math::Abs( dot ) ) );
+        return Radians( 2.0f * Math::ACos( Math::Abs( dot ) ) );
     }
 
     inline Quaternion& Quaternion::Conjugate()

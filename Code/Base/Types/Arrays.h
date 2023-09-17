@@ -15,6 +15,7 @@ namespace EE
 
     template<typename T> using TVector = eastl::vector<T>;
     template<typename T, eastl_size_t S> using TInlineVector = eastl::fixed_vector<T, S, true>;
+    template<typename T, eastl_size_t S> using TFixedVector = eastl::fixed_vector<T, S, false>;
     template<typename T, eastl_size_t S> using TArray = eastl::array<T, S>;
 
     using Blob = TVector<uint8_t>;

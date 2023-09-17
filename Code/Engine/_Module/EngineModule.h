@@ -32,6 +32,9 @@
 #include "Base/Threading/TaskSystem.h"
 #include "Base/Systems.h"
 
+#include "Base/RenderGraph/RenderGraph.h"
+#include "Base/Render/RenderPipelineRegistry.h"
+
 //-------------------------------------------------------------------------
 
 namespace EE
@@ -74,6 +77,10 @@ namespace EE
         inline ImGuiX::ImguiSystem* GetImguiSystem() { return &m_imguiSystem; }
         #endif
 
+        // TEMPORARY: Test
+        //-------------------------------------------------------------------------
+        inline Render::PipelineRegistry* GetRenderPipelineRegistry() { return &m_renderPipelineRegistry; }
+
     private:
 
         bool                                            m_moduleInitialized = false;
@@ -98,6 +105,9 @@ namespace EE
         EntityModel::EntityCollectionLoader             m_entityCollectionLoader;
 
         // Rendering
+        RG::RenderGraph                                 m_renderGraph;
+        Render::PipelineRegistry                        m_renderPipelineRegistry;
+
         Render::RenderDevice*                           m_pRenderDevice = nullptr;
         Render::MeshLoader                              m_renderMeshLoader;
         Render::ShaderLoader                            m_shaderLoader;

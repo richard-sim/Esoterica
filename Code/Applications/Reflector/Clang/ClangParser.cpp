@@ -85,6 +85,9 @@ namespace EE::TypeSystem::Reflection
             clangArgs.push_back( Settings::g_devToolsExclusionDefine );
         }
 
+        // Note: i am not sure if this is the proper way to add custom macro
+        clangArgs.push_back( Settings::g_engineGraphicBackendMacroDefine );
+        
         //-------------------------------------------------------------------------
 
         // Set up clang

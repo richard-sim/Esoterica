@@ -15,6 +15,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
+    <ClInclude Include="RHI\Resource\RHIBuffer.h" />
+    <ClInclude Include="RHI\Resource\RHIPipelineState.h" />
+    <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h" />
+    <ClInclude Include="RHI\Resource\RHISemaphore.h" />
+    <ClInclude Include="RHI\Resource\RHIShader.h" />
+    <ClInclude Include="RHI\Resource\RHITexture.h" />
+    <ClInclude Include="RHI\RHISwapchain.h" />
+    <ClInclude Include="RHI\Resource\RHIResource.h" />
+    <ClInclude Include="RHI\RHIDevice.h" />
+    <ClInclude Include="Types\Map.h" />
+    <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
     <ClInclude Include="Encoding\Quantization.h" />
     <ClInclude Include="Imgui\ImguiFilteredCombo.h" />
@@ -62,11 +79,31 @@
     <ClInclude Include="Network\NetworkSystem.h" />
     <ClInclude Include="Platform\Platform_Win32.h" />
     <ClInclude Include="Drawing\DebugDrawingSystem.h" />
+    <!-- [Legacy] ClInclude Include="Math\MathStringHelpers.h" /-->
+    <!-- [Legacy] ClInclude Include="Math\MathHelpers.h" /-->
+    <ClInclude Include="RenderGraph\RenderGraph.h" />
+    <ClInclude Include="RenderGraph\RenderGraphContext.h" />
+    <ClInclude Include="RenderGraph\RenderGraphNode.h" />
+    <ClInclude Include="RenderGraph\RenderGraphResource.h" />
+    <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h" />
+    <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
+    <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h" />
     <ClInclude Include="Math\MathUtils.h" />
-    <ClInclude Include="Render\Platform\RenderContext_DX11.h" />
-    <ClInclude Include="Render\Platform\RenderDevice_DX11.h" />
-    <ClInclude Include="Render\Platform\TextureLoader_Win32.h" />
     <ClInclude Include="Render\RenderAPI.h" />
+    <ClInclude Include="Render\RenderPipeline.h" />
+    <ClInclude Include="Render\RenderPipelineRegistry.h" />
+    <ClInclude Include="Render\RenderResourceBarrier.h" />
     <ClInclude Include="Render\RenderBuffer.h" />
     <ClInclude Include="Render\RenderCoreResources.h" />
     <ClInclude Include="Render\RenderDevice.h" />
@@ -428,6 +465,7 @@
     <ClInclude Include="TypeSystem\TypeInfo.h" />
     <ClInclude Include="TypeSystem\TypeRegistry.h" />
     <ClInclude Include="Serialization\TypeSerialization.h" />
+    <ClInclude Include="Types\Atomic.h" />
     <ClInclude Include="Types\Event.h" />
     <ClInclude Include="FileSystem\FileSystemPath.h" />
     <ClInclude Include="FileSystem\FileStreams.h" />
@@ -491,12 +529,17 @@
     <ClInclude Include="Types\Arrays.h" />
     <ClInclude Include="Types\BitFlags.h" />
     <ClInclude Include="Types\LoadingStatus.h" />
+    <ClInclude Include="Types\RefCount.h" />
     <ClInclude Include="Types\ScopedValue.h" />
+    <ClInclude Include="Types\Set.h" />
     <ClInclude Include="Types\String.h" />
     <ClInclude Include="Types\Containers_ForwardDecl.h" />
     <ClInclude Include="Types\StringID.h" />
     <ClInclude Include="Types\Tag.h" />
     <ClInclude Include="Types\UUID.h" />
+    <ClInclude Include="Types\Variant.h" />
+    <ClInclude Include="Types\WString.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanShader.h" />
     <ClInclude Include="_Module\API.h" />
   </ItemGroup>
   <ItemGroup>
@@ -505,6 +548,10 @@
     <ClCompile Include="Logging\LoggingSystem.cpp" />
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Math\Platform\Math_Win32.h" />
+    <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" />
+    <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp" />
+    <ClCompile Include="RHI\RHISwapchain.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
@@ -543,9 +590,24 @@
     <ClCompile Include="Network\IPC\IPCMessageServer.cpp" />
     <ClCompile Include="Network\NetworkSystem.cpp" />
     <ClCompile Include="Platform\Platform_Win32.cpp" />
-    <ClCompile Include="Render\Platform\RenderContext_DX11.cpp" />
-    <ClCompile Include="Render\Platform\RenderDevice_DX11.cpp" />
-    <ClCompile Include="Render\Platform\TextureLoader_Win32.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraph.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphContext.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphNode.cpp" />
+    <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp" />
+    <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp" />
+    <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp" />
+    <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
+    <ClCompile Include="Render\RenderPipelineState.cpp" />
+    <ClCompile Include="Render\RenderResourceBarrier.cpp" />
     <ClCompile Include="Render\RenderCoreResources.cpp" />
     <ClCompile Include="Render\RenderShader.cpp" />
     <ClCompile Include="Render\RenderTarget.cpp" />
@@ -628,6 +690,7 @@
     <ClCompile Include="Types\Tag.cpp" />
     <ClCompile Include="Types\UUID.cpp" />
     <ClCompile Include="Types\Platform\Types_Win32.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE" />
@@ -692,6 +755,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

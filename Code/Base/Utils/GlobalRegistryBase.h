@@ -77,7 +77,7 @@ namespace EE
 
     private:
 
-        T* m_pNext = nullptr;
+        T*                                      m_pNext = nullptr;
     };
 
     //-------------------------------------------------------------------------

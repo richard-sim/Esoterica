@@ -27,14 +27,14 @@ namespace EE
 
         public:
 
-            CullMode                m_cullMode = CullMode::BackFace;
-            FillMode                m_fillMode = FillMode::Solid;
-            WindingMode             m_windingMode = WindingMode::CounterClockwise;
-            bool                    m_scissorCulling = false;
+            CullMode                        m_cullMode = CullMode::BackFace;
+            FillMode                        m_fillMode = FillMode::Solid;
+            WindingMode                     m_windingMode = WindingMode::CounterClockwise;
+            bool                            m_scissorCulling = false;
 
         private:
 
-            RasterizerStateHandle          m_resourceHandle;
+            RasterizerStateHandle           m_resourceHandle;
         };
 
         //-------------------------------------------------------------------------
@@ -55,17 +55,17 @@ namespace EE
 
         public:
 
-            BlendValue              m_srcValue = BlendValue::One;
-            BlendValue              m_dstValue = BlendValue::Zero;
-            BlendOp                 m_blendOp = BlendOp::Add;
-            BlendValue              m_srcAlphaValue = BlendValue::One;
-            BlendValue              m_dstAlphaValue = BlendValue::Zero;
-            BlendOp                 m_blendOpAlpha = BlendOp::Add;
-            bool                    m_blendEnable = false;
+            BlendValue                      m_srcValue = BlendValue::One;
+            BlendValue                      m_dstValue = BlendValue::Zero;
+            BlendOp                         m_blendOp = BlendOp::Add;
+            BlendValue                      m_srcAlphaValue = BlendValue::One;
+            BlendValue                      m_dstAlphaValue = BlendValue::Zero;
+            BlendOp                         m_blendOpAlpha = BlendOp::Add;
+            bool                            m_blendEnable = false;
 
         private:
 
-            BlendStateHandle          m_resourceHandle;
+            BlendStateHandle                m_resourceHandle;
         };
     }
 }

@@ -28,7 +28,7 @@ namespace EE::Resource
 
         //-------------------------------------------------------------------------
 
-        TInlineString<10> const filenameStr( TInlineString < 10>::CtorSprintf(), "NewResource.%s", m_pDescriptor->GetCompiledResourceTypeID().ToString().c_str() );
+        TInlineString<10> const filenameStr( TInlineString <10>::CtorSprintf(), "NewResource.%s", m_pDescriptor->GetCompiledResourceTypeID().ToString().c_str() );
         m_startingPath += filenameStr.c_str();
     }
 

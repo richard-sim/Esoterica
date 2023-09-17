@@ -30,7 +30,7 @@ namespace EE::EntityModel
             archive << *pMap;
             pCollectionDesc = pMap;
         }
-        else  if ( resID.GetResourceTypeID() == SerializedEntityCollection::GetStaticResourceTypeID() )
+        else if ( resID.GetResourceTypeID() == SerializedEntityCollection::GetStaticResourceTypeID() )
         {
             auto pEC = EE::New<SerializedEntityCollection>();
             archive << *pEC;

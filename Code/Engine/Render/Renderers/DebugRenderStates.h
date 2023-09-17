@@ -34,7 +34,7 @@ namespace EE::Render
         RasterizerState                 m_rasterizerState;
         Blob                            m_stagingVertexData;
 
-        PipelineState                   m_PSO;
+        RasterPipelineState             m_PSO;
     };
 
     //-------------------------------------------------------------------------
@@ -60,7 +60,7 @@ namespace EE::Render
         RasterizerState                 m_rasterizerState;
         Blob                            m_stagingVertexData;
 
-        PipelineState                   m_PSO;
+        RasterPipelineState             m_PSO;
     };
 
     //-------------------------------------------------------------------------
@@ -85,7 +85,7 @@ namespace EE::Render
         RasterizerState                 m_rasterizerState;
         Blob                            m_stagingVertexData;
 
-        PipelineState                   m_PSO;
+        RasterPipelineState             m_PSO;
     };
 
     //-------------------------------------------------------------------------
@@ -199,7 +199,7 @@ namespace EE::Render
         BlendState                      m_blendState;
         RasterizerState                 m_rasterizerState;
 
-        PipelineState                   m_PSO;
+        RasterPipelineState             m_PSO;
 
         DebugTextFontAtlas              m_fontAtlas;
         Texture                         m_fontAtlasTexture;

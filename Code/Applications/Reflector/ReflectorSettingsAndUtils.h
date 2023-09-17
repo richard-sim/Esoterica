@@ -43,6 +43,12 @@ namespace EE::TypeSystem::Reflection
 
         constexpr static char const* const g_devToolsExclusionDefine = "-D EE_SHIPPING";
 
+        #if defined(_WIN32) && defined(EE_DX11)
+        constexpr static char const* const g_engineGraphicBackendMacroDefine = "-D EE_DX11";
+        #elif defined(EE_VULKAN)
+        constexpr static char const* const g_engineGraphicBackendMacroDefine = "-D EE_VULKAN";
+        #endif
+
         //-------------------------------------------------------------------------
         // Projects
         //-------------------------------------------------------------------------

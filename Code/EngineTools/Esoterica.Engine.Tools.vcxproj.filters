@@ -292,6 +292,9 @@
     <ClCompile Include="Render\ResourceCompilers\ResourceCompiler_RenderTexture.cpp">
       <Filter>Render\ResourceCompilers</Filter>
     </ClCompile>
+    <ClCompile Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.cpp">
+      <Filter>Render\ResourceCompilers</Filter>
+    </ClCompile>
     <ClCompile Include="Navmesh\NavmeshGenerator.cpp">
       <Filter>Navmesh</Filter>
     </ClCompile>
@@ -325,12 +328,27 @@
     <ClCompile Include="Resource\ResourceDescriptorCreator.cpp">
       <Filter>Resource</Filter>
     </ClCompile>
-    <ClCompile Include="Resource\EditorTools\EditorTool_RawFileInspector.cpp" />
-    <ClCompile Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_FBX.cpp" />
-    <ClCompile Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_GLTF.cpp" />
-    <ClCompile Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_Image.cpp" />
-    <ClCompile Include="Render\Workspaces\Workspace_Mesh.cpp" />
-    <ClCompile Include="Animation\ResourceDescriptors\ResourceDescriptor_AnimationClip.cpp" />
+    <ClCompile Include="Resource\EditorTools\EditorTool_RawFileInspector.cpp">
+      <Filter>Resource\EditorTools</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_FBX.cpp">
+      <Filter>Resource\EditorTools\RawFileInspectors</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_GLTF.cpp">
+      <Filter>Resource\EditorTools\RawFileInspectors</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_Image.cpp">
+      <Filter>Resource\EditorTools\RawFileInspectors</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Workspaces\Workspace_Mesh.cpp">
+      <Filter>Render\Workspaces</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation\ResourceDescriptors\ResourceDescriptor_AnimationClip.cpp">
+      <Filter>Animation\ResourceDescriptors</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.cpp">
+      <Filter>Render\ResourceCompilers\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\CommonToolTypes.h">
@@ -708,11 +726,231 @@
     <ClInclude Include="Resource\ResourceDescriptorCreator.h">
       <Filter>Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Resource\EditorTools\EditorTool_RawFileInspector.h" />
-    <ClInclude Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_FBX.h" />
-    <ClInclude Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_GLTF.h" />
-    <ClInclude Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_Image.h" />
-    <ClInclude Include="Render\Workspaces\Workspace_Mesh.h" />
+    <ClInclude Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_FBX.h">
+      <Filter>Resource\EditorTools\RawFileInspectors</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_GLTF.h">
+      <Filter>Resource\EditorTools\RawFileInspectors</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource\EditorTools\RawFileInspectors\EditorTool_RawFileInspector_Image.h">
+      <Filter>Resource\EditorTools\RawFileInspectors</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\ResourceCompilers\Platform\DxcShaderCompiler.h">
+      <Filter>Render\ResourceCompilers\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Workspaces\Workspace_Mesh.h">
+      <Filter>Render\Workspaces</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Events\AnimationEventTracks.h">
+      <Filter>Animation\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Events\AnimationEventTrack.h">
+      <Filter>Animation\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Events\AnimationEventEditor.h">
+      <Filter>Animation\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Workspaces\Workspace_BoneMask.h">
+      <Filter>Animation\Workspaces</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Workspaces\Workspace_AnimationClip.h">
+      <Filter>Animation\Workspaces</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Workspaces\Workspace_AnimationGraph.h">
+      <Filter>Animation\Workspaces</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Workspaces\Workspace_Skeleton.h">
+      <Filter>Animation\Workspaces</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Animation_ToolsGraph_UserContext.h">
+      <Filter>Animation\ToolsGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Animation_ToolsGraph_Compilation.h">
+      <Filter>Animation\ToolsGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Animation_ToolsGraph_Definition.h">
+      <Filter>Animation\ToolsGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Animation_ToolsGraph_Variations.h">
+      <Filter>Animation\ToolsGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_State.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_GlobalTransitions.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_EntryStates.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Transition.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_StateMachine.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Result.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Parameters.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_DataSlot.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_ChildGraph.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_ExternalGraph.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_AnimationClip.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Blends.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_BoneMasks.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Bools.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_CachedValues.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_ConstValues.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Events.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Floats.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_IDs.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Layers.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Pose.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Ragdolls.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_RootMotionOverride.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Selector.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_SpeedScale.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_StateConditions.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Targets.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Vectors.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Nodes\Animation_ToolsGraphNode_Warping.h">
+      <Filter>Animation\ToolsGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Graphs\Animation_ToolsGraph_FlowGraph.h">
+      <Filter>Animation\ToolsGraph\Graphs</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ToolsGraph\Graphs\Animation_ToolsGraph_StateMachineGraph.h">
+      <Filter>Animation\ToolsGraph\Graphs</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceCompilers\ResourceCompiler_AnimationBoneMask.h">
+      <Filter>Animation\ResourceCompilers</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceCompilers\ResourceCompiler_AnimationClip.h">
+      <Filter>Animation\ResourceCompilers</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceCompilers\ResourceCompiler_AnimationGraph.h">
+      <Filter>Animation\ResourceCompilers</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceCompilers\ResourceCompiler_AnimationSkeleton.h">
+      <Filter>Animation\ResourceCompilers</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceDescriptors\ResourceDescriptor_AnimationClip.h">
+      <Filter>Animation\ResourceDescriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceDescriptors\ResourceDescriptor_AnimationGraph.h">
+      <Filter>Animation\ResourceDescriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceDescriptors\ResourceDescriptor_AnimationSkeleton.h">
+      <Filter>Animation\ResourceDescriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ResourceDescriptors\ResourceDescriptor_AnimationBoneMask.h">
+      <Filter>Animation\ResourceDescriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\RawAnimation.h">
+      <Filter>RawAssets</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\RawAsset.h">
+      <Filter>RawAssets</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\RawAssetInfo.h">
+      <Filter>RawAssets</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\RawAssetReader.h">
+      <Filter>RawAssets</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\RawMesh.h">
+      <Filter>RawAssets</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\RawSkeleton.h">
+      <Filter>RawAssets</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\Fbx\FbxAnimation.h">
+      <Filter>RawAssets\Fbx</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\Fbx\FbxMesh.h">
+      <Filter>RawAssets\Fbx</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\Fbx\FbxSceneContext.h">
+      <Filter>RawAssets\Fbx</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\Fbx\FbxSkeleton.h">
+      <Filter>RawAssets\Fbx</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\gltf\gltfAnimation.h">
+      <Filter>RawAssets\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\gltf\gltfMesh.h">
+      <Filter>RawAssets\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\gltf\gltfSceneContext.h">
+      <Filter>RawAssets\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="RawAssets\gltf\gltfSkeleton.h">
+      <Filter>RawAssets\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\pfd\portable-file-dialogs.h">
+      <Filter>ThirdParty\pfd</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cgltf\cgltf.h">
+      <Filter>ThirdParty\cgltf</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cgltf\cgltf_write.h">
+      <Filter>ThirdParty\cgltf</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\sqlite\SqliteHelpers.h">
+      <Filter>ThirdParty\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\subprocess\subprocess.h">
+      <Filter>ThirdParty\subprocess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">

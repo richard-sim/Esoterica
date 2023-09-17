@@ -16,8 +16,8 @@ namespace EE::Encoding::Base64
 
         Blob encodedData;
         int32_t i = 0, j = 0;
-        uint8_t byte3[3];
-        uint8_t byte4[4];
+        uint8_t byte3[3]= { 0 };
+        uint8_t byte4[4]= { 0 };
 
         while ( dataSize-- )
         {
@@ -89,7 +89,7 @@ namespace EE::Encoding::Base64
 
         int32_t idx = 0;
         size_t i = 0, j = 0;
-        uint8_t byte4[4], byte3[3];
+        uint8_t byte4[4] = { 0 }, byte3[3] = { 0 };
 
         while ( dataSize-- && ( pDataToDecode[idx] != '=' ) && IsBase64( pDataToDecode[idx] ) )
         {

@@ -68,6 +68,29 @@ namespace EE::Platform
 
 #define InvalidIndex -1
 
+// Platform agnostic asserts
+//-------------------------------------------------------------------------
+
+// TODO: macr with comma in C++ with result in error macro expand
+// (e.g. for some type contains std::is_same_v<A, B> which contains a comma,
+//  and macro will expand that to cond = "is_same_v<A" and error = " B>")
+// To correct this, we have several solutions:
+// 
+// 1. Use macro to prevent macro expand.
+// #define COMMA ,
+// EE_STATIC_ASSERT( std::is_same_v<A COMMA B>, error_msg )
+// 
+// this way macro expand will separate comma correctly.
+//
+// Or something like:
+// #define SINGLE_ARG(...) __VA_ARGS__
+// EE_STATIC_ASSERT( SINGLE_ARG( std::is_same_v<A, B> ), error_msg )
+// 
+// 2. User takes care.
+// User just wrap cond with a parentheses.
+// 
+// EE_STATIC_ASSERT( ( std::is_same_v<A, B> ), error_msg )
+// 
 #define EE_STATIC_ASSERT( cond, error ) static_assert( cond, error )
 
 #if EE_DEVELOPMENT_TOOLS

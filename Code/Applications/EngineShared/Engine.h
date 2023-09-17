@@ -48,7 +48,7 @@ namespace EE
 
     protected:
 
-        TFunction<bool( EE::String const& error )>     m_fatalErrorHandler;
+        TFunction<bool( EE::String const& error )>      m_fatalErrorHandler;
 
         // Modules
         //-------------------------------------------------------------------------
@@ -75,8 +75,12 @@ namespace EE
 
         #if EE_DEVELOPMENT_TOOLS
         ImGuiX::ImguiSystem*                            m_pImguiSystem = nullptr;
-        ImGuiX::IDevelopmentToolsUI*                               m_pToolsUI = nullptr;
+        ImGuiX::IDevelopmentToolsUI*                    m_pToolsUI = nullptr;
         #endif
+
+        // Temporary: Test
+        //-------------------------------------------------------------------------
+        Render::PipelineRegistry*                       m_pRenderPipelineResgistry = nullptr;
 
         // Application data
         //-------------------------------------------------------------------------

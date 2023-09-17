@@ -73,7 +73,7 @@ namespace EE
 #define EE_PROFILE_SCOPE_AI( name ) OPTICK_EVENT( name, Optick::Category::AI )
 #define EE_PROFILE_SCOPE_ANIMATION( name ) OPTICK_EVENT( name, Optick::Category::Animation )
 #define EE_PROFILE_SCOPE_CAMERA( name) OPTICK_EVENT( name, Optick::Category::Camera )
-#define EE_PROFILE_SCOPE_GAMEPLAY( name) OPTICK_EVENT( name, Optick::Category::GameLogic )
+#define EE_PROFILE_SCOPE_GAMEPLAY( name ) OPTICK_EVENT( name, Optick::Category::GameLogic )
 #define EE_PROFILE_SCOPE_IO( name ) OPTICK_EVENT( name, Optick::Category::IO )
 #define EE_PROFILE_SCOPE_NAVIGATION( name ) OPTICK_EVENT( name, Optick::Category::Navigation )
 #define EE_PROFILE_SCOPE_PHYSICS( name ) OPTICK_EVENT( name, Optick::Category::Physics )

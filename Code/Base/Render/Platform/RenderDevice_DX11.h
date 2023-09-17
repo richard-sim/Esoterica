@@ -1,9 +1,11 @@
 #pragma once
-#ifdef _WIN32
+#if defined(_WIN32) && defined(EE_DX11)
 
 #include "RenderContext_DX11.h"
 #include "Base/Types/Color.h"
 #include "Base/Threading/Threading.h"
+
+#include "System/Memory/Pointers.h"
 
 #include <D3D11.h>
 
@@ -15,12 +17,27 @@ namespace EE { class IniFile; }
 
 namespace EE::Render
 {
+<<<<<<<< HEAD:Code/Base/Render/Platform/DX11/RenderDevice_DX11.h
+    #ifdef EE_VULKAN
+    // temporary
+    namespace Backend
+    { 
+        class VulkanInstance;
+        class VulkanSurface;
+        class VulkanDevice;
+        class VulkanSwapchain;
+    }
+    #endif
+
+    class EE_SYSTEM_API RenderDevice
+========
     class EE_BASE_API RenderDevice
+>>>>>>>> heads/upstream:Code/Base/Render/Platform/RenderDevice_DX11.h
     {
 
     public:
 
-        RenderDevice() = default;
+        RenderDevice();
         ~RenderDevice();
 
         //-------------------------------------------------------------------------
@@ -58,6 +75,9 @@ namespace EE::Render
         // Shaders
         void CreateShader( Shader& shader );
         void DestroyShader( Shader& shader );
+
+        void CreateVkShader( Shader& shader );
+        void DestroyVkShader( Shader& shader );
 
         // Buffers
         void CreateBuffer( RenderBuffer& buffer, void const* pInitializationData = nullptr );
@@ -116,6 +136,14 @@ namespace EE::Render
         IDXGIFactory*               m_pFactory = nullptr;
         RenderWindow                m_primaryWindow;
         RenderContext               m_immediateContext;
+
+        #ifdef EE_VULKAN
+        // temporary
+        TSharedPtr<Backend::VulkanInstance>         m_pVkInstance = nullptr;
+        TSharedPtr<Backend::VulkanSurface>          m_pVkSurface = nullptr;
+        TSharedPtr<Backend::VulkanDevice>           m_pVkDevice = nullptr;
+        TSharedPtr<Backend::VulkanSwapchain>        m_pVkSwapchain = nullptr;
+        #endif
 
         // Lock to allow loading resources while rendering across different threads
         Threading::RecursiveMutex   m_deviceMutex;

@@ -1,6 +1,7 @@
 #pragma once
 #include "Arrays.h"
 #include "HashMap.h"
+#include "Base/Memory/Pointers.h"
 
 //-------------------------------------------------------------------------
 // ID Vector
@@ -29,6 +30,11 @@ namespace EE
         ItemType& operator[]( int32_t idx ) { return m_vector[idx]; }
         int32_t size() const { return (int32_t) m_vector.size(); }
         bool empty() const { return m_vector.empty(); }
+        void clear()
+        {
+            m_vector.clear();
+            m_indexMap.clear();
+        }
 
         typename TVector<ItemType>::iterator begin() { return m_vector.begin(); }
         typename TVector<ItemType>::iterator end() { return m_vector.end(); }
@@ -48,7 +54,7 @@ namespace EE
         // Add a new item
         ItemType* Add( ItemType const& item )
         {
-            IDType const ID = GetItemID( std::is_pointer<ItemType>(), item );
+            IDType const ID = GetItemID( Trait::IsPointerIncludeSmartPointer<ItemType>(), item);
             EE_ASSERT( m_indexMap.find( ID ) == m_indexMap.end() );
             int32_t const itemIdx = (int32_t) m_vector.size();
             m_vector.emplace_back( item );
@@ -59,7 +65,7 @@ namespace EE
         // Add a new item - Expects the item to not already have an entry and will crash otherwise
         ItemType* Add( ItemType const&& item )
         {
-            IDType const ID = GetItemID( std::is_pointer<ItemType>(), item );
+            IDType const ID = GetItemID( Trait::IsPointerIncludeSmartPointer<ItemType>(), item);
             EE_ASSERT( m_indexMap.find( ID ) == m_indexMap.end() );
             int32_t const itemIdx = (int32_t) m_vector.size();
             m_vector.emplace_back( eastl::forward<ItemType const>( item ) );
@@ -74,7 +80,7 @@ namespace EE
             EE_ASSERT( m_indexMap.find( ID ) == m_indexMap.end() );
             int32_t const itemIdx = (int32_t) m_vector.size();
             m_vector.emplace_back( eastl::forward<Args>( args )... );
-            EE_ASSERT( GetLastElementID( std::is_pointer<ItemType>() ) == ID );
+            EE_ASSERT( GetLastElementID( Trait::IsPointerIncludeSmartPointer<ItemType>() ) == ID );
             m_indexMap.insert( TPair<IDType, int32_t>( ID, itemIdx ) );
             return &m_vector[itemIdx];
         }
@@ -88,7 +94,7 @@ namespace EE
             // Update the index for the last element if that exists
             if ( m_vector.size() > 1 )
             {
-                IDType lastItemID = GetLastElementID( std::is_pointer<ItemType>() );
+                IDType lastItemID = GetLastElementID( Trait::IsPointerIncludeSmartPointer<ItemType>() );
                 auto foundLastItemIter = m_indexMap.find( lastItemID );
                 foundLastItemIter->second = foundIter->second;
             }

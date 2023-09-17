@@ -137,6 +137,6 @@ namespace EE
 
     private:
 
-        TEvent<Args...>* m_pEvent = nullptr;
+        TEvent<Args...>*                    m_pEvent = nullptr;
     };
 }

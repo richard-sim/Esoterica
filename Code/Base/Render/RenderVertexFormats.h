@@ -56,8 +56,8 @@ namespace EE::Render
                 , m_offset( offset )
             {}
 
-            DataSemantic        m_semantic = DataSemantic::None;
-            DataFormat      m_format = DataFormat::Unknown;
+            DataSemantic          m_semantic = DataSemantic::None;
+            DataFormat            m_format = DataFormat::Unknown;
             uint16_t              m_semanticIndex = 0;
             uint16_t              m_offset = 0;
         };

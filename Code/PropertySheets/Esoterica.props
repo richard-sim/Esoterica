@@ -13,7 +13,15 @@
     <EE_BUILD_DIR>$(SolutionDir)Build\</EE_BUILD_DIR>
     <OutDir>$(EE_BUILD_DIR)$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(EE_BUILD_DIR)_Temp\$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
+    <EE_GRAPHIC_DX11>True</EE_GRAPHIC_DX11>
+    <EE_GRAPHIC_VULKAN>True</EE_GRAPHIC_VULKAN>
   </PropertyGroup>
+  <ImportGroup Label="PropertySheets" Condition="$(EE_GRAPHIC_DX11) == 'True'">
+    <Import Project="$(SolutionDir)Code\PropertySheets\Esoterica.DX11.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="$(EE_GRAPHIC_VULKAN) == 'True'">
+    <Import Project="$(SolutionDir)Code\PropertySheets\Esoterica.Vulkan.props" />
+  </ImportGroup>
   <PropertyGroup>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
     <CodeAnalysisRuleSet>NativeMinimumRules.ruleset</CodeAnalysisRuleSet>
@@ -43,6 +51,8 @@
       <Optimization Condition="$(Configuration) != 'Debug'">MaxSpeed</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <!-- Disable warning level 18 for dxcapi.h to disable warning C5204-->
+      <WarningVersion>18</WarningVersion>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
