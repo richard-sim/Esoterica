@@ -233,7 +233,10 @@ namespace EE
         //-------------------------------------------------------------------------
 
         // Note: returns true for 0
-        EE_FORCE_INLINE bool IsPowerOf2( int32_t x ) { return ( x & ( x - 1 ) ) == 0; }
+        EE_FORCE_INLINE bool IsPowerOf2( uint32_t x )
+        {
+            return ( x & ( x - 1 ) ) == 0;
+        }
 
         EE_FORCE_INLINE uint32_t GetClosestPowerOfTwo( uint32_t x )
         {
