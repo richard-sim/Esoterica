@@ -27,11 +27,11 @@ namespace EE::Render
 			switch ( messageSeverity )
 			{
 				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-					EE_LOG_MESSAGE( "Render", "Vulkan Backend", "%s %s", messageTypeStr, pCallbackData->pMessage );
+					EE_LOG_INFO( "Render", "Vulkan Backend", "%s %s", messageTypeStr, pCallbackData->pMessage );
 				break;
 
 				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-					EE_LOG_MESSAGE( "Render", "Vulkan Backend", "%s %s", messageTypeStr, pCallbackData->pMessage );
+					EE_LOG_INFO( "Render", "Vulkan Backend", "%s %s", messageTypeStr, pCallbackData->pMessage );
 				break;
 
 				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
