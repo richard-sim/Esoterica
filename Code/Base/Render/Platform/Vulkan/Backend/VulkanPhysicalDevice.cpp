@@ -93,7 +93,7 @@ namespace EE::Render
 				EE_ASSERT( false );
 			}
 
-			EE_LOG_MESSAGE("Render", "Vulkan Backend", "Pick physical device info: \n\tname: %s\n\tdriver version: %u\n\tvendor id: %u", pdDevices[currPickIndex].m_props.deviceName, pdDevices[currPickIndex].m_props.driverVersion, pdDevices[currPickIndex].m_props.vendorID );
+			EE_LOG_INFO("Render", "Vulkan Backend", "Pick physical device info: \n\tname: %s\n\tdriver version: %u\n\tvendor id: %u", pdDevices[currPickIndex].m_props.deviceName, pdDevices[currPickIndex].m_props.driverVersion, pdDevices[currPickIndex].m_props.vendorID );
 
 			VulkanPhysicalDevice pd = std::move( pdDevices[currPickIndex] );
 			pdDevices.erase_unsorted( pdDevices.begin() + currPickIndex );

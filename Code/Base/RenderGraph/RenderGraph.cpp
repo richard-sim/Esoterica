@@ -58,11 +58,11 @@ namespace EE
 
 			size_t const count = m_graph.size();
 
-			EE_LOG_MESSAGE( "Render Graph", "Graph", "Node Count: %u", count );
+			EE_LOG_INFO( "Render Graph", "Graph", "Node Count: %u", count );
 
 			for ( size_t i = 0; i < count; ++i )
 			{
-				EE_LOG_MESSAGE( "Render Graph", "Graph", "\tNode (%s)", m_graph[i].m_passName.c_str() );
+				EE_LOG_INFO( "Render Graph", "Graph", "\tNode (%s)", m_graph[i].m_passName.c_str() );
 			}
 		}
 
@@ -96,8 +96,8 @@ namespace EE
                     {
                         BufferDesc const& desc = rgResource.GetDesc<RGResourceTagBuffer>();
 
-                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Desired Size = %d", desc.m_desc.m_desireSize );
-                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Allocated Size = %d", desc.m_desc.m_desireSize );
+                        EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Desired Size = %d", desc.m_desc.m_desireSize );
+                        EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Allocated Size = %d", desc.m_desc.m_desireSize );
 
                         if ( rgResource.IsLazyCreateResource() )
                         {
@@ -112,8 +112,8 @@ namespace EE
                     {
                         TextureDesc const& desc = rgResource.GetDesc<RGResourceTagTexture>();
 
-                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Width = %d", desc.m_desc.m_width );
-                        EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Height = %d", desc.m_desc.m_height );
+                        EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Width = %d", desc.m_desc.m_width );
+                        EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Height = %d", desc.m_desc.m_height );
 
                         if ( rgResource.IsLazyCreateResource() )
                         {

@@ -393,29 +393,29 @@ namespace EE
 
         if ( Trait::IsPointerIncludeSmartPointer<TSharedPtr<int>>::value )
         {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is a smart pointer!" );
+            EE_LOG_INFO( "Test", "Pointer Trait", "TSharedPtr<int> is a smart pointer!" );
         }
         else
         {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TSharedPtr<int> is not a smart pointer!" );
+            EE_LOG_INFO( "Test", "Pointer Trait", "TSharedPtr<int> is not a smart pointer!" );
         }
 
         if ( Trait::IsPointerIncludeSmartPointer<int*>::value )
         {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is a smart pointer!" );
+            EE_LOG_INFO( "Test", "Pointer Trait", "int* is a smart pointer!" );
         }
         else
         {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "int* is not a smart pointer!" );
+            EE_LOG_INFO( "Test", "Pointer Trait", "int* is not a smart pointer!" );
         }
 
         if ( Trait::IsPointerIncludeSmartPointer<TUniquePtr<RG::BufferDesc>>::value )
         {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is a smart pointer!" );
+            EE_LOG_INFO( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is a smart pointer!" );
         }
         else
         {
-            EE_LOG_MESSAGE( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is not a smart pointer!" );
+            EE_LOG_INFO( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is not a smart pointer!" );
         }
 
         //-------------------------------------------------------------------------
