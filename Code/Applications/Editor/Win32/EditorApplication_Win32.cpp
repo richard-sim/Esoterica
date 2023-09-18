@@ -68,6 +68,12 @@ namespace EE
 
     void EditorApplication::GetBorderlessTitleBarInfo( Math::ScreenSpaceRectangle& outTitlebarRect, bool& isInteractibleWidgetHovered ) const
     {
+        if ( m_engine.m_pToolsUI == nullptr )
+        {
+            isInteractibleWidgetHovered = false;
+            return;
+        }
+
         static_cast<EditorUI*>( m_engine.m_pToolsUI )->GetBorderlessTitleBarInfo( outTitlebarRect, isInteractibleWidgetHovered );
     }
 
