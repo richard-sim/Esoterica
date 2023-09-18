@@ -167,7 +167,7 @@ namespace EE::RHI
 
     RHIBufferCreateDesc RHIBufferCreateDesc::NewAlignedSize( uint32_t sizeInByte, uint32_t alignment )
     {
-        EE_ASSERT( sizeInByte > 0 && alignment >= 2 && Math::IsPowerOfTwo( alignment ) );
+        EE_ASSERT( sizeInByte > 0 && alignment >= 2 && Math::IsPowerOf2( alignment ) );
 
         uint32_t aligned = Math::MinValueAlignTo( sizeInByte, alignment );
 
