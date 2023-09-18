@@ -169,7 +169,7 @@ namespace EE::RHI
     {
         EE_ASSERT( sizeInByte > 0 && alignment >= 2 && Math::IsPowerOf2( alignment ) );
 
-        uint32_t aligned = Math::MinValueAlignTo( sizeInByte, alignment );
+        uint32_t aligned = Math::RoundUpToNearestMultiple32( sizeInByte, alignment );
 
         RHIBufferCreateDesc bufferDesc = {};
         bufferDesc.m_desireSize = aligned;

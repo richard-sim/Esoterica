@@ -165,11 +165,6 @@ namespace EE
             return (int32_t) roundf( value );
         }
 
-        EE_FORCE_INLINE uint32_t MinValueAlignTo( uint32_t value, uint32_t alignment )
-        {
-            return ( value + ( alignment - 1 ) ) / alignment * alignment;
-        }
-
         inline int32_t GreatestCommonDivisor( int32_t a, int32_t b )
         {
             return ( b == 0 ) ? Abs( a ) : GreatestCommonDivisor( b, a % b );
