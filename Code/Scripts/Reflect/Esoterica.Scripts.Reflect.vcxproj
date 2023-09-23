@@ -58,15 +58,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeBuildCommandLine>nmake -f Reflect.nmake PLATFORM=$(Platform) CONFIG=$(Configuration) EE_ROOT_DIR="$(EE_ROOT_DIR)\" EE_BUILD_DIR="$(EE_BUILD_DIR)\" OUT_DIR="$(OutDir)\"</NMakeBuildCommandLine>
-    <NMakeOutput>
-    </NMakeOutput>
+    <NMakeOutput />
     <NMakeCleanCommandLine>nmake clean -f Reflect.nmake PLATFORM=$(Platform) CONFIG=$(Configuration) EE_ROOT_DIR="$(EE_ROOT_DIR)\" EE_BUILD_DIR="$(EE_BUILD_DIR)\" OUT_DIR="$(OutDir)\"</NMakeCleanCommandLine>
-    <NMakePreprocessorDefinitions>WIN32;_DEBUG;EE_DX11;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <NMakeBuildCommandLine>nmake -f Reflect.nmake PLATFORM=$(Platform) CONFIG=$(Configuration) EE_ROOT_DIR="$(EE_ROOT_DIR)\" EE_BUILD_DIR="$(EE_BUILD_DIR)\" OUT_DIR="$(OutDir)\"</NMakeBuildCommandLine>
-    <NMakeOutput>
-    </NMakeOutput>
+    <NMakeOutput />
     <NMakeCleanCommandLine>nmake clean -f Reflect.nmake PLATFORM=$(Platform) CONFIG=$(Configuration) EE_ROOT_DIR="$(EE_ROOT_DIR)\" EE_BUILD_DIR="$(EE_BUILD_DIR)\" OUT_DIR="$(OutDir)\"</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
