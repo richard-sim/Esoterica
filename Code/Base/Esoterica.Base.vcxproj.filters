@@ -106,12 +106,6 @@
     <ClCompile Include="Render\RenderVertexFormats.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp">
-      <Filter>Render\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp">
-      <Filter>Render\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp">
       <Filter>Render\Platform</Filter>
     </ClCompile>
@@ -441,6 +435,12 @@
     </ClCompile>
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.cpp">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp">
+      <Filter>Render\Platform\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp">
+      <Filter>Render\Platform\DX11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1498,12 +1498,6 @@
     <ClInclude Include="Render\RenderWindow.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h">
-      <Filter>Render\Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h">
-      <Filter>Render\Platform</Filter>
-    </ClInclude>
     <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h">
       <Filter>Render\Platform</Filter>
     </ClInclude>
@@ -2007,7 +2001,9 @@
     <ClInclude Include="Types\Map.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
     <ClInclude Include="Types\List.h">
       <Filter>Types</Filter>
     </ClInclude>
@@ -2025,6 +2021,389 @@
     </ClInclude>
     <ClInclude Include="RHI\RHITaggedType.h">
       <Filter>RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\bgfx.h">
+      <Filter>Render\Platform\BGFX\bgfx\include\bgfx</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\defines.h">
+      <Filter>Render\Platform\BGFX\bgfx\include\bgfx</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\embedded_shader.h">
+      <Filter>Render\Platform\BGFX\bgfx\include\bgfx</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\platform.h">
+      <Filter>Render\Platform\BGFX\bgfx\include\bgfx</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\alloca.h">
+      <Filter>Render\Platform\BGFX\bx\include\compat\msvc</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\dirent.h">
+      <Filter>Render\Platform\BGFX\bx\include\compat\msvc</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\inttypes.h">
+      <Filter>Render\Platform\BGFX\bx\include\compat\msvc</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\stdbool.h">
+      <Filter>Render\Platform\BGFX\bx\include\compat\msvc</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\allocator.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\bounds.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\bx.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\commandline.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\config.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\constants.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\cpu.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\debug.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\easing.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\endian.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\error.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\file.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\filepath.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\float4x4_t.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\handlealloc.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\hash.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\macros.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\maputil.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\math.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\mpscqueue.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\mutex.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\os.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\pixelformat.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\platform.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\process.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\readerwriter.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\ringbuffer.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\rng.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\semaphore.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\settings.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\simd_t.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\sort.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\spscqueue.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\string.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\thread.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\timer.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\typetraits.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\uint32_t.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\bx\url.h">
+      <Filter>Render\Platform\BGFX\bx\include\bx\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\3rdparty\catch\catch_amalgamated.hpp">
+      <Filter>Render\Platform\BGFX\bx\3rdparty\catch</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\3rdparty\ini\ini.h">
+      <Filter>Render\Platform\BGFX\bx\3rdparty\ini</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\hash.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\hash_base.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\new.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\stddef.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\string.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\traits.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\unordered_map.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\unordered_set.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\vector.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\allocator.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bx\include\tinystl\buffer.h">
+      <Filter>Render\Platform\BGFX\bx\include\tinystl</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\bgfx_p.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\charset.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\config.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\debug_renderdoc.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\dxgi.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\emscripten.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear0.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear1.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear2.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear3.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear4.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear5.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear6.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear7.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\fs_debugfont.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\glcontext_egl.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\glcontext_html5.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\glcontext_wgl.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\glimports.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\nvapi.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d9.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d11.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d12.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_gl.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_mtl.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_vk.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_webgpu.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\shader.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\shader_dx9bc.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\shader_dxbc.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\shader_spirv.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\topology.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\version.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\vertexlayout.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\vs_clear.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\vs_debugfont.bin.h">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\include\bimg\decode.h">
+      <Filter>Render\Platform\BGFX\bimg\include\bimg</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\include\bimg\encode.h">
+      <Filter>Render\Platform\BGFX\bimg\include\bimg</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\include\bimg\bimg.h">
+      <Filter>Render\Platform\BGFX\bimg\include\bimg</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\src\bimg_p.h">
+      <Filter>Render\Platform\BGFX\bimg\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\src\config.h">
+      <Filter>Render\Platform\BGFX\bimg\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\include\astcenc.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_diagnostic_trace.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_internal.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_internal_entry.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_mathlib.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_avx2_8.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_common_4.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_neon_4.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_none_4.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_sse_4.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bimg\3rdparty\tinyexr\deps\miniz\miniz.h">
+      <Filter>Render\Platform\BGFX\bimg\3rdparty\tinyexr\deps\miniz</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\src\bgfx.idl.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\allocator.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\bounds.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\bx.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\cpu.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\easing.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\endian.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\error.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\float4x4_t.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\handlealloc.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\hash.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\math.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\mpscqueue.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\mutex.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\os.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\pixelformat.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\readerwriter.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\ringbuffer.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\rng.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_langext.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_neon.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_ref.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_sse.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_swizzle.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd256_avx.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd256_ref.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd_ni.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\sort.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\spscqueue.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\string.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\typetraits.inl" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\uint32_t.inl" />
+    <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h">
+      <Filter>Render\Platform\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h">
+      <Filter>Render\Platform\DX11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2290,10 +2669,112 @@
     <Filter Include="Render\Platform\Vulkan\Backend\Platform">
       <UniqueIdentifier>{901c0ff1-37b7-47d5-a5c1-a1008abffced}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Render\Platform\BGFX">
+      <UniqueIdentifier>{5f76088b-5d80-46b9-abfd-2c3ad28fab2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bgfx">
+      <UniqueIdentifier>{6151773b-6830-42d0-9764-fc0b0cc19932}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bgfx\include">
+      <UniqueIdentifier>{b3f3bf88-8060-40e2-8d9e-3de29c42e119}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bgfx\include\bgfx">
+      <UniqueIdentifier>{53fbbb05-255a-4a4f-8254-7d94cc380eab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx">
+      <UniqueIdentifier>{25483bab-5694-4ae5-8d57-b2227cccedff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include">
+      <UniqueIdentifier>{71038753-fae5-4d89-a6ee-32d7e11c9c15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include\compat">
+      <UniqueIdentifier>{cc0b8e7f-e11a-4ab7-9f84-de9f67490241}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include\compat\msvc">
+      <UniqueIdentifier>{677b19f5-d819-4f6c-ad53-7d9d49d747c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include\bx">
+      <UniqueIdentifier>{7dcbaf0d-39b8-4e6e-ad8e-46bff020ccca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include\bx\include">
+      <UniqueIdentifier>{e09d2069-641c-449e-aee1-10256b894a6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include\bx\include\inline">
+      <UniqueIdentifier>{3a20e277-1f27-464f-9298-bd8df529c947}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\3rdparty">
+      <UniqueIdentifier>{a853507c-3ad2-4c62-b411-e907d781f974}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\3rdparty\catch">
+      <UniqueIdentifier>{3a944b4a-276d-4710-9a56-3b587323e8df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\3rdparty\ini">
+      <UniqueIdentifier>{d7ba5120-3d54-4aa8-ad61-f5c317c1c913}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\src">
+      <UniqueIdentifier>{229cabb8-5c49-494c-8288-f9b8571be3c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\include\tinystl">
+      <UniqueIdentifier>{7719958f-b26e-44ce-811e-5313b1eb83ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bgfx\src">
+      <UniqueIdentifier>{4974baaa-0d21-40ec-8b00-b49ed5ab6c37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg">
+      <UniqueIdentifier>{6b95a16b-c441-4e88-a330-9f3ba4e703e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\include">
+      <UniqueIdentifier>{72c2036b-766c-40d7-8a3b-94a11cfeb698}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\src">
+      <UniqueIdentifier>{df2c0973-f8cd-48a3-8228-1ec7d9f8144f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty">
+      <UniqueIdentifier>{0076f104-53f3-4d3b-ba84-d0deba0ba369}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\include\bimg">
+      <UniqueIdentifier>{415e8204-c1ae-48b8-8ffe-dce2f914c7df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty\atsc-encoder">
+      <UniqueIdentifier>{b224e387-4f5d-4c6d-b0cd-7e4a4ab2cd85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\include">
+      <UniqueIdentifier>{c920d1e6-a701-47cd-9db6-c43c24b605cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty\atsc-encoder\source">
+      <UniqueIdentifier>{18696a67-7bd8-4f5c-924d-0d0516db6b58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty\tinyexr">
+      <UniqueIdentifier>{c0593061-6d9b-4805-a1be-36ec83da4d97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty\tinyexr\deps">
+      <UniqueIdentifier>{b3ddbb48-f40a-4661-9970-2db336383534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bimg\3rdparty\tinyexr\deps\miniz">
+      <UniqueIdentifier>{86606aa9-e086-4622-b8a5-6c59ee610365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bx\scripts">
+      <UniqueIdentifier>{605aea4f-4c3d-404a-b2e9-ce9c70be2f1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\BGFX\bgfx\scripts">
+      <UniqueIdentifier>{e935cc06-e0c1-4229-b121-ff680c989c40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\DX11">
+      <UniqueIdentifier>{0509f50a-2b15-451b-a4a4-177c1ca178ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="ThirdParty\EA\EASTL\Doc\EASTL.natvis">
       <Filter>ThirdParty\EA\EASTL\Doc</Filter>
+    </Natvis>
+    <Natvis Include="ThirdParty\bx\scripts\bx.natvis">
+      <Filter>Render\Platform\BGFX\bx\scripts</Filter>
+    </Natvis>
+    <Natvis Include="ThirdParty\bx\scripts\tinystl.natvis">
+      <Filter>Render\Platform\BGFX\bx\scripts</Filter>
+    </Natvis>
+    <Natvis Include="ThirdParty\bgfx\scripts\bgfx.natvis">
+      <Filter>Render\Platform\BGFX\bgfx\scripts</Filter>
     </Natvis>
   </ItemGroup>
 </Project>
