@@ -3,9 +3,10 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <EE_BGFX_INCLUDED>True</EE_BGFX_INCLUDED>
-    <BGFX_PATH>$(SolutionDir)Code\Base\ThirdParty\bgfx</BGFX_PATH>
-    <BX_PATH>$(SolutionDir)Code\Base\ThirdParty\bx</BX_PATH>
-    <BIMG_PATH>$(SolutionDir)Code\Base\ThirdParty\bimg</BIMG_PATH>
+    <BGFX_PATH>$(SolutionDir)Code\Base\ThirdParty\bgfx\bgfx</BGFX_PATH>
+    <BX_PATH>$(SolutionDir)Code\Base\ThirdParty\bgfx\bx</BX_PATH>
+    <BIMG_PATH>$(SolutionDir)Code\Base\ThirdParty\bgfx\bimg</BIMG_PATH>
+    <BGFX_LIB_PATH>$(SolutionDir)Code\Base\ThirdParty\bgfx\lib</BGFX_LIB_PATH>
     <BGFX_CONFIG Condition="$(Configuration) == 'Debug'">Debug</BGFX_CONFIG>
     <BGFX_CONFIG Condition="$(Configuration) == 'Release'">Release</BGFX_CONFIG>
     <BGFX_CONFIG Condition="$(Configuration) == 'Shipping'">Release</BGFX_CONFIG>
@@ -19,7 +20,7 @@
       <AdditionalIncludeDirectories Condition="$(EE_BGFX_INCLUDED) == 'True'">$(BGFX_PATH)\include\;$(BX_PATH)\include\;$(BX_PATH)\include\compat\msvc\;$(BIMG_PATH)\include\;$(BGFX_PATH)\3rdparty\;$(BGFX_PATH)\3rdparty\dxsdk\include\;$(BGFX_PATH)\3rdparty\khronos\;$(BIMG_PATH)\3rdparty\astc-encoder\;$(BIMG_PATH)\3rdparty\astc-encoder\include\;$(BX_PATH)\3rdparty\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories Condition="$(EE_BGFX_INCLUDED) == 'True'">$(BGFX_PATH)\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="$(EE_BGFX_INCLUDED) == 'True'">$(BGFX_LIB_PATH)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="$(EE_BGFX_INCLUDED) == 'True'">bgfx$(BGFX_CONFIG).lib;bx$(BGFX_CONFIG).lib;bimg$(BGFX_CONFIG).lib;bimg_decode$(BGFX_CONFIG).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
