@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <EE_BGFX_INCLUDED>True</EE_BGFX_INCLUDED>
+    <BGFX_PATH>$(SolutionDir)Code\Base\ThirdParty\bgfx</BGFX_PATH>
+    <BX_PATH>$(SolutionDir)Code\Base\ThirdParty\bx</BX_PATH>
+    <BIMG_PATH>$(SolutionDir)Code\Base\ThirdParty\bimg</BIMG_PATH>
+    <BGFX_CONFIG Condition="$(Configuration) == 'Debug'">Debug</BGFX_CONFIG>
+    <BGFX_CONFIG Condition="$(Configuration) == 'Release'">Release</BGFX_CONFIG>
+    <BGFX_CONFIG Condition="$(Configuration) == 'Shipping'">Release</BGFX_CONFIG>
+    <BGFX_PLATFORM Condition="$(Platform) == 'x64'">x86_64</BGFX_PLATFORM>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="$(EE_BGFX_INCLUDED) == 'True'">EE_BGFX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(EE_BGFX_INCLUDED) == 'True' And $(BGFX_CONFIG) == 'Debug'">BX_CONFIG_DEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(EE_BGFX_INCLUDED) == 'True' And $(BGFX_CONFIG) == 'Release'">BX_CONFIG_DEBUG=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="$(EE_BGFX_INCLUDED) == 'True'">$(BGFX_PATH)\include\;$(BX_PATH)\include\;$(BX_PATH)\include\compat\msvc\;$(BIMG_PATH)\include\;$(BGFX_PATH)\3rdparty\;$(BGFX_PATH)\3rdparty\dxsdk\include\;$(BGFX_PATH)\3rdparty\khronos\;$(BIMG_PATH)\3rdparty\astc-encoder\;$(BIMG_PATH)\3rdparty\astc-encoder\include\;$(BX_PATH)\3rdparty\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories Condition="$(EE_BGFX_INCLUDED) == 'True'">$(BGFX_PATH)\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies Condition="$(EE_BGFX_INCLUDED) == 'True'">bgfx$(BGFX_CONFIG).lib;bx$(BGFX_CONFIG).lib;bimg$(BGFX_CONFIG).lib;bimg_decode$(BGFX_CONFIG).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

@@ -16,11 +16,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="RHI\Resource\RHIBuffer.h" />
     <ClInclude Include="RHI\Resource\RHIPipelineState.h" />
     <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h" />
@@ -30,6 +30,153 @@
     <ClInclude Include="RHI\RHISwapchain.h" />
     <ClInclude Include="RHI\Resource\RHIResource.h" />
     <ClInclude Include="RHI\RHIDevice.h" />
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\bgfx.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\defines.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\embedded_shader.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\include\bgfx\platform.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\bgfx_p.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\charset.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\config.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\debug_renderdoc.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\dxgi.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\emscripten.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear0.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear1.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear2.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear3.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear4.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear5.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear6.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_clear7.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\fs_debugfont.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\glcontext_egl.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\glcontext_html5.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\glcontext_wgl.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\glimports.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\nvapi.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d11.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d12.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_d3d9.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_gl.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_mtl.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_vk.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\renderer_webgpu.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\shader.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\shader_dx9bc.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\shader_dxbc.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\shader_spirv.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\topology.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\version.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\vertexlayout.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\vs_clear.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\vs_debugfont.bin.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bgfx\src\bgfx.idl.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\include\astcenc.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_diagnostic_trace.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_internal.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_internal_entry.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_mathlib.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_avx2_8.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_common_4.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_neon_4.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_none_4.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\astc-encoder\source\astcenc_vecmathlib_sse_4.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\3rdparty\tinyexr\deps\miniz\miniz.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\include\bimg\bimg.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\include\bimg\decode.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\include\bimg\encode.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\src\bimg_p.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bimg\src\config.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\3rdparty\catch\catch_amalgamated.hpp" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\3rdparty\ini\ini.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\allocator.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\bounds.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\bx.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\commandline.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\config.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\constants.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\cpu.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\debug.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\easing.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\endian.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\error.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\file.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\filepath.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\float4x4_t.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\handlealloc.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\hash.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\macros.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\maputil.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\math.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\mpscqueue.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\mutex.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\os.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\pixelformat.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\platform.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\process.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\readerwriter.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\ringbuffer.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\rng.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\semaphore.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\settings.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\simd_t.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\sort.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\spscqueue.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\string.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\thread.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\timer.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\typetraits.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\uint32_t.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\url.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\allocator.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\bounds.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\bx.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\cpu.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\easing.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\endian.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\error.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\float4x4_t.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\handlealloc.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\hash.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\math.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\mpscqueue.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\mutex.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\os.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\pixelformat.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\readerwriter.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\ringbuffer.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\rng.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_langext.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_neon.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_ref.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_sse.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd128_swizzle.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd256_avx.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd256_ref.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\simd_ni.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\sort.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\spscqueue.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\string.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\typetraits.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\bx\inline\uint32_t.inl" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\alloca.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\dirent.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\inttypes.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\compat\msvc\stdbool.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\allocator.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\buffer.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\hash.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\hash_base.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\new.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\stddef.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\string.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\traits.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\unordered_map.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\unordered_set.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <ClInclude Include="ThirdParty\bx\include\tinystl\vector.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
     <ClInclude Include="Types\Map.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
@@ -85,19 +232,19 @@
     <ClInclude Include="RenderGraph\RenderGraphContext.h" />
     <ClInclude Include="RenderGraph\RenderGraphNode.h" />
     <ClInclude Include="RenderGraph\RenderGraphResource.h" />
-    <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h" />
-    <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" />
+    <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h" Condition="$(EE_DX11_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" Condition="$(EE_DX11_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSurface.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h" />
     <ClInclude Include="Math\MathUtils.h" />
     <ClInclude Include="Render\RenderAPI.h" />
@@ -539,7 +686,7 @@
     <ClInclude Include="Types\UUID.h" />
     <ClInclude Include="Types\Variant.h" />
     <ClInclude Include="Types\WString.h" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanShader.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanShader.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="_Module\API.h" />
   </ItemGroup>
   <ItemGroup>
@@ -549,7 +696,7 @@
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Math\Platform\Math_Win32.h" />
     <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp" />
     <ClCompile Include="RHI\RHISwapchain.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />
@@ -593,17 +740,17 @@
     <ClCompile Include="RenderGraph\RenderGraph.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphContext.cpp" />
     <ClCompile Include="RenderGraph\RenderGraphNode.cpp" />
-    <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp" />
-    <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp" />
+    <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp" Condition="$(EE_DX11_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp" Condition="$(EE_DX11_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanPhysicalDevice.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSurface.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanSwapchain.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp" />
     <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
     <ClCompile Include="Render\RenderPipelineState.cpp" />
@@ -690,7 +837,7 @@
     <ClCompile Include="Types\Tag.cpp" />
     <ClCompile Include="Types\UUID.cpp" />
     <ClCompile Include="Types\Platform\Types_Win32.cpp" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanShader.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanShader.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE" />
@@ -699,6 +846,9 @@
     <None Include="ThirdParty\EA\EABase\doc\EABase.html" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="ThirdParty\bgfx\scripts\bgfx.natvis" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <Natvis Include="ThirdParty\bx\scripts\bx.natvis" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
+    <Natvis Include="ThirdParty\bx\scripts\tinystl.natvis" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
     <Natvis Include="ThirdParty\EA\EASTL\Doc\EASTL.natvis" />
   </ItemGroup>
   <ItemGroup>
