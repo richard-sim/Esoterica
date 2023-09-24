@@ -19,7 +19,7 @@ namespace EE::RHI
         desc.m_usage = ETextureUsage::Color;
         desc.m_tiling = ETextureMemoryTiling::Optimal;
         desc.m_format = EPixelFormat::RGBA8Unorm;
-        desc.m_sample = ETextureSampleCount::SC1;
+        desc.m_sample = ESampleCount::SC1;
         desc.m_type = ETextureType::T2D;
         desc.m_memoryUsage = ERenderResourceMemoryUsage::GPUOnly;
         return desc;
@@ -211,6 +211,14 @@ namespace EE::RHI
         // default to vertex buffer
         bufferDesc.m_memoryUsage = ERenderResourceMemoryUsage::GPUOnly;
         return bufferDesc;
+    }
+
+    //-------------------------------------------------------------------------
+
+    bool RHIRenderPassCreateDesc::IsValid() const
+    {
+        return !m_colorAttachments.empty()
+            || ( m_colorAttachments.empty() && m_depthAttachment.has_value() );
     }
 
     //-------------------------------------------------------------------------

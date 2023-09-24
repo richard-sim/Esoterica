@@ -16,13 +16,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
+    <ClInclude Include="RHI\RHIDowncastHelper.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanFramebuffer.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSemaphore.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.h" />
     <ClInclude Include="RHI\Resource\RHIBuffer.h" />
     <ClInclude Include="RHI\Resource\RHIPipelineState.h" />
+    <ClInclude Include="RHI\Resource\RHIRenderPass.h" />
     <ClInclude Include="RHI\Resource\RHIResourceCreationCommons.h" />
     <ClInclude Include="RHI\Resource\RHISemaphore.h" />
     <ClInclude Include="RHI\Resource\RHIShader.h" />
@@ -30,6 +34,8 @@
     <ClInclude Include="RHI\RHISwapchain.h" />
     <ClInclude Include="RHI\Resource\RHIResource.h" />
     <ClInclude Include="RHI\RHIDevice.h" />
+    <ClInclude Include="RHI\RHITaggedType.h" />
+    <ClInclude Include="Types\List.h" />
     <ClInclude Include="Types\Map.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
@@ -548,6 +554,7 @@
     <ClCompile Include="Math\Platform\Math_Win32.h" />
     <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.cpp" />
     <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp" />
     <ClCompile Include="RHI\RHISwapchain.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />

@@ -5,8 +5,6 @@
 #include "Base/Types/Color.h"
 #include "Base/Threading/Threading.h"
 
-#include "Base/Memory/Pointers.h"
-
 #include <D3D11.h>
 
 //-------------------------------------------------------------------------
@@ -33,7 +31,7 @@ namespace EE::Render
         // Temporary
         //-------------------------------------------------------------------------
 
-        inline TSharedPtr<RHI::RHIDevice> GetRHIDevice() { return m_pRHIDevice; }
+        inline RHI::RHIDevice* GetRHIDevice() const { return m_pRHIDevice; }
 
         //-------------------------------------------------------------------------
 
@@ -132,8 +130,8 @@ namespace EE::Render
         RenderWindow                            m_primaryWindow;
         RenderContext                           m_immediateContext;
 
-        TSharedPtr<RHI::RHIDevice>              m_pRHIDevice = nullptr;
-        TSharedPtr<RHI::RHISwapchain>           m_pRHISwapchain = nullptr;
+        RHI::RHIDevice*                         m_pRHIDevice = nullptr;
+        RHI::RHISwapchain*                      m_pRHISwapchain = nullptr;
 
         // Lock to allow loading resources while rendering across different threads
         Threading::RecursiveMutex               m_deviceMutex;

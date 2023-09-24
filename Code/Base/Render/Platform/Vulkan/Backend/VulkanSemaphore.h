@@ -15,7 +15,11 @@ namespace EE::Render
 
 		public:
 
-			VulkanSemaphore() = default;
+            EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
+
+            VulkanSemaphore()
+                : RHISemaphore( RHI::ERHIType::Vulkan )
+            {}
 
 		private:
 

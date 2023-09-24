@@ -3,14 +3,27 @@
 #include "Base/Types/Arrays.h"
 #include "Base/Types/BitFlags.h"
 #include "Base/Types/Set.h"
+#include "Base/Encoding/Hash.h"
 #include "Base/Render/RenderAPI.h"
 #include "Base/Render/RenderShader.h"
 #include "Base/Resource/ResourcePath.h"
 #include "Base/Resource/ResourceTypeID.h"
 
+#include <EASTL/optional.h>
+#include <numeric>
+
 namespace EE::RHI
 {
-    static constexpr size_t MAX_DESCRIPTOR_SET_COUNT = 4;
+    enum class ESampleCount : uint8_t
+    {
+        SC1 = 0,
+        SC2,
+        SC4,
+        SC8,
+        SC16,
+        SC32,
+        SC64,
+    };
 
     //-------------------------------------------------------------------------
 
@@ -48,17 +61,6 @@ namespace EE::RHI
         T2DArray,
         T3D,
         TCubemap
-    };
-
-    enum class ETextureSampleCount : uint8_t
-    {
-        SC1 = 0,
-        SC2,
-        SC4,
-        SC8,
-        SC16,
-        SC32,
-        SC64,
     };
 
     enum class ETextureUsage : uint8_t
@@ -113,7 +115,7 @@ namespace EE::RHI
         EPixelFormat                            m_format;
         TBitFlags<ETextureUsage>                m_usage;
         ETextureMemoryTiling			        m_tiling;
-        TBitFlags<ETextureSampleCount>	        m_sample;
+        TBitFlags<ESampleCount>	                m_sample;
         ETextureType                            m_type;
         TBitFlags<ETextureCreateFlag>           m_flag;
 
@@ -166,6 +168,75 @@ namespace EE::RHI
 
     //-------------------------------------------------------------------------
 
+    enum class ERenderPassAttachmentLoadOp
+    {
+        Load,
+        Clear,
+        DontCare,
+    };
+
+    enum class ERenderPassAttachmentStoreOp
+    {
+        Store,
+        DontCare,
+    };
+
+    struct RHIRenderPassAttachmentDesc
+    {
+        static RHIRenderPassAttachmentDesc TrivialColor( EPixelFormat pixelFormat )
+        {
+            RHIRenderPassAttachmentDesc desc;
+            desc.m_pixelFormat = pixelFormat;
+            desc.m_loadOp = ERenderPassAttachmentLoadOp::Load;
+            desc.m_storeOp = ERenderPassAttachmentStoreOp::Store;
+            desc.m_stencilLoadOp = ERenderPassAttachmentLoadOp::DontCare;
+            desc.m_stencilStoreOp = ERenderPassAttachmentStoreOp::DontCare;
+            desc.m_sample = ESampleCount::SC1;
+            return desc;
+        }
+
+        static RHIRenderPassAttachmentDesc UselessInput( EPixelFormat pixelFormat )
+        {
+            RHIRenderPassAttachmentDesc desc = TrivialColor( pixelFormat );
+            desc.m_loadOp = ERenderPassAttachmentLoadOp::DontCare;
+            return desc;
+        }
+
+        static RHIRenderPassAttachmentDesc ClearInput( EPixelFormat pixelFormat )
+        {
+            RHIRenderPassAttachmentDesc desc = TrivialColor( pixelFormat );
+            desc.m_loadOp = ERenderPassAttachmentLoadOp::Clear;
+            return desc;
+        }
+
+        static RHIRenderPassAttachmentDesc DiscardOutput( EPixelFormat pixelFormat )
+        {
+            RHIRenderPassAttachmentDesc desc = TrivialColor( pixelFormat );
+            desc.m_storeOp = ERenderPassAttachmentStoreOp::DontCare;
+            return desc;
+        }
+
+        EPixelFormat                                    m_pixelFormat;
+        ERenderPassAttachmentLoadOp                     m_loadOp;
+        ERenderPassAttachmentStoreOp                    m_storeOp;
+        ERenderPassAttachmentLoadOp                     m_stencilLoadOp;
+        ERenderPassAttachmentStoreOp                    m_stencilStoreOp;
+        ESampleCount                                    m_sample = ESampleCount::SC1;
+    };
+
+    struct RHIRenderPassCreateDesc
+    {
+        static constexpr size_t NumMaxColorAttachmentCount = 9;
+        static constexpr size_t NumMaxAttachmentCount = 10;
+
+        bool IsValid() const;
+
+        TFixedVector<RHIRenderPassAttachmentDesc, NumMaxColorAttachmentCount>       m_colorAttachments;
+        eastl::optional<RHIRenderPassAttachmentDesc>                                m_depthAttachment;
+    };
+
+    //-------------------------------------------------------------------------
+
     enum class RHIPipelineType
     {
         Raster,
@@ -173,10 +244,15 @@ namespace EE::RHI
         Transfer
     };
 
-    class RHIRenderpass;
-
     struct RHIPipelineRasterizerState
     {
+        static RHIPipelineRasterizerState NoCulling()
+        {
+            RHIPipelineRasterizerState defaultState = {};
+            defaultState.m_cullMode = Render::CullMode::None;
+            return defaultState;
+        }
+
         Render::FillMode                m_fillMode = Render::FillMode::Solid;
         Render::CullMode                m_cullMode = Render::CullMode::BackFace;
         Render::WindingMode             m_WindingMode = Render::WindingMode::CounterClockwise;
@@ -185,6 +261,19 @@ namespace EE::RHI
 
     struct RHIPipelineBlendState
     {
+        static RHIPipelineBlendState ColorAdditiveAlpha()
+        {
+            RHIPipelineBlendState defaultState = {};
+            defaultState.m_blendEnable = true;
+            defaultState.m_srcValue = Render::BlendValue::SourceAlpha;
+            defaultState.m_dstValue = Render::BlendValue::InverseSourceAlpha;
+            defaultState.m_blendOp = Render::BlendOp::Add;
+            defaultState.m_srcAlphaValue = Render::BlendValue::One;
+            defaultState.m_dstAlphaValue = Render::BlendValue::InverseSourceAlpha;
+            defaultState.m_blendOpAlpha = Render::BlendOp::Add;
+            return defaultState;
+        }
+
         Render::BlendValue              m_srcValue = Render::BlendValue::One;
         Render::BlendValue              m_dstValue = Render::BlendValue::Zero;
         Render::BlendOp                 m_blendOp = Render::BlendOp::Add;
@@ -202,7 +291,7 @@ namespace EE::RHI
         TriangleList,
         TriangleStrip,
 
-        None,
+        //None,
     };
 
     struct EE_BASE_API RHIPipelineShader
@@ -261,6 +350,8 @@ namespace EE::RHI
         ResourcePath            m_shaderPath;
         String                  m_entryName = "main";
     };
+
+    class RHIRenderPass;
 
     struct RHIRasterPipelineStateCreateDesc
     {
@@ -321,6 +412,11 @@ namespace EE::RHI
             return *this;
         }
 
+        inline RHIRasterPipelineStateCreateDesc& SetRenderPass( RHIRenderPass* pRenderPass )
+        {
+            m_pRenderpass = pRenderPass;
+        }
+
         inline RHIRasterPipelineStateCreateDesc& DepthTest( bool enable )
         {
             this->m_enableDepthTest = enable;
@@ -342,12 +438,11 @@ namespace EE::RHI
 
         size_t GetHashCode() const
         {
-            // TODO: use combine hash algorithm
-            size_t hash = 482441568449451;
+            size_t hash = 0;
             for ( auto const& pipelineShader : m_pipelineShaders )
             {
-                hash &= EE::Hash::GetHash64( pipelineShader.m_shaderPath.c_str() );
-                hash &= EE::Hash::GetHash64( pipelineShader.m_entryName );
+                Hash::HashCombine( hash, pipelineShader.m_shaderPath.c_str() );
+                Hash::HashCombine( hash, pipelineShader.m_entryName );
             }
             return hash;
         }
@@ -361,13 +456,15 @@ namespace EE::RHI
     public:
 
         TSet<RHIPipelineShader>         m_pipelineShaders;
-        RHIRenderpass*                  m_pRenderpass;
+        RHIRenderPass*                  m_pRenderpass = nullptr;
         RHIPipelineRasterizerState      m_rasterizerState;
         RHIPipelineBlendState           m_blendState;
-        ERHIPipelinePirmitiveTopology   m_primitiveTopology;
+        ERHIPipelinePirmitiveTopology   m_primitiveTopology = ERHIPipelinePirmitiveTopology::TriangleList;
+        ESampleCount                    m_multisampleCount = ESampleCount::SC1;
 
         bool                            m_enableDepthTest = false;
         bool                            m_enableDepthWrite = false;
+        bool                            m_enableDepthBias = false;
     };
 
     //-------------------------------------------------------------------------
@@ -408,11 +505,9 @@ namespace eastl
     {
         eastl_size_t operator()( EE::RHI::RHIPipelineShader const& pipelineShader ) const
         {
-            // TODO: use combine hash algorithm
-            eastl_size_t hash = 884512945412378;
-            hash &= eastl::hash<uint8_t>()( static_cast<uint8_t>( pipelineShader.m_stage ) );
-            hash &= EE::Hash::GetHash64( pipelineShader.m_shaderPath.c_str() );
-            hash &= EE::Hash::GetHash64( pipelineShader.m_entryName );
+            eastl_size_t hash = eastl::hash<uint8_t>()( static_cast<uint8_t>( pipelineShader.m_stage ) );
+            EE::Hash::HashCombine(hash, pipelineShader.m_shaderPath.c_str() );
+            EE::Hash::HashCombine(hash, pipelineShader.m_entryName );
             return hash;
         }
     };

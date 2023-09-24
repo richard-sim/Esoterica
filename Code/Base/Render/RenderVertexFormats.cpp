@@ -50,6 +50,18 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
+    void VertexLayoutDescriptor::CalculateElementOffsets()
+    {
+        uint16_t currentOffset = 0;
+        for ( auto& vertexElementDesc : m_elementDescriptors )
+        {
+            vertexElementDesc.m_offset = currentOffset;
+            currentOffset += static_cast<uint16_t>( GetDataTypeFormatByteSize( vertexElementDesc.m_format ) );
+
+            EE_ASSERT( Math::IsAlignTo( currentOffset, static_cast<uint16_t>( sizeof( float ) ) ) );
+        }
+    }
+
     void VertexLayoutDescriptor::CalculateByteSize()
     {
         m_byteSize = 0;

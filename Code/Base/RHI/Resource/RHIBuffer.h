@@ -9,6 +9,9 @@ namespace EE::RHI
     {
     public:
 
+        RHIBuffer( ERHIType rhiType = ERHIType::Invalid )
+            : RHIResource( rhiType )
+        {}
         virtual ~RHIBuffer() = default;
 
     protected:

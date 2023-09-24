@@ -8,6 +8,9 @@ namespace EE::RHI
     {
     public:
 
+        RHISemaphore( ERHIType rhiType = ERHIType::Invalid )
+            : RHISynchronazationPrimitive( rhiType )
+        {}
         virtual ~RHISemaphore() = default;
     };
 }

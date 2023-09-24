@@ -5,8 +5,8 @@ struct PS_INPUT
     float2 uv  : TEXCOORD0;
 };
 
-sampler sampler_llr;
-Texture2D texture0;
+[[vk::binding(1)]] sampler sampler_llr;
+[[vk::binding(2)]] Texture2D texture0;
 
 float4 main( PS_INPUT input ) : SV_TARGET
 {

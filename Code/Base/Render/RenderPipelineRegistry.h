@@ -1,14 +1,11 @@
 #pragma once
 
-#include "Base/_Module/API.h"
-
 #include "Base/Systems.h"
 #include "Base/Resource/ResourcePtr.h"
 #include "Base/Render/RenderShader.h"
 #include "Base/Render/RenderPipeline.h"
 #include "Base/Render/RenderPipelineState.h"
 #include "Base/Types/IDVector.h"
-#include "Base/Memory/Pointers.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 
 #include <numeric>
@@ -24,6 +21,7 @@ namespace EE
 namespace EE::RHI
 {
     class RHIDevice;
+    class RHIPipelineState;
 }
 
 //-------------------------------------------------------------------------
@@ -108,7 +106,8 @@ namespace EE::Render
 
         RHI::RHIRasterPipelineStateCreateDesc   m_desc;
 
-		PipelineHandle						    m_handle;
+        RHI::RHIPipelineState*                  m_pPipelineState = nullptr;
+        PipelineHandle                          m_handle;
 	};
 
 	class ComputePipelineEntry
@@ -150,12 +149,12 @@ namespace EE::Render
 		[[nodiscard]] PipelineHandle RegisterRasterPipeline( RHI::RHIRasterPipelineStateCreateDesc const& rasterPipelineDesc );
 		[[nodiscard]] PipelineHandle RegisterComputePipeline( ComputePipelineDesc const& computePipelineDesc );
 
-		void LoadAndUpdatePipelines( TSharedPtr<RHI::RHIDevice> const& pDevice );
+		void LoadAndUpdatePipelines( RHI::RHIDevice* pDevice );
 
 	private:
 
 		void LoadPipelineShaders();
-        void CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, TSharedPtr<RHI::RHIDevice> const& pDevice );
+        bool CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, RHI::RHIDevice* pDevice );
 
 		void UnloadAllPipelineShaders();
 
@@ -173,8 +172,10 @@ namespace EE::Render
         TIDVector<PipelineHandle, ComputePipelineEntry>					    m_computePipelineStates;
         //THashMap<ComputePipelineDesc, PipelineHandle>					    m_computePipelineHandles;
 
+        // TODO: use state update pattern
         TVector<TSharedPtr<RasterPipelineEntry>>						    m_waitToSubmitRasterPipelines;
         TVector<TSharedPtr<RasterPipelineEntry>>						    m_waitToLoadRasterPipelines;
         TVector<TSharedPtr<RasterPipelineEntry>>						    m_waitToRegisteredRasterPipelines;
+        TVector<TSharedPtr<RasterPipelineEntry>>                            m_retryRasterPipelineCaches;
 	};
 }

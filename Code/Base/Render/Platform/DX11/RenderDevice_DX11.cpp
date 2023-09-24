@@ -13,7 +13,7 @@
 #endif
 
 // TODO: move to RenderDevice_Vulkan
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 #include "Base/Render/Platform/Vulkan/Backend/VulkanDevice.h"
 #include "Base/Render/Platform/Vulkan/Backend/VulkanSwapchain.h"
 #endif
@@ -53,13 +53,7 @@ namespace EE::Render
     //-------------------------------------------------------------------------
 
     RenderDevice::RenderDevice()
-    {
-        #ifdef EE_VULKAN
-        auto pVkRHIDevice = MakeShared<Backend::VulkanDevice>();
-        m_pRHIDevice = pVkRHIDevice;
-        m_pRHISwapchain = MakeShared<Backend::VulkanSwapchain>( pVkRHIDevice );
-        #endif
-    }
+    {}
 
     RenderDevice::~RenderDevice()
     {
@@ -117,11 +111,23 @@ namespace EE::Render
 
         CoreResources::Initialize( this );
 
+        #if defined(EE_VULKAN)
+        auto pVkRHIDevice = EE::New<Backend::VulkanDevice>();
+        m_pRHIDevice = pVkRHIDevice;
+        m_pRHISwapchain = EE::New<Backend::VulkanSwapchain>( pVkRHIDevice );
+        #endif
+
         return true;
     }
 
     void RenderDevice::Shutdown()
     {
+        if ( m_pRHIDevice != nullptr )
+        {
+            EE::Delete( m_pRHISwapchain );
+            EE::Delete( m_pRHIDevice );
+        }
+
         CoreResources::Shutdown( this );
 
         m_immediateContext.m_pDeviceContext->ClearState();
@@ -532,9 +538,10 @@ namespace EE::Render
 
         auto createDesc = RHI::RHIShaderCreateDesc{ shader.m_byteCode };
         auto pShader = m_pRHIDevice->CreateShader( createDesc );
-        shader.m_shaderHandle.m_pData = pShader;
+        shader.m_shaderHandle.m_pData = nullptr;
+        shader.m_rhiShader = pShader;
 
-        // remove shader code to reduce some RAM usage.
+        // remove shader code immediately
         auto emptyBlob = Blob{};
         std::swap( shader.m_byteCode, emptyBlob );
 
@@ -545,7 +552,7 @@ namespace EE::Render
     {
         EE_ASSERT( IsInitialized() && shader.IsValid() );
 
-        RHI::RHIShader*& pShader = reinterpret_cast<RHI::RHIShader*&>( shader.m_shaderHandle.m_pData );
+        RHI::RHIShader*& pShader = reinterpret_cast<RHI::RHIShader*&>( shader.m_rhiShader );
         m_pRHIDevice->DestroyShader( pShader );
         pShader = nullptr;
     }

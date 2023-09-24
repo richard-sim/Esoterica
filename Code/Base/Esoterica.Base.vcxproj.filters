@@ -436,6 +436,7 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -1997,6 +1998,12 @@
     </ClInclude>
     <ClInclude Include="Types\Map.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
+    <ClInclude Include="Types\List.h" />
+    <ClInclude Include="RHI\Resource\RHIRenderPass.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanFramebuffer.h" />
+    <ClInclude Include="RHI\RHIDowncastHelper.h" />
+    <ClInclude Include="RHI\RHITaggedType.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">
