@@ -37,6 +37,13 @@
 
 //-------------------------------------------------------------------------
 
+namespace EE::RHI
+{
+    class RHIRenderPass;
+}
+
+//-------------------------------------------------------------------------
+
 namespace EE
 {
     class EE_ENGINE_API EngineModule final
@@ -107,6 +114,8 @@ namespace EE
         // Rendering
         RG::RenderGraph                                 m_renderGraph;
         Render::PipelineRegistry                        m_renderPipelineRegistry;
+        // Temporary
+        RHI::RHIRenderPass*                             m_pImguiRenderPass = nullptr;
 
         Render::RenderDevice*                           m_pRenderDevice = nullptr;
         Render::MeshLoader                              m_renderMeshLoader;

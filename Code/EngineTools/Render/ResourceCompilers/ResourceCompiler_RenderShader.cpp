@@ -18,6 +18,48 @@
 
 namespace EE::Render
 {
+    namespace
+    {
+        static char const* const g_semanticNames[] = { "POSITION", "NORMAL", "TANGENT", "BINORMAL", "COLOR", "TEXCOORD", "BLENDINDICES", "BLENDWEIGHTS" };
+
+        EE_FORCE_INLINE static char const* GetNameForSemantic( DataSemantic semantic )
+        {
+            EE_ASSERT( semantic < DataSemantic::None );
+            return g_semanticNames[(uint8_t) semantic];
+        }
+
+        EE_FORCE_INLINE static DataSemantic GetSemanticForName( std::string const& semantic )
+        {
+            size_t const numSemantics = sizeof( g_semanticNames ) / sizeof( g_semanticNames[0] );
+            for ( size_t i = 0; i < numSemantics; ++i )
+            {
+                if ( semantic == g_semanticNames[i] )
+                {
+                    return DataSemantic( static_cast<uint8_t>( i ) );
+                }
+
+                // specialization
+                if ( DataSemantic( static_cast<uint8_t>( i ) ) == DataSemantic::Color )
+                {
+                    if ( semantic == "COLOR0" || semantic == "COLOR1" )
+                    {
+                        return DataSemantic( static_cast<uint8_t>( i ) );
+                    }
+                }
+                else if ( DataSemantic( static_cast<uint8_t>( i ) ) == DataSemantic::TexCoord )
+                {
+                    if ( semantic == "TEXCOORD0" || semantic == "TEXCOORD1" )
+                    {
+                        return DataSemantic( static_cast<uint8_t>( i ) );
+                    }
+                }
+            }
+
+            EE_UNREACHABLE_CODE();
+            return {};
+        }
+    }
+
     static bool GetCBufferDescs( ID3D11ShaderReflection* pShaderReflection, TVector<RenderBuffer>& cbuffers )
     {
         EE_ASSERT( pShaderReflection != nullptr );
@@ -88,40 +130,40 @@ namespace EE::Render
 
     //-------------------------------------------------------------------------
 
-    static DataSemantic GetSemanticForName( char const* pName )
-    {
-        if ( strcmp( pName, "POSITION" ) == 0 )
-        {
-            return DataSemantic::Position;
-        }
+    //static DataSemantic GetSemanticForName( char const* pName )
+    //{
+    //    if ( strcmp( pName, "POSITION" ) == 0 )
+    //    {
+    //        return DataSemantic::Position;
+    //    }
 
-        if ( strcmp( pName, "NORMAL" ) == 0 )
-        {
-            return DataSemantic::Normal;
-        }
+    //    if ( strcmp( pName, "NORMAL" ) == 0 )
+    //    {
+    //        return DataSemantic::Normal;
+    //    }
 
-        if ( strcmp( pName, "TANGENT" ) == 0 )
-        {
-            return DataSemantic::Tangent;
-        }
+    //    if ( strcmp( pName, "TANGENT" ) == 0 )
+    //    {
+    //        return DataSemantic::Tangent;
+    //    }
 
-        if ( strcmp( pName, "BINORMAL" ) == 0 )
-        {
-            return DataSemantic::BiTangent;
-        }
+    //    if ( strcmp( pName, "BINORMAL" ) == 0 )
+    //    {
+    //        return DataSemantic::BiTangent;
+    //    }
 
-        if ( strcmp( pName, "COLOR" ) == 0 )
-        {
-            return DataSemantic::Color;
-        }
+    //    if ( strcmp( pName, "COLOR" ) == 0 )
+    //    {
+    //        return DataSemantic::Color;
+    //    }
 
-        if ( strcmp( pName, "TEXCOORD" ) == 0 )
-        {
-            return DataSemantic::TexCoord;
-        }
+    //    if ( strcmp( pName, "TEXCOORD" ) == 0 )
+    //    {
+    //        return DataSemantic::TexCoord;
+    //    }
 
-        return DataSemantic::None;
-    }
+    //    return DataSemantic::None;
+    //}
 
     static bool GetInputLayoutDesc( ID3D11ShaderReflection* pShaderReflection, VertexLayoutDescriptor& vertexLayoutDesc )
     {
@@ -219,29 +261,29 @@ namespace EE::Render
     //    return 0;
     //}
 
-    static bool GetCBufferDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<RenderBuffer>& cbuffers )
-    {
-        auto shaderResources = spirvCompiler.get_shader_resources();
+    //static bool GetCBufferDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<RenderBuffer>& cbuffers )
+    //{
+    //    auto shaderResources = spirvCompiler.get_shader_resources();
 
-        for ( auto& ubo : shaderResources.uniform_buffers )
-        {
-            auto const& type = spirvCompiler.get_type( ubo.type_id );
-            char const* name = spirvCompiler.get_name( ubo.id ).c_str();
-            auto const set = spirvCompiler.get_decoration( ubo.id, spv::DecorationDescriptorSet );
-            auto const binding = spirvCompiler.get_decoration( ubo.id, spv::DecorationBinding );
+    //    for ( auto& ubo : shaderResources.uniform_buffers )
+    //    {
+    //        auto const& type = spirvCompiler.get_type( ubo.type_id );
+    //        char const* name = spirvCompiler.get_name( ubo.id ).c_str();
+    //        auto const set = spirvCompiler.get_decoration( ubo.id, spv::DecorationDescriptorSet );
+    //        auto const binding = spirvCompiler.get_decoration( ubo.id, spv::DecorationBinding );
 
-            RenderBuffer buffer;
-            buffer.m_ID = Hash::GetHash32( name );
-            buffer.m_byteSize = static_cast<uint32_t>( spirvCompiler.get_declared_struct_size( type ) );
-            buffer.m_byteStride = 16; // Vector4 aligned
-            buffer.m_usage = RenderBuffer::Usage::CPU_and_GPU;
-            buffer.m_type = RenderBuffer::Type::Constant;
-            buffer.m_slot = binding;
-            cbuffers.push_back( buffer );
-        }
+    //        RenderBuffer buffer;
+    //        buffer.m_ID = Hash::GetHash32( name );
+    //        buffer.m_byteSize = static_cast<uint32_t>( spirvCompiler.get_declared_struct_size( type ) );
+    //        buffer.m_byteStride = 16; // Vector4 aligned
+    //        buffer.m_usage = RenderBuffer::Usage::CPU_and_GPU;
+    //        buffer.m_type = RenderBuffer::Type::Constant;
+    //        buffer.m_slot = binding;
+    //        cbuffers.push_back( buffer );
+    //    }
 
-        return true;
-    }
+    //    return true;
+    //}
 
     static Shader::ReflectedBindingCount GetBindingCount( spirv_cross::SPIRType const& spirvType )
     {
@@ -269,7 +311,203 @@ namespace EE::Render
         return bindingCount;
     }
 
-    static bool GetResourceBindingDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<TVector<Shader::ResourceBinding>>& resourceBindings )
+    static DataSemantic GetVertexLayoutElementDataSemanticFromName( std::string const& name )
+    {
+        size_t semanticStartPos = name.find_last_of( '.' ) + 1;
+        EE_ASSERT( semanticStartPos < name.size() );
+
+        std::string semanticStr = name.substr( semanticStartPos, name.size() - semanticStartPos );
+        return GetSemanticForName( semanticStr );
+    }
+
+    static DataFormat GetVertexLayoutElementDataFormat( DataSemantic semantic, spirv_cross::Compiler& spirvCompiler, spirv_cross::SPIRType const& spirvType )
+    {
+        if ( spirvType.basetype == spirv_cross::SPIRType::UByte )
+        {
+            if ( spirvType.columns == 1 ) // This is a vector type
+            {
+                if ( spirvType.vecsize == 1 )
+                {
+                    return DataFormat::UInt_R8;
+                }
+                else if ( spirvType.vecsize == 2 )
+                {
+                    return DataFormat::UInt_R8G8;
+                }
+                else if ( spirvType.vecsize == 4 )
+                {
+                    return DataFormat::UInt_R8G8B8A8;
+                }
+
+                EE_UNIMPLEMENTED_FUNCTION();
+            }
+        }
+        else if ( spirvType.basetype == spirv_cross::SPIRType::UInt )
+        {
+            if ( spirvType.columns == 1 ) // This is a vector type
+            {
+                if ( spirvType.vecsize == 1 )
+                {
+                    return DataFormat::UInt_R32;
+                }
+                else if ( spirvType.vecsize == 2 )
+                {
+                    return DataFormat::UInt_R32G32;
+                }
+                else if ( spirvType.vecsize == 3 )
+                {
+                    return DataFormat::UInt_R32G32B32;
+                }
+                else if ( spirvType.vecsize == 4 )
+                {
+                    return DataFormat::UInt_R32G32B32A32;
+                }
+
+                EE_UNIMPLEMENTED_FUNCTION();
+            }
+        }
+        else if ( spirvType.basetype == spirv_cross::SPIRType::Int )
+        {
+            if ( spirvType.columns == 1 ) // This is a vector type
+            {
+                if ( spirvType.vecsize == 1 )
+                {
+                    return DataFormat::SInt_R32;
+                }
+                else if ( spirvType.vecsize == 2 )
+                {
+                    return DataFormat::SInt_R32G32;
+                }
+                else if ( spirvType.vecsize == 3 )
+                {
+                    return DataFormat::SInt_R32G32B32;
+                }
+                else if ( spirvType.vecsize == 4 )
+                {
+                    return DataFormat::SInt_R32G32B32A32;
+                }
+
+                EE_UNIMPLEMENTED_FUNCTION();
+            }
+        }
+        else if ( spirvType.basetype == spirv_cross::SPIRType::Half )
+        {
+            if ( spirvType.columns == 1 ) // This is a vector type
+            {
+                if ( spirvType.vecsize == 1 )
+                {
+                    return DataFormat::Float_R16;
+                }
+                else if ( spirvType.vecsize == 2 )
+                {
+                    return DataFormat::Float_R16G16;
+                }
+                else if ( spirvType.vecsize == 4 )
+                {
+                    return DataFormat::Float_R16G16B16A16;
+                }
+
+                EE_UNIMPLEMENTED_FUNCTION();
+            }
+        }
+        else if ( spirvType.basetype == spirv_cross::SPIRType::Float )
+        {
+            if ( spirvType.columns == 1 ) // This is a vector type
+            {
+                if ( spirvType.vecsize == 1 )
+                {
+                    // Note: It is robust? what can we do if we want unorm float?
+                    //       We just assume that all these value should be in range [0, 1].
+                    if ( semantic == DataSemantic::Color ||
+                         semantic == DataSemantic::Normal ||
+                         semantic == DataSemantic::Tangent || 
+                         semantic == DataSemantic::BiTangent ) 
+                    {
+                        return DataFormat::UNorm_R8;
+                    }
+
+                    return DataFormat::Float_R32;
+                }
+                else if ( spirvType.vecsize == 2 )
+                {
+                    // Note: It is robust? what can we do if we want unorm float?
+                    //       We just assume that all these value should be in range [0, 1].
+                    if ( semantic == DataSemantic::Color ||
+                         semantic == DataSemantic::Normal ||
+                         semantic == DataSemantic::Tangent ||
+                         semantic == DataSemantic::BiTangent )
+                    {
+                        return DataFormat::UNorm_R8G8;
+                    }
+
+                    return DataFormat::Float_R32G32;
+                }
+                else if ( spirvType.vecsize == 3 )
+                {
+                    // Note: It is robust? what can we do if we want unorm float?
+                    //       We just assume that all these value should be in range [0, 1].
+                    if ( semantic == DataSemantic::Color ||
+                         semantic == DataSemantic::Normal ||
+                         semantic == DataSemantic::Tangent ||
+                         semantic == DataSemantic::BiTangent )
+                    {
+                        EE_UNREACHABLE_CODE();
+                        return DataFormat::Count;
+                    }
+
+                    return DataFormat::Float_R32G32B32;
+                }
+                else if ( spirvType.vecsize == 4 )
+                {
+                    // Note: It is robust? what can we do if we want unorm float?
+                    //       We just assume that all these value should be in range [0, 1].
+                    if ( semantic == DataSemantic::Color ||
+                         semantic == DataSemantic::Normal ||
+                         semantic == DataSemantic::Tangent ||
+                         semantic == DataSemantic::BiTangent )
+                    {
+                        return DataFormat::UNorm_R8G8B8A8;
+                    }
+
+                    return DataFormat::Float_R32G32B32A32;
+                }
+
+                EE_UNIMPLEMENTED_FUNCTION();
+            }
+        }
+
+        EE_UNREACHABLE_CODE();
+        return DataFormat::Count;
+    }
+
+    static bool ReflectVertexLayoutSpirv( spirv_cross::Compiler& spirvCompiler, VertexLayoutDescriptor& vertexLayoutDesc )
+    {
+        vertexLayoutDesc.m_elementDescriptors.clear();
+
+        auto shaderResources = spirvCompiler.get_shader_resources();
+
+        for ( auto const& stageInput : shaderResources.stage_inputs )
+        {
+            //auto const set = spirvCompiler.get_decoration( ubo.id, spv::DecorationDescriptorSet );
+            //auto const binding = spirvCompiler.get_decoration( ubo.id, spv::DecorationBinding );
+            auto const& spirvType = spirvCompiler.get_type( stageInput.type_id );
+
+            VertexLayoutDescriptor::ElementDescriptor currentElement = {};
+            currentElement.m_semantic = GetVertexLayoutElementDataSemanticFromName( stageInput.name );
+            currentElement.m_format = GetVertexLayoutElementDataFormat( currentElement.m_semantic, spirvCompiler, spirvType );
+            currentElement.m_semanticIndex = 0;
+            currentElement.m_offset = 0;
+
+            vertexLayoutDesc.m_elementDescriptors.push_back( currentElement );
+        }
+
+        vertexLayoutDesc.CalculateElementOffsets();
+        vertexLayoutDesc.CalculateByteSize();
+
+        return true;
+    }
+
+    static bool ReflectResourceBindingDescsSpirv( spirv_cross::Compiler& spirvCompiler, TVector<TVector<Shader::ResourceBinding>>& resourceBindings )
     {
         auto shaderResources = spirvCompiler.get_shader_resources();
         
@@ -285,7 +523,7 @@ namespace EE::Render
             auto bindingCount = GetBindingCount( spirvType );
             Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::UniformBuffer;
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType, "" });
         }
 
         for ( auto& sbo : shaderResources.storage_buffers )
@@ -298,7 +536,7 @@ namespace EE::Render
             auto bindingCount = GetBindingCount( spirvType );
             Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::StorageBuffer;
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType, "" } );
         }
 
         for ( auto& img : shaderResources.sampled_images )
@@ -311,7 +549,7 @@ namespace EE::Render
             auto bindingCount = GetBindingCount( spirvType );
             Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::CombinedImageSampler;
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType, "" } );
         }
 
         for ( auto& img : shaderResources.separate_images )
@@ -333,7 +571,7 @@ namespace EE::Render
                 resourceType = Shader::ReflectedBindingResourceType::SampledImage;
             }
             
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType, "" } );
         }
 
         for ( auto& img : shaderResources.storage_images )
@@ -354,12 +592,12 @@ namespace EE::Render
                 resourceType = Shader::ReflectedBindingResourceType::StorageImage;
             }
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType, "" } );
         }
 
         for ( auto& sampler : shaderResources.separate_samplers )
         {
-            char const* name = spirvCompiler.get_name( sampler.id ).c_str();
+            String const name = spirvCompiler.get_name( sampler.id ).c_str();
             auto const set = spirvCompiler.get_decoration( sampler.id, spv::DecorationDescriptorSet );
             auto const binding = spirvCompiler.get_decoration( sampler.id, spv::DecorationBinding );
             auto const& spirvType = spirvCompiler.get_type( sampler.type_id );
@@ -367,7 +605,9 @@ namespace EE::Render
             auto bindingCount = GetBindingCount( spirvType );
             Shader::ReflectedBindingResourceType resourceType = Shader::ReflectedBindingResourceType::Sampler;
 
-            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType } );
+            size_t const underscorePos = name.find_first_of( '_' ) + 1;
+            String const nameSuffix = name.substr( underscorePos, name.size() - underscorePos );
+            bindings.emplace_back( set, Shader::ResourceBinding{ Hash::GetHash32( name ), binding, bindingCount, resourceType, nameSuffix } );
         }
 
         //for ( auto& acc : shaderResources.acceleration_structures )
@@ -400,7 +640,7 @@ namespace EE::Render
         return true;
     }
 
-    static bool GetPushConstantsSpirv( spirv_cross::Compiler& spirvCompiler, Shader::PushConstants& pushConstants  )
+    static bool ReflectPushConstantsSpirv( spirv_cross::Compiler& spirvCompiler, Shader::PushConstant& pushConstants  )
     {
         auto shaderResources = spirvCompiler.get_shader_resources();
 
@@ -652,19 +892,29 @@ namespace EE::Render
         EE_ASSERT( !pShader->m_byteCode.empty() );
         spirv_cross::Compiler spirvCompiler( reinterpret_cast<uint32_t const*>( pShader->m_byteCode.data() ), pShader->m_byteCode.size() / sizeof( uint32_t ) );
 
-        if ( !GetCBufferDescsSpirv( spirvCompiler, pShader->m_cbuffers ) )
+        if ( pShader->GetPipelineStage() == PipelineStage::Vertex )
         {
-            return Error( "Failed to get cbuffer!" );
+            auto* pVertexShader = static_cast<VertexShader*>(pShader.get());
+
+            if ( !ReflectVertexLayoutSpirv( spirvCompiler, pVertexShader->m_vertexLayoutDesc ) )
+            {
+                return Error( "Failed to reflect vertex shader vertex layout!" );
+            }
         }
 
-        if ( !GetResourceBindingDescsSpirv( spirvCompiler, pShader->m_resourceBindings ) )
+        //if ( !GetCBufferDescsSpirv( spirvCompiler, pShader->m_cbuffers ) )
+        //{
+        //    return Error( "Failed to get cbuffer!" );
+        //}
+
+        if ( !ReflectResourceBindingDescsSpirv( spirvCompiler, pShader->m_resourceBindings ) )
         {
-            return Error( "Failed to get resource bindings!" );
+            return Error( "Failed to reflect shader resource bindings!" );
         }
 
-        if ( !GetPushConstantsSpirv( spirvCompiler, pShader->m_pushConstants ) )
+        if ( !ReflectPushConstantsSpirv( spirvCompiler, pShader->m_pushConstants ) )
         {
-            return Error( "Failed to get push constants!" );
+            return Error( "Failed to reflect shader push constants!" );
         }
         
         return Resource::CompilationResult::Success;

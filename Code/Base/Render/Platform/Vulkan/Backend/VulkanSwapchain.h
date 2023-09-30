@@ -1,7 +1,6 @@
 #pragma once
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 
-#include "Base/Memory/Pointers.h"
 #include "Base/Types/Arrays.h"
 
 #include "Base/RHI/RHISwapchain.h"
@@ -41,14 +40,15 @@ namespace EE::Render
 
 		public:
 
-			VulkanSwapchain( TSharedPtr<VulkanDevice> pDevice );
-			VulkanSwapchain( InitConfig config, TSharedPtr<VulkanDevice> pDevice );
+			VulkanSwapchain( VulkanDevice* pDevice );
+			VulkanSwapchain( InitConfig config, VulkanDevice* pDevice );
 
 			~VulkanSwapchain();
 
 		private:
 
-			TSharedPtr<VulkanDevice>				m_pDevice = nullptr;
+            // Cache device pointer (Use TSharedPtr ?)
+			VulkanDevice*           				m_pDevice = nullptr;
 
 			VkSwapchainKHR							m_pHandle;
 			LoadFuncs								m_loadFuncs;

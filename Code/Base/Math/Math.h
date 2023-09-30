@@ -109,30 +109,33 @@ namespace EE
             return A + ( B - A ) * t;
         }
 
-        EE_FORCE_INLINE float PercentageThroughRange( float value, float lowerBound, float upperBound )
+        template<typename T>
+        EE_FORCE_INLINE T PercentageThroughRange( T value, T lowerBound, T upperBound )
         {
             EE_ASSERT( lowerBound < upperBound );
             return Clamp( value, lowerBound, upperBound ) / ( upperBound - lowerBound );
         }
 
-        EE_FORCE_INLINE bool IsNearEqual( float value, float comparand, float epsilon = Epsilon )
+        template<typename T>
+        EE_FORCE_INLINE bool IsNearEqual( T value, T comparand, float epsilon = Epsilon )
         {
-            return fabsf( value - comparand ) <= epsilon;
+            return Math::Abs( value - comparand ) <= epsilon;
         }
 
-        EE_FORCE_INLINE bool IsNearZero( float value, float epsilon = Epsilon )
+        template<typename T>
+        EE_FORCE_INLINE bool IsNearZero( T value, float epsilon = Epsilon )
         {
-            return fabsf( value ) <= epsilon;
+
+        template<typename T>
+        EE_FORCE_INLINE bool IsNearEqual( T value, T comparand, T epsilon = Epsilon )
+        {
+            return Abs( value - comparand ) <= epsilon;
         }
 
-        EE_FORCE_INLINE bool IsNearEqual( double value, double comparand, double epsilon = Epsilon )
+        template<typename T>
+        EE_FORCE_INLINE bool IsNearZero( T value, T epsilon = Epsilon )
         {
-            return fabs( value - comparand ) <= epsilon;
-        }
-
-        EE_FORCE_INLINE bool IsNearZero( double value, double epsilon = Epsilon )
-        {
-            return fabs( value ) <= epsilon;
+            return Abs( value ) <= epsilon;
         }
 
         EE_FORCE_INLINE float Ceiling( float value )
@@ -215,19 +218,36 @@ namespace EE
             return IsEven( n ) ? n : n + 1;
         }
 
-        EE_FORCE_INLINE bool IsNaN( float n )
+        template<typename T>
+        EE_FORCE_INLINE bool IsNaN( T n )
         {
             return isnan( n );
         }
 
-        EE_FORCE_INLINE bool IsInf( float n )
+        template<typename T>
+        EE_FORCE_INLINE bool IsInf( T n )
         {
             return isinf( n );
         }
 
-        EE_FORCE_INLINE bool IsNaNOrInf( float n )
+        template<typename T>
+        EE_FORCE_INLINE bool IsNaNOrInf( T n )
         {
             return isnan( n ) || isinf( n );
+        }
+
+        template<typename T>
+        EE_FORCE_INLINE typename std::enable_if_t<std::is_unsigned_v<T>, bool> IsAlignTo( T value, T alignment )
+        {
+            EE_ASSERT( alignment != 0 );
+            return value % alignment == 0;
+        }
+
+        template<typename T>
+        EE_FORCE_INLINE typename std::enable_if_t<std::is_unsigned_v<T>, T> MinValueAlignTo( T value, T alignment )
+        {
+            EE_ASSERT( alignment != 0 );
+            return ( ( value + alignment - 1 ) / alignment ) * alignment;
         }
 
         //-------------------------------------------------------------------------
@@ -706,11 +726,11 @@ namespace EE
         {
             Clamp360();
 
-            float delta = 180 - Math::Abs( m_value );
-            if ( delta < 0 )
+            float delta = 180.0f - Math::Abs( m_value );
+            if ( delta < 0.0f )
             {
-                delta += 180;
-                m_value = ( m_value < 0 ) ? delta : -delta;
+                delta += 180.0f;
+                m_value = ( m_value < 0.0f ) ? delta : -delta;
             }
         }
 

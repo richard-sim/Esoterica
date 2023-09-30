@@ -439,6 +439,9 @@
     <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp">
       <Filter>Render\Platform\Vulkan\Backend</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.cpp">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imgui\ImguiGizmo.h">
@@ -2001,8 +2004,28 @@
     <ClInclude Include="RHI\Resource\RHIBuffer.h">
       <Filter>RHI\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Types\Map.h" />
+    <ClInclude Include="Types\Map.h">
+      <Filter>Types</Filter>
+    </ClInclude>
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" />
+    <ClInclude Include="Types\List.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resource\RHIRenderPass.h">
+      <Filter>RHI\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanFramebuffer.h">
+      <Filter>Render\Platform\Vulkan\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\RHIDowncastHelper.h">
+      <Filter>RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\RHITaggedType.h">
+      <Filter>RHI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">

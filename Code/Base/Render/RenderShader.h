@@ -3,6 +3,7 @@
 #include "RenderBuffer.h"
 #include "Base/Resource/IResource.h"
 #include "Base/TypeSystem/ReflectedType.h"
+#include "Base/RHI/Resource/RHIShader.h"
 
 //-------------------------------------------------------------------------
 
@@ -12,8 +13,6 @@ namespace EE
     {
         //-------------------------------------------------------------------------
 
-        static constexpr size_t NumMaxShaderResourceSetLayout = 4;
-
         class EE_BASE_API Shader : public Resource::IResource
         {
             friend class RenderDevice;
@@ -21,12 +20,14 @@ namespace EE
             friend class ShaderLoader;
             friend class PipelineRegistry;
 
-            EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode, m_shaderEntryName, m_pushConstants );
+            EE_SERIALIZE( m_cbuffers, m_resourceBindings, m_byteCode, m_shaderEntryName, m_pushConstants, m_pipelineStage );
             EE_RESOURCE( 'shdr', "Render Shader" );
 
         public:
 
-            enum class BindingCountType
+            static constexpr size_t NumMaxResourceBindingSet = 4;
+
+            enum class BindingCountType : uint8_t
             {
                 // Exact one resource binding.
                 // Example:
@@ -45,6 +46,8 @@ namespace EE
 
             struct ReflectedBindingCount
             {
+                EE_SERIALIZE( m_type, m_count );
+
                 BindingCountType            m_type;
                 size_t                      m_count;
 
@@ -69,12 +72,12 @@ namespace EE
 
             struct ResourceBinding
             {
-                EE_SERIALIZE( m_ID, m_slot );
+                EE_SERIALIZE( m_ID, m_slot, m_bindingCount, m_bindingResourceType, m_extraInfos );
 
                 ResourceBinding() : m_slot( 0 ) {}
                 ResourceBinding( uint32_t ID, uint32_t slot ) : m_ID( ID ), m_slot( slot ) {}
-                ResourceBinding( uint32_t ID, uint32_t slot, ReflectedBindingCount bindingCount, ReflectedBindingResourceType resourceType )
-                    : m_ID( ID ), m_slot( slot ), m_bindingCount( bindingCount ), m_bindingResourceType( resourceType ) {}
+                ResourceBinding( uint32_t ID, uint32_t slot, ReflectedBindingCount bindingCount, ReflectedBindingResourceType resourceType, String const& extraInfos )
+                    : m_ID( ID ), m_slot( slot ), m_bindingCount( bindingCount ), m_bindingResourceType( resourceType ), m_extraInfos( extraInfos ) {}
 
                 inline bool operator<( ResourceBinding const& rhs ) const { return m_slot < rhs.m_slot; }
 
@@ -83,11 +86,12 @@ namespace EE
 
                 ReflectedBindingCount               m_bindingCount;
                 ReflectedBindingResourceType        m_bindingResourceType;
+                String                              m_extraInfos;
             };
 
             using ResourceBindingSetLayout = TVector<TVector<ResourceBinding>>;
 
-            struct PushConstants
+            struct PushConstant
             {
                 EE_SERIALIZE( m_ID, m_size, m_offset );
 
@@ -107,12 +111,20 @@ namespace EE
             inline PipelineStage GetPipelineStage() const { return m_pipelineStage; }
 
             inline ShaderHandle const& GetShaderHandle() const { return m_shaderHandle; }
+            inline RHI::RHIShader* const& GetRHIShader() const { return m_rhiShader; }
             inline uint32_t GetNumConstBuffers() const { return (uint32_t) m_cbuffers.size(); }
             inline RenderBuffer const& GetConstBuffer( uint32_t i ) const { EE_ASSERT( i < m_cbuffers.size() ); return m_cbuffers[i]; }
             inline ResourceBindingSetLayout const& GetResourceBindingSetLayout() const { return m_resourceBindings; }
+            inline PushConstant const& GetPushConstant() const { return m_pushConstants; }
+            inline String const& GetEntryName() const { return m_shaderEntryName; }
 
             inline bool operator==( Shader const& rhs ) const { return m_shaderHandle.m_pData == rhs.m_shaderHandle.m_pData; }
             inline bool operator!=( Shader const& rhs ) const { return m_shaderHandle.m_pData != rhs.m_shaderHandle.m_pData; }
+
+            virtual bool IsValid() const override
+            {
+                return ( m_rhiShader != nullptr && m_rhiShader->IsValid() ) || m_shaderHandle.IsValid();
+            }
 
         protected:
 
@@ -121,12 +133,13 @@ namespace EE
 
         protected:
 
-            ShaderHandle                        m_shaderHandle;
+            ShaderHandle                        m_shaderHandle; // TODO: remove this with RHI
+            RHI::RHIShader*                     m_rhiShader = nullptr;
             String                              m_shaderEntryName;
             TVector<RenderBuffer>               m_cbuffers;
             ResourceBindingSetLayout            m_resourceBindings;
             Blob                                m_byteCode;
-            PushConstants                       m_pushConstants;
+            PushConstant                        m_pushConstants;
             PipelineStage                       m_pipelineStage;
         };
 
@@ -148,10 +161,6 @@ namespace EE
             {}
             VertexShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers, VertexLayoutDescriptor const& vertexLayoutDesc );
 
-            virtual bool IsValid() const override
-            {
-                return m_shaderHandle.IsValid();
-            }
             inline VertexLayoutDescriptor const& GetVertexLayoutDesc() const
             {
                 return m_vertexLayoutDesc;
@@ -176,7 +185,6 @@ namespace EE
             PixelShader() : Shader( PipelineStage::Pixel ) {}
             PixelShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers );
 
-            virtual bool IsValid() const override { return m_shaderHandle.IsValid(); }
         };
 
         //-------------------------------------------------------------------------
@@ -192,8 +200,6 @@ namespace EE
 
             GeometryShader() : Shader( PipelineStage::Geometry ) {}
             GeometryShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers );
-
-            virtual bool IsValid() const override { return m_shaderHandle.IsValid(); }
         };
 
         //-------------------------------------------------------------------------
@@ -212,8 +218,6 @@ namespace EE
 
             ComputeShader() : Shader( PipelineStage::Compute ) {}
             ComputeShader( uint8_t const* pByteCode, size_t const byteCodeSize, TVector<RenderBuffer> const& constBuffers );
-
-            virtual bool IsValid() const override { return m_shaderHandle.IsValid(); }
         };
     }
 }

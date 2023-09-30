@@ -9,6 +9,9 @@ namespace EE::RHI
     {
     public:
 
+        RHITexture( ERHIType rhiType = ERHIType::Invalid )
+            : RHIResource( rhiType )
+        {}
         virtual ~RHITexture() = default;
 
     protected:

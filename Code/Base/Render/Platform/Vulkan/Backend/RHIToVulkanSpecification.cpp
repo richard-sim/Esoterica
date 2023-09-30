@@ -40,6 +40,44 @@ namespace EE::Render
             return VK_FORMAT_UNDEFINED;
 		}
 
+		VkFormat ToVulkanFormat( Render::DataFormat format )
+		{
+            switch ( format )
+            {
+                case EE::Render::DataFormat::UInt_R8: return VK_FORMAT_R8_UINT;
+                case EE::Render::DataFormat::UInt_R8G8: return VK_FORMAT_R8G8_UINT;
+                case EE::Render::DataFormat::UInt_R8G8B8A8: return VK_FORMAT_R8G8B8A8_UINT;
+                case EE::Render::DataFormat::UNorm_R8: return VK_FORMAT_R8_UNORM;
+                case EE::Render::DataFormat::UNorm_R8G8: return VK_FORMAT_R8G8_UNORM;
+                case EE::Render::DataFormat::UNorm_R8G8B8A8: return VK_FORMAT_R8G8B8A8_UNORM;
+                case EE::Render::DataFormat::UInt_R32: return VK_FORMAT_R32_UINT;
+                case EE::Render::DataFormat::UInt_R32G32: return VK_FORMAT_R32G32_UINT;
+                case EE::Render::DataFormat::UInt_R32G32B32: return VK_FORMAT_R32G32B32_UINT;
+                case EE::Render::DataFormat::UInt_R32G32B32A32: return VK_FORMAT_R32G32B32A32_UINT;
+                case EE::Render::DataFormat::SInt_R32: return VK_FORMAT_R32_SINT;
+                case EE::Render::DataFormat::SInt_R32G32: return VK_FORMAT_R32G32_SINT;
+                case EE::Render::DataFormat::SInt_R32G32B32: return VK_FORMAT_R32G32B32_SINT;
+                case EE::Render::DataFormat::SInt_R32G32B32A32: return VK_FORMAT_R32G32B32A32_SINT;
+                case EE::Render::DataFormat::Float_R16: return VK_FORMAT_R16_SFLOAT;
+                case EE::Render::DataFormat::Float_R16G16: return VK_FORMAT_R16G16_SFLOAT;
+                case EE::Render::DataFormat::Float_R16G16B16A16: return VK_FORMAT_R16G16B16A16_SFLOAT;
+                case EE::Render::DataFormat::Float_R32: return VK_FORMAT_R32_SFLOAT;
+                case EE::Render::DataFormat::Float_R32G32: return VK_FORMAT_R32G32_SFLOAT;
+                case EE::Render::DataFormat::Float_R32G32B32: return VK_FORMAT_R32G32B32_SFLOAT;
+                case EE::Render::DataFormat::Float_R32G32B32A32: return VK_FORMAT_R32G32B32A32_SFLOAT;
+                case EE::Render::DataFormat::Float_X32:
+                EE_UNIMPLEMENTED_FUNCTION();
+                break;
+                case EE::Render::DataFormat::Unknown:
+                case EE::Render::DataFormat::Count:
+                default:
+                break;
+            }
+
+            EE_UNREACHABLE_CODE();
+            return VK_FORMAT_UNDEFINED;
+		}
+
         VkImageType ToVulkanImageType( RHI::ETextureType type )
         {
             switch ( type )
@@ -57,34 +95,34 @@ namespace EE::Render
             return VK_IMAGE_TYPE_MAX_ENUM;
         }
 
-        VkSampleCountFlagBits ToVulkanSampleCountFlags( TBitFlags<RHI::ETextureSampleCount> sample )
+        VkSampleCountFlagBits ToVulkanSampleCountFlags( TBitFlags<RHI::ESampleCount> sample )
         {
             VkFlags flag = 0u;
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC1 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC1 ) )
             {
                 flag |= VK_SAMPLE_COUNT_1_BIT;
             }
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC2 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC2 ) )
             {
                 flag |= VK_SAMPLE_COUNT_2_BIT;
             }
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC4 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC4 ) )
             {
                 flag |= VK_SAMPLE_COUNT_4_BIT;
             }
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC8 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC8 ) )
             {
                 flag |= VK_SAMPLE_COUNT_8_BIT;
             }
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC16 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC16 ) )
             {
                 flag |= VK_SAMPLE_COUNT_16_BIT;
             }
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC32 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC32 ) )
             {
                 flag |= VK_SAMPLE_COUNT_32_BIT;
             }
-            if ( sample.IsFlagSet( RHI::ETextureSampleCount::SC64 ) )
+            if ( sample.IsFlagSet( RHI::ESampleCount::SC64 ) )
             {
                 flag |= VK_SAMPLE_COUNT_64_BIT;
             }
@@ -200,6 +238,49 @@ namespace EE::Render
 
         //-------------------------------------------------------------------------
 
+        VkAttachmentLoadOp ToVulkanAttachmentLoadOp( RHI::ERenderPassAttachmentLoadOp loadOP )
+        {
+            switch ( loadOP )
+            {
+                case EE::RHI::ERenderPassAttachmentLoadOp::Load: return VK_ATTACHMENT_LOAD_OP_LOAD;
+                case EE::RHI::ERenderPassAttachmentLoadOp::Clear: return VK_ATTACHMENT_LOAD_OP_CLEAR;
+                case EE::RHI::ERenderPassAttachmentLoadOp::DontCare: return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_ATTACHMENT_LOAD_OP_MAX_ENUM;
+        }
+
+        VkAttachmentStoreOp ToVulkanAttachmentStoreOp( RHI::ERenderPassAttachmentStoreOp storeOP )
+        {
+            switch ( storeOP )
+            {
+                case EE::RHI::ERenderPassAttachmentStoreOp::Store: return VK_ATTACHMENT_STORE_OP_STORE;
+                case EE::RHI::ERenderPassAttachmentStoreOp::DontCare: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_ATTACHMENT_STORE_OP_MAX_ENUM;
+        }
+
+        VkAttachmentDescription ToVulkanAttachmentDescription( RHI::RHIRenderPassAttachmentDesc const& attachmentDesc )
+        {
+            VkAttachmentDescription vkAttachmentDesc = {};
+            vkAttachmentDesc.format = ToVulkanFormat( attachmentDesc.m_pixelFormat );
+            vkAttachmentDesc.samples = ToVulkanSampleCountFlags( attachmentDesc.m_sample );
+            vkAttachmentDesc.loadOp = ToVulkanAttachmentLoadOp( attachmentDesc.m_loadOp );
+            vkAttachmentDesc.storeOp = ToVulkanAttachmentStoreOp( attachmentDesc.m_storeOp );
+            vkAttachmentDesc.stencilLoadOp = ToVulkanAttachmentLoadOp( attachmentDesc.m_stencilLoadOp );
+            vkAttachmentDesc.stencilStoreOp = ToVulkanAttachmentStoreOp( attachmentDesc.m_stencilStoreOp );
+            vkAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            vkAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            return vkAttachmentDesc;
+        }
+
+        //-------------------------------------------------------------------------
+
 		VkDescriptorType ToVulkanDescriptorType( Render::Shader::ReflectedBindingResourceType reflectedBindingType )
 		{
             // TODO: support dynamic uniform buffer and storage buffer
@@ -215,12 +296,154 @@ namespace EE::Render
                 case EE::Render::Shader::ReflectedBindingResourceType::StorageBuffer: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 case EE::Render::Shader::ReflectedBindingResourceType::InputAttachment: return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
                 default:
-                EE_UNREACHABLE_CODE();
                 break;
             }
+            EE_UNREACHABLE_CODE();
             return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		}
-	}
+
+        //-------------------------------------------------------------------------
+
+		VkShaderStageFlagBits ToVulkanShaderStageFlags( TBitFlags<Render::PipelineStage> pipelineStage )
+		{
+            if ( pipelineStage.IsFlagSet( PipelineStage::None ) )
+            {
+                return VkShaderStageFlagBits( 0u );
+            }
+
+            VkFlags flag = 0u;
+            if ( pipelineStage.IsFlagSet( PipelineStage::Vertex ) )
+            {
+                flag |= VK_SHADER_STAGE_VERTEX_BIT;
+            }
+            if ( pipelineStage.IsFlagSet( PipelineStage::Pixel ) )
+            {
+                flag |= VK_SHADER_STAGE_FRAGMENT_BIT;
+            }
+            if ( pipelineStage.IsFlagSet( PipelineStage::Hull ) )
+            {
+                flag |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            }
+            if ( pipelineStage.IsFlagSet( PipelineStage::Domain ) )
+            {
+                flag |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            }
+            if ( pipelineStage.IsFlagSet( PipelineStage::Geometry ) )
+            {
+                flag |= VK_SHADER_STAGE_GEOMETRY_BIT;
+            }
+            if ( pipelineStage.IsFlagSet( PipelineStage::Compute ) )
+            {
+                flag |= VK_SHADER_STAGE_COMPUTE_BIT;
+            }
+            return VkShaderStageFlagBits( flag );
+		}
+
+        VkPrimitiveTopology ToVulkanPrimitiveTopology( RHI::ERHIPipelinePirmitiveTopology topology )
+        {
+            switch ( topology )
+            {
+                case EE::RHI::ERHIPipelinePirmitiveTopology::PointList: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+                case EE::RHI::ERHIPipelinePirmitiveTopology::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+                case EE::RHI::ERHIPipelinePirmitiveTopology::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+                case EE::RHI::ERHIPipelinePirmitiveTopology::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+                case EE::RHI::ERHIPipelinePirmitiveTopology::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+                //case EE::RHI::ERHIPipelinePirmitiveTopology::None: return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+        }
+
+        VkCullModeFlagBits ToVulkanCullModeFlags( Render::CullMode cullMode )
+        {
+            switch ( cullMode )
+            {
+                case EE::Render::CullMode::BackFace: return VK_CULL_MODE_BACK_BIT;
+                case EE::Render::CullMode::FrontFace: return VK_CULL_MODE_FRONT_BIT;
+                case EE::Render::CullMode::None: return VK_CULL_MODE_NONE;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_CULL_MODE_FLAG_BITS_MAX_ENUM;
+        }
+
+        VkFrontFace ToVulkanFrontFace( Render::WindingMode windingMode )
+        {
+            switch ( windingMode )
+            {
+                case EE::Render::WindingMode::Clockwise: return VK_FRONT_FACE_CLOCKWISE;
+                case EE::Render::WindingMode::CounterClockwise: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_FRONT_FACE_MAX_ENUM;
+        }
+
+        VkPolygonMode ToVulkanPolygonMode( Render::FillMode fillMode )
+        {
+            switch ( fillMode )
+            {
+                case EE::Render::FillMode::Solid: return VK_POLYGON_MODE_FILL;
+                case EE::Render::FillMode::Wireframe: return VK_POLYGON_MODE_LINE;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_POLYGON_MODE_MAX_ENUM;
+        }
+
+        VkBlendFactor ToVulkanBlendFactor( Render::BlendValue blendValue )
+        {
+            switch ( blendValue )
+            {
+                case EE::Render::BlendValue::Zero: return VK_BLEND_FACTOR_ZERO;
+                case EE::Render::BlendValue::One: return VK_BLEND_FACTOR_ONE;
+                case EE::Render::BlendValue::SourceColor: return VK_BLEND_FACTOR_SRC_COLOR;
+                case EE::Render::BlendValue::InverseSourceColor: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+                case EE::Render::BlendValue::SourceAlpha: return VK_BLEND_FACTOR_SRC_ALPHA;
+                case EE::Render::BlendValue::InverseSourceAlpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                case EE::Render::BlendValue::DestinationColor: return VK_BLEND_FACTOR_DST_COLOR;
+                case EE::Render::BlendValue::InverseDestinationColor: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+                case EE::Render::BlendValue::DestinationAlpha: return VK_BLEND_FACTOR_DST_ALPHA;
+                case EE::Render::BlendValue::InverseDestinationAlpha: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+                case EE::Render::BlendValue::SourceAlphaSaturated: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+                case EE::Render::BlendValue::Source1Color: return VK_BLEND_FACTOR_SRC1_COLOR;
+                case EE::Render::BlendValue::InverseSource1Color: return VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
+                case EE::Render::BlendValue::Source1Alpha: return VK_BLEND_FACTOR_SRC1_ALPHA;
+                case EE::Render::BlendValue::InverseSource1Alpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
+                case EE::Render::BlendValue::BlendFactor: 
+                case EE::Render::BlendValue::InverseBlendFactor:
+                EE_UNIMPLEMENTED_FUNCTION();
+                break;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_BLEND_FACTOR_MAX_ENUM;
+        }
+
+        VkBlendOp ToVulkanBlendOp( Render::BlendOp blendOp )
+        {
+            switch ( blendOp )
+            {
+                case EE::Render::BlendOp::Add: return VK_BLEND_OP_ADD;
+                case EE::Render::BlendOp::Min: return VK_BLEND_OP_MIN;
+                case EE::Render::BlendOp::Max: return VK_BLEND_OP_MAX;
+                case EE::Render::BlendOp::SourceMinusDestination:
+                case EE::Render::BlendOp::DestinationMinusSource:
+                EE_UNIMPLEMENTED_FUNCTION();
+                break;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_BLEND_OP_MAX_ENUM;
+        }
+    }
 }
 
 #endif

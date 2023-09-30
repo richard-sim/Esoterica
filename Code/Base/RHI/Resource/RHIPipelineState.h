@@ -12,6 +12,9 @@ namespace EE::RHI
     {
     public:
 
+        RHIPipelineState( ERHIType rhiType = ERHIType::Invalid )
+            : RHIResource( rhiType )
+        {}
         virtual ~RHIPipelineState() = default;
 
         virtual RHIPipelineType GetPipelineType() const = 0;
@@ -22,6 +25,9 @@ namespace EE::RHI
     {
     public:
 
+        RHIRasterPipelineState( ERHIType rhiType = ERHIType::Invalid )
+            : RHIPipelineState( rhiType )
+        {}
         virtual ~RHIRasterPipelineState() = default;
 
         inline virtual RHIPipelineType GetPipelineType() const override { return RHIPipelineType::Raster; }
@@ -35,6 +41,9 @@ namespace EE::RHI
     {
     public:
 
+        RHIComputePipelineState( ERHIType rhiType = ERHIType::Invalid )
+            : RHIPipelineState( rhiType )
+        {}
         virtual ~RHIComputePipelineState() = default;
 
         inline virtual RHIPipelineType GetPipelineType() const override { return RHIPipelineType::Compute; }

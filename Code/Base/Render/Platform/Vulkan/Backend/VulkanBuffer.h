@@ -19,7 +19,11 @@ namespace EE::Render
 
         public:
 
-            VulkanBuffer() = default;
+            EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
+
+            VulkanBuffer()
+                : RHIBuffer( RHI::ERHIType::Vulkan )
+            {}
             virtual ~VulkanBuffer() = default;
 
         private:

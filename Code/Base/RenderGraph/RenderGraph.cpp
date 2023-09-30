@@ -16,7 +16,7 @@ namespace EE
 		void RGNodeBuilder::RegisterRasterPipeline( RHI::RHIRasterPipelineStateCreateDesc pipelineDesc )
 		{
 			EE_ASSERT( Threading::IsMainThread() );
-			//EE_ASSERT( pipelineDesc.IsValid() );
+			EE_ASSERT( pipelineDesc.IsValid() );
 
             // Immediately register pipeline into graph, next frame it can start the loading process
             m_node.m_pipelineHandle = m_graph.RegisterRasterPipeline( pipelineDesc );
@@ -69,7 +69,7 @@ namespace EE
         // Compilation Stage
         //-------------------------------------------------------------------------
 
-        void RenderGraph::Compile( TSharedPtr<RHI::RHIDevice> const& pRhiDevice )
+        void RenderGraph::Compile( RHI::RHIDevice* pRhiDevice )
         {
             if ( pRhiDevice == nullptr )
             {
@@ -86,8 +86,10 @@ namespace EE
             //-------------------------------------------------------------------------
         }
 
-        void RenderGraph::CreateRHIResource( TSharedPtr<RHI::RHIDevice> const& pRhiDevice )
+        void RenderGraph::CreateRHIResource( RHI::RHIDevice* pRhiDevice )
         {
+            EE_ASSERT( pRhiDevice != nullptr );
+
             auto CreateRHILazyResource = [pRhiDevice] ( RGResource& rgResource )
             {
                 switch ( rgResource.GetResourceType() )
@@ -158,8 +160,10 @@ namespace EE
         // Cleanup Stage
         //-------------------------------------------------------------------------
 
-        void RenderGraph::ClearAllRHIResources( TSharedPtr<RHI::RHIDevice> const& pRhiDevice )
+        void RenderGraph::ClearAllRHIResources( RHI::RHIDevice* pRhiDevice )
         {
+            EE_ASSERT( pRhiDevice != nullptr );
+
             for ( auto& resource : m_graphResources )
             {
                 switch ( resource.GetResourceType() )

@@ -22,7 +22,11 @@ namespace EE::Render
 
 		public:
 
-			VulkanTexture() = default;
+            EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
+
+            VulkanTexture()
+                : RHITexture( RHI::ERHIType::Vulkan )
+            {}
             virtual ~VulkanTexture() = default;
 
 		private:

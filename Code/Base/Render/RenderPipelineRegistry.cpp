@@ -121,7 +121,7 @@ namespace EE::Render
 		return PipelineHandle();
 	}
 
-	void PipelineRegistry::LoadAndUpdatePipelines( TSharedPtr<RHI::RHIDevice> const& pDevice )
+	void PipelineRegistry::LoadAndUpdatePipelines( RHI::RHIDevice* pDevice )
 	{
 		EE_ASSERT( Threading::IsMainThread() );
 		EE_ASSERT( m_isInitialized );
@@ -129,13 +129,24 @@ namespace EE::Render
 
 		LoadPipelineShaders();
 
+        //-------------------------------------------------------------------------
+
         for ( auto const& rasterEntry : m_waitToRegisteredRasterPipelines )
         {
-            // Double checked again in case pipeline entry is unloaded by chance.
+            // double checked again in case pipeline entry is unloaded by chance.
             if ( rasterEntry->IsReadyToCreatePipelineLayout() )
             {
-                CreateRasterPipelineStateLayout( rasterEntry, pDevice );
+                if ( !CreateRasterPipelineStateLayout( rasterEntry, pDevice ) )
+                {
+                    m_retryRasterPipelineCaches.push_back( rasterEntry );
+                }
             }
+        }
+
+        if ( !m_waitToRegisteredRasterPipelines.empty() )
+        {
+            m_waitToRegisteredRasterPipelines.clear();
+            std::swap( m_waitToRegisteredRasterPipelines, m_retryRasterPipelineCaches );
         }
 	}
 
@@ -266,7 +277,7 @@ namespace EE::Render
 		m_rasterPipelineHandlesCache.clear();
 	}
 
-    void PipelineRegistry::CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, TSharedPtr<RHI::RHIDevice> const& pDevice )
+    bool PipelineRegistry::CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, RHI::RHIDevice* pDevice )
     {
         EE_ASSERT( Threading::IsMainThread() );
 
@@ -275,7 +286,13 @@ namespace EE::Render
         RHI::RHIDevice::CompiledShaderArray compiledShaders;
         compiledShaders.push_back( rasterEntry->m_vertexShader.GetPtr() );
         compiledShaders.push_back( rasterEntry->m_pixelShader.GetPtr() );
-        pDevice->CreateRasterPipelineState( rasterEntry->m_desc, compiledShaders );
+        auto* pPipelineState = pDevice->CreateRasterPipelineState( rasterEntry->m_desc, compiledShaders );
+
+        // Note: test purpose
+        bool bResult = pPipelineState != nullptr;
+        pDevice->DestroyRasterPipelineState( pPipelineState );
+        
+        return bResult;
     }
 
 }

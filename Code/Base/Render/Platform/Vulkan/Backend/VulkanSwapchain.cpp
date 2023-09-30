@@ -28,12 +28,12 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanSwapchain::VulkanSwapchain( TSharedPtr<VulkanDevice> pDevice )
+		VulkanSwapchain::VulkanSwapchain( VulkanDevice* pDevice )
 			: VulkanSwapchain( InitConfig::GetDefault(), pDevice )
 		{}
 
-		VulkanSwapchain::VulkanSwapchain( InitConfig config, TSharedPtr<VulkanDevice> pDevice )
-			: m_pDevice( pDevice )
+		VulkanSwapchain::VulkanSwapchain( InitConfig config, VulkanDevice* pDevice )
+			: RHISwapchain( RHI::ERHIType::Vulkan ), m_pDevice( pDevice )
 		{
 			// load function
 			//-------------------------------------------------------------------------

@@ -14,9 +14,11 @@
 
 //-------------------------------------------------------------------------
 
+#include "Base/Render/RenderAPI.h"
 #include "Base/Render/RenderResourceBarrier.h"
 #include "Base/RenderGraph/RenderGraphResource.h"
-#include "Base/Render/RenderAPI.h"
+#include "Base/RHI/RHIDevice.h"
+#include "Base/RHI/Resource/RHIRenderPass.h"
 
 namespace EE
 {
@@ -362,9 +364,18 @@ namespace EE
             auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
             auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
 
+            RHI::RHIRenderPassCreateDesc renderPassCreateDesc = {};
+            renderPassCreateDesc.m_colorAttachments.push_back( RHI::RHIRenderPassAttachmentDesc::TrivialColor( RHI::EPixelFormat::BGRA8Unorm ) );
+            m_pImguiRenderPass = m_pRenderDevice->GetRHIDevice()->CreateRenderPass( renderPassCreateDesc );
+
             auto pipelineDesc = RHI::RHIRasterPipelineStateCreateDesc{};
             pipelineDesc.AddShader( RHI::RHIPipelineShader( ResourcePath( "data://shaders/imgui/imgui.vsdr" ) ));
             pipelineDesc.AddShader( RHI::RHIPipelineShader( ResourcePath( "data://shaders/imgui/imgui.psdr" ) ));
+            pipelineDesc.SetRasterizerState( RHI::RHIPipelineRasterizerState::NoCulling() );
+            pipelineDesc.SetBlendState( RHI::RHIPipelineBlendState::ColorAdditiveAlpha() );
+            pipelineDesc.SetRenderPass( m_pImguiRenderPass );
+            pipelineDesc.DepthTest( false );
+            pipelineDesc.DepthWrite( false );
             node.RegisterRasterPipeline( std::move( pipelineDesc ) );
 
             EE_ASSERT( handle0_ref.GetDesc().m_desc.m_desireSize == 512 );
@@ -430,6 +441,9 @@ namespace EE
         EE_ASSERT( m_pRenderDevice != nullptr );
 
         //-------------------------------------------------------------------------
+
+        m_pRenderDevice->GetRHIDevice()->DestroyRenderPass( m_pImguiRenderPass );
+        m_pImguiRenderPass = nullptr;
 
         m_renderGraph.ClearAllRHIResources( m_pRenderDevice->GetRHIDevice() );
         m_renderPipelineRegistry.Shutdown();

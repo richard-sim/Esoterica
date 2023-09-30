@@ -65,12 +65,14 @@ namespace EE::Render
     public:
 
         inline bool IsValid() const { return m_byteSize > 0 && !m_elementDescriptors.empty(); }
+
+        void CalculateElementOffsets();
         void CalculateByteSize();
 
     public:
 
         TInlineVector<ElementDescriptor, 6>     m_elementDescriptors;
-        uint32_t                                  m_byteSize = 0;             // The total byte size per vertex
+        uint32_t                                m_byteSize = 0;             // The total byte size per vertex
     };
 
     //-------------------------------------------------------------------------

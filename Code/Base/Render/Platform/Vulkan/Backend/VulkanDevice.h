@@ -5,6 +5,7 @@
 #include "VulkanMemoryAllocator.h"
 #include "VulkanSampler.h"
 #include "Base/Types/Map.h"
+#include "Base/Types/String.h"
 #include "Base/Types/HashMap.h"
 #include "Base/Memory/Pointers.h"
 #include "Base/Resource/ResourcePtr.h"
@@ -70,6 +71,7 @@ namespace EE::Render
             friend class VulkanMemoryAllocator;
             friend class VulkanQueue;
             friend class VulkanSwapchain;
+            friend class VulkanFramebufferCache;
 
         public:
 
@@ -88,6 +90,8 @@ namespace EE::Render
 			};
 
         public:
+
+            EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
 
 			// Only support single physical device for now.
 			VulkanDevice();
@@ -111,18 +115,23 @@ namespace EE::Render
 
             //-------------------------------------------------------------------------
 
+            virtual RHI::RHIRenderPass* CreateRenderPass( RHI::RHIRenderPassCreateDesc const& createDesc) override;
+            virtual void                DestroyRenderPass( RHI::RHIRenderPass* pRenderPass ) override;
+
+            //-------------------------------------------------------------------------
+
             virtual RHI::RHIPipelineState* CreateRasterPipelineState( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders ) override;
             virtual void                   DestroyRasterPipelineState( RHI::RHIPipelineState* pPipelineState ) override;
 
 		private:
 
             using CombinedShaderBindingLayout = TMap<uint32_t, Render::Shader::ResourceBinding>;
-            using CombinedShaderSetLayout = TFixedMap<uint32_t, CombinedShaderBindingLayout, Render::NumMaxShaderResourceSetLayout>;
+            using CombinedShaderSetLayout = TFixedMap<uint32_t, CombinedShaderBindingLayout, Render::Shader::NumMaxResourceBindingSet>;
 
             struct VulkanDescriptorSetLayoutInfos
             {
-                TFixedVector<VkDescriptorSetLayout, Render::NumMaxShaderResourceSetLayout>                  m_vkDescriptorSetLayouts;
-                TFixedVector<TMap<uint32_t, VkDescriptorType>, Render::NumMaxShaderResourceSetLayout>       m_SetLayoutsVkDescriptorTypes;
+                TFixedVector<VkDescriptorSetLayout, Render::Shader::NumMaxResourceBindingSet>                  m_vkDescriptorSetLayouts;
+                TFixedVector<TMap<uint32_t, VkDescriptorType>, Render::Shader::NumMaxResourceBindingSet>       m_SetLayoutsVkDescriptorTypes;
             };
 
             constexpr static uint32_t BindlessDescriptorSetDesiredSampledImageCount = 1024;
@@ -136,7 +145,8 @@ namespace EE::Render
             // Pipeline State
             //-------------------------------------------------------------------------
 
-            bool CreatePipelineStateLayout( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders, VulkanPipelineState* pPipelineState );
+            bool CreateRasterPipelineStateLayout( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders, VulkanPipelineState* pPipelineState );
+            void DestroyRasterPipelineStateLayout( VulkanPipelineState* pPipelineState );
             CombinedShaderSetLayout CombinedAllShaderSetLayouts( CompiledShaderArray const& compiledShaders );
             TPair<VkDescriptorSetLayout, TMap<uint32_t, VkDescriptorType>> CreateDescriptorSetLayout( uint32_t set, CombinedShaderBindingLayout const& combinedSetBindingLayout, VkShaderStageFlags stage );
 
@@ -144,6 +154,7 @@ namespace EE::Render
             //-------------------------------------------------------------------------
             
             void CreateStaticSamplers();
+            VkSampler FindImmutableSampler( String const& indicateString );
             void DestroyStaticSamplers();
 
             // Utility Functions

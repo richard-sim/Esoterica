@@ -82,10 +82,10 @@ namespace EE
             // Compilation Stage
             //-------------------------------------------------------------------------
 
-            void Compile( TSharedPtr<RHI::RHIDevice> const& pRhiDevice );
+            void Compile( RHI::RHIDevice* pRhiDevice );
             // Use RGDescType to fetch internal RHIResourceDesc and create actual RHIResource.
             // Created transient rhi resources will be cached in transient resource cache.
-            void CreateRHIResource( TSharedPtr<RHI::RHIDevice> const& pRhiDevice );
+            void CreateRHIResource( RHI::RHIDevice* pRhiDevice );
 
             // Execution Stage
             //-------------------------------------------------------------------------
@@ -95,7 +95,7 @@ namespace EE
             // Cleanup Stage
             //-------------------------------------------------------------------------
 
-            void ClearAllRHIResources( TSharedPtr<RHI::RHIDevice> const& pRhiDevice );
+            void ClearAllRHIResources( RHI::RHIDevice* pRhiDevice );
 
 		private:
 

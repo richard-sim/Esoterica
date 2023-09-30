@@ -1,12 +1,16 @@
 #pragma once
 
+#include "../RHITaggedType.h"
+
 namespace EE::RHI
 {
-    class RHIResource
+    class RHIResource : public RHITaggedType
     {
     public:
 
-        RHIResource() = default;
+        RHIResource( ERHIType rhiType = ERHIType::Invalid )
+            : RHITaggedType( rhiType )
+        {}
         virtual ~RHIResource() = default;
 
         RHIResource( RHIResource const& ) = delete;
@@ -20,6 +24,9 @@ namespace EE::RHI
     {
     public:
 
+        RHISynchronazationPrimitive( ERHIType rhiType = ERHIType::Invalid )
+            : RHIResource( rhiType )
+        {}
         virtual ~RHISynchronazationPrimitive() = default;
 
     public:

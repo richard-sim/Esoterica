@@ -1,12 +1,16 @@
 #pragma once
 
+#include "RHITaggedType.h"
+
 namespace EE::RHI
 {
-    class RHISwapchain
+    class RHISwapchain : public RHITaggedType
     {
     public:
 
-        RHISwapchain() = default;
+        RHISwapchain( ERHIType rhiType )
+            : RHITaggedType( rhiType )
+        {}
         virtual ~RHISwapchain() = default;
 
         RHISwapchain( RHISwapchain const& ) = delete;
@@ -15,7 +19,13 @@ namespace EE::RHI
         RHISwapchain( RHISwapchain&& ) = default;
         RHISwapchain& operator=( RHISwapchain&& ) = default;
 
-    private:
+        //-------------------------------------------------------------------------
+
+        inline ERHIType GetDynamicRHIType() const { return m_DynamicRHIType; }
+
+    protected:
+
+        ERHIType            m_DynamicRHIType;
     };
 
 }

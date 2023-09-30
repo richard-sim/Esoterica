@@ -6,6 +6,9 @@
 
 namespace EE::Render
 {
+    // Note: If you modified this enum, please keep data in this file consistent:
+    //       RenderDevice_DX11.cpp : g_semanticNames
+    //       ResourceCompiler_RenderShader.cpp : g_semanticNames
     enum class DataSemantic : uint8_t
     {
         Position = 0,
@@ -20,6 +23,10 @@ namespace EE::Render
         None,
     };
 
+    // Note: If you modified this enum, please keep data in this file consistent:
+    //       RenderDevice_DX11.cpp : g_formatConversion
+    //       ResourceCompiler_RenderShader.cpp : g_formatConversion
+    //       RenderVertexFormats.cpp: g_dataTypeSizes
     enum class DataFormat : uint8_t
     {
         Unknown = 0,

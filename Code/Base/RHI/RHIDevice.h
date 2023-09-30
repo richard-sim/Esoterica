@@ -5,7 +5,8 @@
 #include "Base/Types/Arrays.h"
 #include "Base/Render/RenderShader.h"
 #include "Base/Resource/ResourcePtr.h"
-#include "Base/RHI/Resource/RHIResourceCreationCommons.h"
+#include "Resource/RHIResourceCreationCommons.h"
+#include "RHITaggedType.h"
 
 namespace EE::RHI
 {
@@ -13,17 +14,20 @@ namespace EE::RHI
     class RHISemaphore;
     class RHITexture;
     class RHIBuffer;
+    class RHIRenderPass;
     class RHIPipelineState;
 
-    class RHIDevice
+    class RHIDevice : public RHITaggedType
     {
     public:
 
-        using CompiledShaderArray = TInlineVector<Render::Shader const*, static_cast<size_t>( Render::NumPipelineStages )>;
+        using CompiledShaderArray = TFixedVector<Render::Shader const*, static_cast<size_t>( Render::NumPipelineStages )>;
 
         //-------------------------------------------------------------------------
 
-        RHIDevice() = default;
+        RHIDevice( ERHIType rhiType = ERHIType::Invalid )
+            : RHITaggedType( rhiType )
+        {}
         virtual ~RHIDevice() = default;
 
         RHIDevice( RHIDevice const& ) = delete;
@@ -48,10 +52,13 @@ namespace EE::RHI
 
         //-------------------------------------------------------------------------
 
+        virtual RHIRenderPass* CreateRenderPass( RHIRenderPassCreateDesc const& createDesc ) = 0;
+        virtual void           DestroyRenderPass( RHIRenderPass* pRenderPass ) = 0;
+
+        //-------------------------------------------------------------------------
+
         virtual RHIPipelineState* CreateRasterPipelineState( RHI::RHIRasterPipelineStateCreateDesc const& createDesc, CompiledShaderArray const& compiledShaders ) = 0;
         virtual void              DestroyRasterPipelineState( RHIPipelineState* pPipelineState ) = 0;
-
-    private:
     };
 }
 
