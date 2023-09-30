@@ -117,16 +117,6 @@ namespace EE
         }
 
         template<typename T>
-        EE_FORCE_INLINE bool IsNearEqual( T value, T comparand, float epsilon = Epsilon )
-        {
-            return Math::Abs( value - comparand ) <= epsilon;
-        }
-
-        template<typename T>
-        EE_FORCE_INLINE bool IsNearZero( T value, float epsilon = Epsilon )
-        {
-
-        template<typename T>
         EE_FORCE_INLINE bool IsNearEqual( T value, T comparand, T epsilon = Epsilon )
         {
             return Abs( value - comparand ) <= epsilon;
