@@ -37,12 +37,12 @@ namespace EE::Render
 
 			inline bool IsValid() const
 			{
-				return m_index != std::numeric_limits<uint32_t>::max();
+				return m_index != eastl::numeric_limits<uint32_t>::max();
 			}
 
 		public:
 
-			uint32_t						m_index = std::numeric_limits<uint32_t>::max();
+			uint32_t						m_index = eastl::numeric_limits<uint32_t>::max();
 			VkQueueFamilyProperties			m_props;
 		};
 

@@ -2,8 +2,7 @@
 
 #include "Base/Types/Atomic.h"
 
-#include <type_traits>
-#include <limits>
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 // Reference Counting Object

@@ -5,7 +5,8 @@
 #include "VulkanSurface.h"
 #include "Base/Logging/Log.h"
 
-#include <limits>
+#include <EASTL/numeric_limits.h>
+#include <EASTL/utility.h>
 
 namespace EE::Render
 {
@@ -68,7 +69,7 @@ namespace EE::Render
 		{
 			bool allPhysicalDeviceInvalid = true;
 
-			int currPickScore = std::numeric_limits<int>::min();
+			int currPickScore = eastl::numeric_limits<int>::min();
 			size_t currPickIndex = 0;
 
 			for ( size_t i = 0; i < pdDevices.size(); ++i )
@@ -95,7 +96,7 @@ namespace EE::Render
 
 			EE_LOG_INFO("Render", "Vulkan Backend", "Pick physical device info: \n\tname: %s\n\tdriver version: %u\n\tvendor id: %u", pdDevices[currPickIndex].m_props.deviceName, pdDevices[currPickIndex].m_props.driverVersion, pdDevices[currPickIndex].m_props.vendorID );
 
-			VulkanPhysicalDevice pd = std::move( pdDevices[currPickIndex] );
+			VulkanPhysicalDevice pd = eastl::move( pdDevices[currPickIndex] );
 			pdDevices.erase_unsorted( pdDevices.begin() + currPickIndex );
 
 			return pd;

@@ -39,7 +39,7 @@ namespace EE::AI
         template<typename T>
         T* GetComponentByType() const
         {
-            static_assert( std::is_base_of<EntityComponent, T>::value, "T must be a component type" );
+            static_assert( eastl::is_base_of<EntityComponent, T>::value, "T must be a component type" );
             for ( auto pComponent : m_components )
             {
                 if ( auto pCastComponent = TryCast<T>( pComponent ) )

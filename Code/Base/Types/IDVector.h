@@ -2,6 +2,7 @@
 #include "Arrays.h"
 #include "HashMap.h"
 #include "Base/Memory/Pointers.h"
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 // ID Vector
@@ -142,23 +143,23 @@ namespace EE
 
     private:
 
-        EE_FORCE_INLINE IDType GetItemID( std::true_type, ItemType const& pItem ) const
+        EE_FORCE_INLINE IDType GetItemID( eastl::true_type, ItemType const& pItem ) const
         {
             return pItem->GetID();
         }
 
-        EE_FORCE_INLINE IDType GetItemID( std::false_type, ItemType const& item ) const
+        EE_FORCE_INLINE IDType GetItemID( eastl::false_type, ItemType const& item ) const
         {
             return item.GetID();
         }
 
-        EE_FORCE_INLINE IDType GetLastElementID( std::true_type ) const
+        EE_FORCE_INLINE IDType GetLastElementID( eastl::true_type ) const
         {
             EE_ASSERT( !m_vector.empty() );
             return m_vector.back()->GetID();
         }
 
-        EE_FORCE_INLINE IDType GetLastElementID( std::false_type ) const
+        EE_FORCE_INLINE IDType GetLastElementID( eastl::false_type ) const
         {
             EE_ASSERT( !m_vector.empty() );
             return m_vector.back().GetID();

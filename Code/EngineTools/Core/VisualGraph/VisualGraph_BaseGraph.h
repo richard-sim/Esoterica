@@ -9,6 +9,8 @@
 #include "Base/Types/Event.h"
 #include "Base/Types/Function.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE::VisualGraph
@@ -535,7 +537,7 @@ namespace EE::VisualGraph
         template<typename T>
         TInlineVector<T*, 20> FindAllNodesOfType( SearchMode depth = SearchMode::Localized, SearchTypeMatch typeMatch = SearchTypeMatch::Exact )
         {
-            static_assert( std::is_base_of<BaseNode, T>::value );
+            static_assert( eastl::is_base_of<BaseNode, T>::value );
             TInlineVector<BaseNode*, 20> intermediateResults;
             FindAllNodesOfType( T::GetStaticTypeID(), intermediateResults, depth, typeMatch );
 
@@ -551,7 +553,7 @@ namespace EE::VisualGraph
         template<typename T>
         TInlineVector<T*, 20> FindAllNodesOfTypeAdvanced( TFunction<bool( BaseNode const* )> const& matchFunction, SearchMode depth = SearchMode::Localized, SearchTypeMatch typeMatch = SearchTypeMatch::Exact )
         {
-            static_assert( std::is_base_of<BaseNode, T>::value );
+            static_assert( eastl::is_base_of<BaseNode, T>::value );
             TInlineVector<BaseNode*, 20> intermediateResults;
             FindAllNodesOfTypeAdvanced( T::GetStaticTypeID(), matchFunction, intermediateResults, depth, typeMatch );
 
@@ -567,7 +569,7 @@ namespace EE::VisualGraph
         template<typename T>
         TInlineVector<T const*, 20> FindAllNodesOfType( SearchMode depth = SearchMode::Localized, SearchTypeMatch typeMatch = SearchTypeMatch::Exact ) const
         {
-            static_assert( std::is_base_of<BaseNode, T>::value );
+            static_assert( eastl::is_base_of<BaseNode, T>::value );
             TInlineVector<BaseNode*, 20> intermediateResults;
             FindAllNodesOfType( T::GetStaticTypeID(), intermediateResults, depth, typeMatch );
 
@@ -583,7 +585,7 @@ namespace EE::VisualGraph
         template<typename T>
         TInlineVector<T const*, 20> FindAllNodesOfTypeAdvanced( TFunction<bool( BaseNode const* )> const& matchFunction, SearchMode depth = SearchMode::Localized, SearchTypeMatch typeMatch = SearchTypeMatch::Exact ) const
         {
-            static_assert( std::is_base_of<BaseNode, T>::value );
+            static_assert( eastl::is_base_of<BaseNode, T>::value );
             TInlineVector<BaseNode*, 20> intermediateResults;
             FindAllNodesOfTypeAdvanced( T::GetStaticTypeID(), matchFunction, intermediateResults, depth, typeMatch );
 

@@ -1,11 +1,11 @@
 #include "EntityIDs.h"
-#include <atomic>
+#include <EASTL/atomic.h>
 
 //-------------------------------------------------------------------------
 
 namespace EE
 {
-    static std::atomic<uint64_t> g_entityID = 1;
+    static eastl::atomic<uint64_t> g_entityID = 1;
 
     EntityID EntityID::Generate()
     {
@@ -17,7 +17,7 @@ namespace EE
 
     //-------------------------------------------------------------------------
 
-    static std::atomic<uint64_t> g_componentID = 1;
+    static eastl::atomic<uint64_t> g_componentID = 1;
 
     ComponentID ComponentID::Generate()
     {

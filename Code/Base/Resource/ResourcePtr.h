@@ -2,6 +2,8 @@
 
 #include "ResourceRecord.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE
@@ -101,7 +103,7 @@ namespace EE
     template <typename T>
     class TResourcePtr : public Resource::ResourcePtr
     {
-        static_assert( std::is_base_of<EE::Resource::IResource, T>::value, "Invalid specialization for TResourcePtr, only classes derived from IResource are allowed." );
+        static_assert( eastl::is_base_of<EE::Resource::IResource, T>::value, "Invalid specialization for TResourcePtr, only classes derived from IResource are allowed." );
 
         EE_SERIALIZE( m_resourceID );
 

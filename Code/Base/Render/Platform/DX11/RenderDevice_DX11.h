@@ -5,6 +5,8 @@
 #include "Base/Types/Color.h"
 #include "Base/Threading/Threading.h"
 
+#include "Base/Memory/Pointers.h"
+
 #include <D3D11.h>
 
 //-------------------------------------------------------------------------

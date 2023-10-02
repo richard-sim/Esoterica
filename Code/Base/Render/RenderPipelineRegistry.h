@@ -1,14 +1,17 @@
 #pragma once
 
+#include "Base/_Module/API.h"
+
 #include "Base/Systems.h"
 #include "Base/Resource/ResourcePtr.h"
 #include "Base/Render/RenderShader.h"
 #include "Base/Render/RenderPipeline.h"
 #include "Base/Render/RenderPipelineState.h"
 #include "Base/Types/IDVector.h"
+#include "Base/Memory/Pointers.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 
-#include <numeric>
+#include <EASTL/numeric_limits.h>
 
 //-------------------------------------------------------------------------
 
@@ -38,7 +41,7 @@ namespace EE::Render
 
 		inline bool IsValid() const
 		{
-			return m_ID != 0 && m_ID != std::numeric_limits<uint32_t>::max();
+			return m_ID != 0 && m_ID != eastl::numeric_limits<uint32_t>::max();
 		}
 
 		inline uint32_t RawValue() const
@@ -65,7 +68,7 @@ namespace EE::Render
 	private:
 
 		// this id will be used as ResourceRequestID, so it can not be 0.
-		uint32_t				m_ID = std::numeric_limits<uint32_t>::max();
+		uint32_t				m_ID = eastl::numeric_limits<uint32_t>::max();
 		PipelineType			m_type = PipelineType::Raster;
 	};
 }

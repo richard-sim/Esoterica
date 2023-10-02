@@ -5,7 +5,7 @@ namespace EE
 	namespace RG
 	{
 		RGNode::RGNode()
-			: RGNode( "Unknown Pass", std::numeric_limits<NodeID>::max() )
+			: RGNode( "Unknown Pass", eastl::numeric_limits<NodeID>::max() )
 		{}
 
 		RGNode::RGNode( String const& nodeName, NodeID id )

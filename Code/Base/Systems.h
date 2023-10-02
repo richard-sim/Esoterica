@@ -3,6 +3,7 @@
 #include "Base/_Module/API.h"
 #include "Base/Encoding/Hash.h"
 #include "Base/Types/Arrays.h"
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 // Defines an interface for an engine system
@@ -47,7 +48,7 @@ namespace EE
         template<typename T>
         inline T* GetSystem() const
         {
-            static_assert( std::is_base_of<EE::ISystem, T>::value, "T is not derived from ISystem" );
+            static_assert( eastl::is_base_of<EE::ISystem, T>::value, "T is not derived from ISystem" );
 
             for ( auto pSystem : m_registeredSystems )
             {

@@ -11,6 +11,10 @@
 #include "Base/Render/RenderResourceBarrier.h"
 #include "Base/Render/RenderPipelineRegistry.h"
 
+#include <EASTL/type_traits.h>
+#include <EASTL/utility.h>
+#include <EASTL/numeric_limits.h>
+
 namespace EE::RHI
 {
     class RHIDevice;
@@ -28,7 +32,7 @@ namespace EE
 			friend class RenderGraph;
 			friend class RGNodeBuilder;
 
-			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!");
+			EE_STATIC_ASSERT( ( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!");
 
 		public:
 
@@ -99,7 +103,7 @@ namespace EE
 
 		private:
 
-			template <typename RGDescType, typename RGDescCVType = typename std::add_lvalue_reference_t<std::add_const_t<RGDescType>>>
+			template <typename RGDescType, typename RGDescCVType = typename eastl::add_lvalue_reference_t<eastl::add_const_t<RGDescType>>>
             _Impl::RGResourceID CreateResourceImpl( RGDescCVType rgDesc );
 
             // Pipeline Registration (Defer creating actual RHI pipeline)
@@ -194,7 +198,7 @@ namespace EE
 		template <typename DescType, typename RTTag>
 		RGHandle<RTTag> RenderGraph::CreateResource( DescType const& desc )
 		{
-			static_assert( std::is_base_of<RGResourceTagTypeBase<RTTag>, RTTag>::value, "Invalid render graph resource tag!" );
+			static_assert( eastl::is_base_of<RGResourceTagTypeBase<RTTag>, RTTag>::value, "Invalid render graph resource tag!" );
 			typedef typename RTTag::RGDescType RGDescType;
 
 			EE_ASSERT( Threading::IsMainThread() );
@@ -215,7 +219,7 @@ namespace EE
 		_Impl::RGResourceID RenderGraph::CreateResourceImpl( RGDescCVType rgDesc )
 		{
 			size_t slotID = m_graphResources.size();
-			EE_ASSERT( slotID >= 0 && slotID < std::numeric_limits<uint32_t>::max() );
+			EE_ASSERT( slotID >= 0 && slotID < eastl::numeric_limits<uint32_t>::max() );
 
             _Impl::RGResourceID id( static_cast<uint32_t>( slotID ) );
 			m_graphResources.emplace_back( rgDesc );
@@ -265,16 +269,16 @@ namespace EE
 		template <typename Tag, RGResourceViewType RVT>
 		RGNodeResourceRef<Tag, RVT> RGNodeBuilder::ReadImpl( RGHandle<Tag> const& pResource, Render::RenderResourceBarrierState access )
 		{
-			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
+			EE_STATIC_ASSERT( ( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 
 			typedef typename Tag::DescType DescType;
-			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
+			typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
 
 			EE_ASSERT( pResource.m_slotID.IsValid() );
 
 			// Note: only true to skip sync for read access
 			EE::Render::RenderResourceAccessState accessState( access, true );
-			m_node.m_pInputs.emplace_back( pResource.m_slotID, std::move( accessState ) );
+			m_node.m_pInputs.emplace_back( pResource.m_slotID, eastl::move( accessState ) );
 
 			// fetch graph resource from render graph
 			DescCVType desc = m_graph.m_graphResources[pResource.m_slotID.m_id].GetDesc<Tag>();
@@ -285,16 +289,16 @@ namespace EE
 		template <typename Tag, RGResourceViewType RVT>
 		RGNodeResourceRef<Tag, RVT> RGNodeBuilder::WriteImpl( RGHandle<Tag>& pResource, Render::RenderResourceBarrierState access )
 		{
-			EE_STATIC_ASSERT( ( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
+			EE_STATIC_ASSERT( ( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 
 			typedef typename Tag::DescType DescType;
-			typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
+			typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
 
 			EE_ASSERT( pResource.m_slotID.IsValid() );
 
 			// Note: only true to skip sync for read access
 			EE::Render::RenderResourceAccessState accessState( access, false );
-			m_node.m_pOutputs.emplace_back( pResource.m_slotID, std::move( accessState ) );
+			m_node.m_pOutputs.emplace_back( pResource.m_slotID, eastl::move( accessState ) );
 
 			// fetch graph resource from render graph
 			DescCVType desc = m_graph.m_graphResources[pResource.m_slotID.m_id].GetDesc<Tag>();

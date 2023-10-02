@@ -8,6 +8,8 @@
 #include "Base/Threading/Threading.h"
 #include "Base/Types/Function.h"
 
+#include <EASTL/atomic.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE
@@ -189,10 +191,10 @@ namespace EE::Resource
         mutable TEvent<ResourceID>                                  m_resourceDeletedEvent;
 
         // Build state
-        std::atomic<DatabaseState>                                  m_state = DatabaseState::Empty;
+        eastl::atomic<DatabaseState>                                m_state = DatabaseState::Empty;
         ITaskSet*                                                   m_pAsyncTask = nullptr;
-        std::atomic<bool>                                           m_cancelActiveTask = false;
-        std::atomic<int32_t>                                        m_numItemsProcessed = 0;
+        eastl::atomic<bool>                                         m_cancelActiveTask = false;
+        eastl::atomic<int32_t>                                      m_numItemsProcessed = 0;
         int32_t                                                     m_totalItemsToProcess = 1;
         TVector<FileEntry*>                                         m_descriptorsToLoad;
     };

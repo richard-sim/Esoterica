@@ -3,7 +3,7 @@
 #include "Engine/Physics/PhysicsQuery.h"
 #include "Base/Time/Time.h"
 #include "Base/Math/Transform.h"
-#include <atomic>
+#include <EASTL/atomic.h>
 
 //-------------------------------------------------------------------------
 
@@ -253,8 +253,8 @@ namespace EE::Physics
         uint32_t                                                m_sceneDebugFlags = 0;
         float                                                   m_debugDrawDistance = 10.0f;
         
-        std::atomic<int32_t>                                    m_readLockCount = false;        // Assertion helper
-        std::atomic<bool>                                       m_writeLockAcquired = false;    // Assertion helper
+        eastl::atomic<int32_t>                                  m_readLockCount = false;        // Assertion helper
+        eastl::atomic<bool>                                     m_writeLockAcquired = false;    // Assertion helper
         #endif
     };
 }

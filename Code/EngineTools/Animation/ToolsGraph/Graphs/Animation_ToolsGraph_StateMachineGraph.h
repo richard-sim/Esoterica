@@ -1,6 +1,8 @@
 #pragma once
 #include "EngineTools/Core/VisualGraph/VisualGraph_StateMachineGraph.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE::Animation
@@ -35,7 +37,7 @@ namespace EE::Animation
         {
             VisualGraph::ScopedGraphModification sgm( this );
 
-            static_assert( std::is_base_of<VisualGraph::SM::Node, T>::value );
+            static_assert( eastl::is_base_of<VisualGraph::SM::Node, T>::value );
             auto pNode = EE::New<T>( eastl::forward<ConstructorParams>( params )... );
             pNode->Initialize( this );
 

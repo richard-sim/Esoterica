@@ -9,8 +9,8 @@
 #include "Base/Resource/ResourcePath.h"
 #include "Base/Resource/ResourceTypeID.h"
 
+#include <EASTL/utility.h>
 #include <EASTL/optional.h>
-#include <numeric>
 
 namespace EE::RHI
 {
@@ -365,12 +365,12 @@ namespace EE::RHI
                 {
                     // Do override
                     this->m_pipelineShaders.erase( ps );
-                    this->m_pipelineShaders.emplace( std::move( pipelineShader ) );
+                    this->m_pipelineShaders.emplace( eastl::move( pipelineShader ) );
                     return *this;
                 }
             }
 
-            this->m_pipelineShaders.emplace( std::move( pipelineShader ) );
+            this->m_pipelineShaders.emplace( eastl::move( pipelineShader ) );
             return *this;
         }
 
@@ -385,12 +385,12 @@ namespace EE::RHI
                 {
                     // Do override
                     this->m_pipelineShaders.erase( ps );
-                    this->m_pipelineShaders.emplace( std::move( pipelineShader ) );
+                    this->m_pipelineShaders.emplace( eastl::move( pipelineShader ) );
                     return *this;
                 }
             }
 
-            this->m_pipelineShaders.emplace( std::move( pipelineShader ) );
+            this->m_pipelineShaders.emplace( eastl::move( pipelineShader ) );
             return *this;
         }
 

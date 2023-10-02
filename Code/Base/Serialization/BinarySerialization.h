@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Base/Types/Containers_ForwardDecl.h"
-#include <type_traits>
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 
@@ -144,28 +144,28 @@ namespace EE::Serialization
             Archive& operator<<( T& value )
             {
                 // Handle enums
-                if constexpr ( std::is_enum<T>::value )
+                if constexpr ( eastl::is_enum<T>::value )
                 {
-                    if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                    if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                     {
-                        std::underlying_type_t<T> numericValue;
+                        eastl::underlying_type_t<T> numericValue;
                         m_serializer.ReadValue( numericValue );
                         value = (T) numericValue;
                     }
                     else
                     {
-                        auto numericValue = static_cast<std::underlying_type_t<T>>( value );
+                        auto numericValue = static_cast<eastl::underlying_type_t<T>>( value );
                         m_serializer.WriteValue( numericValue );
                     }
                 }
                 // If this is a structure and not a string, try to call the explicit serialize method on it
-                else if constexpr ( std::is_class<T>::value && !std::is_same<T, EE::String>::value && !std::is_same<T, EE::StringID>::value )
+                else if constexpr ( eastl::is_class<T>::value && !eastl::is_same<T, EE::String>::value && !eastl::is_same<T, EE::StringID>::value )
                 {
                     value.Serialize( *this );
                 }
                 else // Directly serialize POD types (and strings)
                 {
-                    if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                    if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                     {
                         m_serializer.ReadValue( value );
                     }
@@ -202,7 +202,7 @@ namespace EE::Serialization
                 uint64_t numElements = 0;
 
                 // Serialize size
-                if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                 {
                     m_serializer.ReadValue( numElements );
                     EE_ASSERT( numElements == S );
@@ -239,7 +239,7 @@ namespace EE::Serialization
                 uint64_t numElements = 0;
 
                 // Serialize size
-                if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                 {
                     m_serializer.ReadValue( numElements );
                     arr.resize( numElements );
@@ -270,7 +270,7 @@ namespace EE::Serialization
                 uint64_t numElements = 0;
 
                 // Serialize size
-                if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                 {
                     m_serializer.ReadValue( numElements );
                     arr.resize( numElements );
@@ -297,7 +297,7 @@ namespace EE::Serialization
             template<typename K, typename V>
             Archive& operator<<( THashMap<K,V>& map )
             {
-                if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                 {
                     uint32_t size = 0;
                     m_serializer.ReadValue( size );
@@ -343,7 +343,7 @@ namespace EE::Serialization
             template<>
             Archive& operator<<( Blob& blob )
             {
-                if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                 {
                     m_serializer.ReadValue( blob );
                 }
@@ -383,10 +383,10 @@ namespace EE::Serialization
                 }
 
                 // If we are a basic type, then serialize as a block of binary data
-                if constexpr ( std::is_integral<T>::value || std::is_floating_point<T>::value )
+                if constexpr ( eastl::is_integral<T>::value || eastl::is_floating_point<T>::value )
                 {
                     // Read
-                    if constexpr ( std::is_same<Serializer, BinaryReader>::value )
+                    if constexpr ( eastl::is_same<Serializer, BinaryReader>::value )
                     {
                         size_t const dataSize = sizeof( T ) * numElements;
                         m_serializer.ReadBinaryData( pArrayData, dataSize );

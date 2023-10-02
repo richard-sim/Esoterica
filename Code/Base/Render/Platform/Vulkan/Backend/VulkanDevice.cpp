@@ -17,6 +17,8 @@
 #include "Base/Types/HashMap.h"
 #include "Base/Resource/ResourcePtr.h"
 
+#include <EASTL/utility.h>
+
 namespace EE::Render
 {
 	namespace Backend
@@ -696,7 +698,7 @@ namespace EE::Render
             }
 
             auto physicalDevice = PickMostSuitablePhysicalDevice( pdDevices );
-            m_physicalDevice = std::move( physicalDevice );
+            m_physicalDevice = eastl::move( physicalDevice );
 
             EE_ASSERT( CheckAndCollectDeviceLayers( config ) );
             EE_ASSERT( CheckAndCollectDeviceExtensions( config ) );

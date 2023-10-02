@@ -2,7 +2,7 @@
 
 #include "Base/Esoterica.h"
 #include "Base/Serialization/BinarySerialization.h"
-#include <type_traits>
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 //  Bit Flags
@@ -41,7 +41,7 @@ namespace EE
             return ( m_flags & GetFlagMask( flag ) ) > 0;
         }
 
-        template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_enum<T>::value>>
         EE_FORCE_INLINE bool IsFlagSet( T enumValue )
         {
             return IsFlagSet( (uint8_t) enumValue );
@@ -53,7 +53,7 @@ namespace EE
             m_flags |= GetFlagMask( flag );
         }
 
-        template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_enum<T>::value>>
         EE_FORCE_INLINE void SetFlag( T enumValue )
         {
             SetFlag( (uint8_t) enumValue );
@@ -65,7 +65,7 @@ namespace EE
             value ? SetFlag( flag ) : ClearFlag( flag );
         }
 
-        template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_enum<T>::value>>
         EE_FORCE_INLINE void SetFlag( T enumValue, bool value )
         {
             SetFlag( (uint8_t) enumValue, value );
@@ -84,7 +84,7 @@ namespace EE
             return ( m_flags & GetFlagMask( flag ) ) == 0;
         }
 
-        template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_enum<T>::value>>
         EE_FORCE_INLINE bool IsFlagCleared( T enumValue )
         {
             return IsFlagCleared( (uint8_t) enumValue );
@@ -115,7 +115,7 @@ namespace EE
             m_flags ^= GetFlagMask( flag );
         }
 
-        template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_enum<T>::value>>
         EE_FORCE_INLINE void FlipFlag( T enumValue )
         {
             FlipFlag( (uint8_t) enumValue );
@@ -159,7 +159,7 @@ namespace EE
     template<typename T>
     class TBitFlags : public BitFlags
     {
-        static_assert( std::is_enum<T>::value, "TBitFlags only supports enum types" );
+        static_assert( eastl::is_enum<T>::value, "TBitFlags only supports enum types" );
 
     public:
 
@@ -176,7 +176,7 @@ namespace EE
         {
         }
 
-        template<typename... Args, class Enable = std::enable_if_t<( ... && std::is_convertible_v<Args, T> )>>
+        template<typename... Args, class Enable = eastl::enable_if_t<( ... && eastl::is_convertible_v<Args, T> )>>
         TBitFlags( Args&&... args )
         {
             ( ( m_flags |= 1u << (uint8_t) args ), ... );

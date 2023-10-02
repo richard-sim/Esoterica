@@ -4,7 +4,8 @@
 #include "Base/Esoterica.h"
 #include <cstring>
 #include <malloc.h>
-#include <utility>
+#include <EASTL/type_traits.h>
+#include <EASTL/utility.h>
 
 //-------------------------------------------------------------------------
 
@@ -94,7 +95,7 @@ namespace EE
     {
         void* pMemory = Alloc( sizeof( T ), alignof( T ) );
         EE_ASSERT( pMemory != nullptr );
-        return new( pMemory ) T( std::forward<ConstructorParams>( params )... );
+        return new( pMemory ) T( eastl::forward<ConstructorParams>( params )... );
     }
 
     template< typename T >
@@ -129,7 +130,7 @@ namespace EE
         T* pArrayAddress = reinterpret_cast<T*>( pOriginalAddress + requiredExtraMemory );
         for ( size_t i = 0; i < numElements; i++ )
         {
-            new( &pArrayAddress[i] ) T( std::forward<ConstructorParams>( params )... );
+            new( &pArrayAddress[i] ) T( eastl::forward<ConstructorParams>( params )... );
         }
 
         // Record the number of array elements

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <numeric>
+#include <EASTL/numeric_limits.h>
 
 // helper macro
 
@@ -15,7 +15,7 @@ namespace EE::RHI
         Vulkan = 0,
         DX11,
 
-        Invalid = std::numeric_limits<uint8_t>::max()
+        Invalid = eastl::numeric_limits<uint8_t>::max()
     };
 
     class RHITaggedType

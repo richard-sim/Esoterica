@@ -5,7 +5,7 @@
 #include "Base/RHI/Resource/RHITexture.h"
 #include "VulkanCommonSettings.h"
 
-#include <optional>
+#include <EASTL/optional.h>
 #include <vulkan/vulkan_core.h>
 #if VULKAN_USE_VMA_ALLOCATION
 #include <vma/vk_mem_alloc.h>
@@ -41,11 +41,11 @@ namespace EE::Render
 
 		struct ImageViewDesc
 		{
-			std::optional<VkImageViewType>	m_type;
-			std::optional<VkFormat>			m_format;
-			VkImageAspectFlags				m_aspect;
-			uint32_t						m_baseMipLevel;
-			std::optional<uint32_t>			m_levelCount;
+			eastl::optional<VkImageViewType>    m_type;
+			eastl::optional<VkFormat>			m_format;
+			VkImageAspectFlags				    m_aspect;
+			uint32_t						    m_baseMipLevel;
+			eastl::optional<uint32_t>			m_levelCount;
 		};
 
 		class VulkanImageView

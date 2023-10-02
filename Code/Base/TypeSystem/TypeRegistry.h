@@ -4,6 +4,7 @@
 #include "TypeInfo.h"
 #include "CoreTypeIDs.h"
 #include "Base/Systems.h"
+#include <EASTL/type_traits.h>
 #include <typeinfo>
 
 //-------------------------------------------------------------------------
@@ -38,7 +39,7 @@ namespace EE::TypeSystem
         TypeInfo const* GetTypeInfo( TypeID typeID ) const;
 
         // Returns the type information for a given type
-        template<typename T, typename = std::enable_if_t<std::is_base_of<EE::IReflectedType, T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_base_of<EE::IReflectedType, T>::value>>
         TypeInfo const* GetTypeInfo() const
         {
             return T::s_pTypeInfo;
@@ -79,7 +80,7 @@ namespace EE::TypeSystem
         EnumInfo const* GetEnumInfo( TypeID enumID ) const;
 
         // Returns the enum type information for a given type
-        template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+        template<typename T, typename = eastl::enable_if_t<eastl::is_enum<T>::value>>
         EnumInfo const* GetEnumInfo() const
         {
             char const* pEnumName = typeid( T ).name();

@@ -8,7 +8,8 @@
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 #include "RenderGraphResourceBarrier.h"
 
-#include <limits>
+#include <EASTL/type_traits.h>
+#include <EASTL/numeric_limits.h>
 
 namespace EE::RHI
 {
@@ -37,7 +38,7 @@ namespace EE::RG
 	{
 		Buffer = 0,
 		Texture = 1,
-		Unknown = std::numeric_limits<uint8_t>::max(),
+		Unknown = eastl::numeric_limits<uint8_t>::max(),
 	};
 
     namespace _Impl
@@ -51,14 +52,14 @@ namespace EE::RG
                 : m_id( id )
             {}
 
-			inline bool IsValid() const { return m_id != std::numeric_limits<uint32_t>::max(); }
+			inline bool IsValid() const { return m_id != eastl::numeric_limits<uint32_t>::max(); }
 
 			inline bool operator==( RGResourceID const& rhs ) const { return m_id == rhs.m_id && m_generation == rhs.m_generation; }
 			inline bool operator!=( RGResourceID const& rhs ) const { return m_id != rhs.m_id && m_generation != rhs.m_generation; }
 
 			inline void Expire()
 			{ 
-				if ( m_generation >= std::numeric_limits<uint32_t>::max() )
+				if ( m_generation >= eastl::numeric_limits<uint32_t>::max() )
 					m_generation = 0;
 				else
 					m_generation += 1;
@@ -68,7 +69,7 @@ namespace EE::RG
 
 			friend class RGNodeBuilder;
 
-			uint32_t				m_id = std::numeric_limits<uint32_t>::max();
+			uint32_t				m_id = eastl::numeric_limits<uint32_t>::max();
 			uint32_t				m_generation = 0;
 		};
     }
@@ -151,8 +152,8 @@ namespace EE::RG
 	    template <typename SelfType, typename DescType = typename SelfType::DescType>
 	    struct RGResourceDesc
 	    {
-		    using SelfCVType = typename std::add_lvalue_reference_t<std::add_const_t<SelfType>>;
-		    using DescCVType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>;
+		    using SelfCVType = typename eastl::add_lvalue_reference_t<eastl::add_const_t<SelfType>>;
+		    using DescCVType = typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>>;
 
 		    inline DescCVType GetDesc() const
 		    {
@@ -170,7 +171,7 @@ namespace EE::RG
 	    public:
 
 		    typedef BufferDesc DescType;
-		    typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
+		    typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
 
         public:
 
@@ -182,7 +183,7 @@ namespace EE::RG
 	    public:
 
 		    typedef TextureDesc DescType;
-		    typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
+		    typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
 
         public:
 
@@ -256,7 +257,7 @@ namespace EE::RG
 
 		template <typename Tag,
 			typename DescType = typename Tag::DescType,
-			typename DescConstRefType = typename std::add_lvalue_reference_t<std::add_const_t<DescType>>
+			typename DescConstRefType = typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>>
 		>
 		DescConstRefType GetDesc() const;
 
@@ -310,7 +311,7 @@ namespace EE::RG
 	template <typename Tag, typename DescType, typename DescConstRefType>
 	DescConstRefType RGResource::GetDesc() const
 	{
-		static_assert( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+		static_assert( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
 
 		constexpr size_t const index = static_cast<size_t>( Tag::GetRGResourceType() );
 		return eastl::get<index>( m_desc ).GetDesc();

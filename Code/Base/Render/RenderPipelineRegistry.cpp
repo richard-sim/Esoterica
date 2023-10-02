@@ -5,6 +5,8 @@
 #include "Base/Threading/TaskSystem.h"
 #include "Base/RHI/RHIDevice.h"
 
+#include <EASTL/utility.h>
+
 namespace EE::Render
 {
 	PipelineHandle::PipelineHandle( PipelineType type, uint32_t id )
@@ -146,7 +148,7 @@ namespace EE::Render
         if ( !m_waitToRegisteredRasterPipelines.empty() )
         {
             m_waitToRegisteredRasterPipelines.clear();
-            std::swap( m_waitToRegisteredRasterPipelines, m_retryRasterPipelineCaches );
+            eastl::swap( m_waitToRegisteredRasterPipelines, m_retryRasterPipelineCaches );
         }
 	}
 

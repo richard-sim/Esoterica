@@ -2,6 +2,8 @@
 #include "EngineTools/Core/VisualGraph/VisualGraph_FlowGraph.h"
 #include "EngineTools/Animation/ToolsGraph/Nodes/Animation_ToolsGraphNode.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE::Animation
@@ -32,7 +34,7 @@ namespace EE::Animation
         {
             VisualGraph::ScopedGraphModification sgm( this );
 
-            static_assert( std::is_base_of<GraphNodes::FlowToolsNode, T>::value );
+            static_assert( eastl::is_base_of<GraphNodes::FlowToolsNode, T>::value );
             auto pNode = EE::New<T>( eastl::forward<ConstructorParams>( params )... );
             EE_ASSERT( pNode->GetAllowedParentGraphTypes().IsFlagSet( m_type ) );
             pNode->Initialize( this );

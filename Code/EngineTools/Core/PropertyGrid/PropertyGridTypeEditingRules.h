@@ -4,6 +4,8 @@
 #include "Base/Utils/GlobalRegistryBase.h"
 #include "Base/TypeSystem/ReflectedType.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE 
@@ -40,7 +42,7 @@ namespace EE::PG
     template<typename T>
     class EE_ENGINETOOLS_API TTypeEditingRules : public TypeEditingRules
     {
-        static_assert( std::is_base_of<EE::IReflectedType, T>::value, "T is not derived from IReflectedType" );
+        static_assert( eastl::is_base_of<EE::IReflectedType, T>::value, "T is not derived from IReflectedType" );
 
     public:
 

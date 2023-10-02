@@ -5,6 +5,7 @@
 #include "Engine/UpdateStage.h"
 #include "Base/Threading/Threading.h"
 #include "Base/Types/Event.h"
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 // Entity
@@ -240,7 +241,7 @@ namespace EE
         template<typename T>
         T* GetSystem()
         {
-            static_assert( std::is_base_of<EntitySystem, T>::value, "T has to derive from IEntitySystem" );
+            static_assert( eastl::is_base_of<EntitySystem, T>::value, "T has to derive from IEntitySystem" );
             for ( auto pSystem : m_systems )
             {
                 if ( pSystem->GetTypeInfo()->m_ID == T::GetStaticTypeID() )
@@ -259,7 +260,7 @@ namespace EE
         template<typename T> 
         inline void CreateSystem()
         {
-            static_assert( std::is_base_of<EE::EntitySystem, T>::value, "Invalid system type detected" );
+            static_assert( eastl::is_base_of<EE::EntitySystem, T>::value, "Invalid system type detected" );
             EE_ASSERT( !VectorContains( m_systems, T::s_pTypeInfo->m_ID, [] ( EntitySystem* pSystem, TypeSystem::TypeID systemTypeID ) { return pSystem->GetTypeInfo()->m_ID == systemTypeID; } ) );
             CreateSystem( T::s_pTypeInfo );
         }
@@ -274,7 +275,7 @@ namespace EE
         template<typename T>
         inline void DestroySystem()
         {
-            static_assert( std::is_base_of<EE::EntitySystem, T>::value, "Invalid system type detected" );
+            static_assert( eastl::is_base_of<EE::EntitySystem, T>::value, "Invalid system type detected" );
             EE_ASSERT( VectorContains( m_systems, T::s_pTypeInfo->m_ID, [] ( EntitySystem* pSystem, TypeSystem::TypeID systemTypeID ) { return pSystem->GetTypeInfo()->m_ID == systemTypeID; } ) );
             DestroySystem( T::s_pTypeInfo );
         }

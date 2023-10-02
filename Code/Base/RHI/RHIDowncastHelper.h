@@ -3,14 +3,14 @@
 #include "Base/Esoterica.h"
 #include "RHITaggedType.h"
 
-#include <type_traits>
+#include <EASTL/type_traits.h>
 
 namespace EE::RHI
 {
     template <typename To, typename From>
     To* RHIDowncast( From* pRHI )
     {
-        EE_STATIC_ASSERT( ( std::is_base_of<RHITaggedType, From>::value ), "Try to downcast a non-decorated rhi type!" );
+        EE_STATIC_ASSERT( ( eastl::is_base_of<RHITaggedType, From>::value ), "Try to downcast a non-decorated rhi type!" );
 
         EE_ASSERT( pRHI->GetDynamicRHIType() != ERHIType::Invalid );
 
@@ -30,7 +30,7 @@ namespace EE::RHI
     template <typename To, typename From>
     To const* RHIDowncast( From const* pRHI )
     {
-        EE_STATIC_ASSERT( ( std::is_base_of<RHITaggedType, From>::value ), "Try to downcast a non-decorated rhi type!" );
+        EE_STATIC_ASSERT( ( eastl::is_base_of<RHITaggedType, From>::value ), "Try to downcast a non-decorated rhi type!" );
 
         EE_ASSERT( pRHI->GetDynamicRHIType() != ERHIType::Invalid );
 

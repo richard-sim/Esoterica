@@ -5,6 +5,8 @@
 #include "Base/Serialization/BinarySerialization.h"
 #include "Base/Esoterica.h"
 #include <math.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/numeric_limits.h>
 
 // Compiler Specific Math Functions
 //-------------------------------------------------------------------------
@@ -183,28 +185,28 @@ namespace EE
         template<typename T>
         EE_FORCE_INLINE bool IsOdd( T n )
         {
-            static_assert( std::numeric_limits<T>::is_integer, "Integer type required" );
-            return n % 2 != 0; 
+            static_assert( eastl::numeric_limits<T>::is_integer, "Integer type required" );
+            return n % 2 != 0;
         }
 
         template<typename T>
         EE_FORCE_INLINE bool IsEven( T n )
         {
-            static_assert( std::numeric_limits<T>::is_integer, "Integer type required." );
-            return n % 2 == 0; 
+            static_assert( eastl::numeric_limits<T>::is_integer, "Integer type required." );
+            return n % 2 == 0;
         }
 
         template<typename T>
         EE_FORCE_INLINE T MakeOdd( T n )
         {
-            static_assert( std::numeric_limits<T>::is_integer, "Integer type required." );
+            static_assert( eastl::numeric_limits<T>::is_integer, "Integer type required." );
             return IsOdd( n ) ? n : n + 1;
         }
 
         template<typename T>
         EE_FORCE_INLINE T MakeEven( T n )
         {
-            static_assert( std::numeric_limits<T>::is_integer, "Integer type required." );
+            static_assert( eastl::numeric_limits<T>::is_integer, "Integer type required." );
             return IsEven( n ) ? n : n + 1;
         }
 
@@ -227,14 +229,14 @@ namespace EE
         }
 
         template<typename T>
-        EE_FORCE_INLINE typename std::enable_if_t<std::is_unsigned_v<T>, bool> IsAlignTo( T value, T alignment )
+        EE_FORCE_INLINE typename eastl::enable_if_t<eastl::is_unsigned_v<T>, bool> IsAlignTo( T value, T alignment )
         {
             EE_ASSERT( alignment != 0 );
             return value % alignment == 0;
         }
 
         template<typename T>
-        EE_FORCE_INLINE typename std::enable_if_t<std::is_unsigned_v<T>, T> MinValueAlignTo( T value, T alignment )
+        EE_FORCE_INLINE typename eastl::enable_if_t<eastl::is_unsigned_v<T>, T> MinValueAlignTo( T value, T alignment )
         {
             EE_ASSERT( alignment != 0 );
             return ( ( value + alignment - 1 ) / alignment ) * alignment;

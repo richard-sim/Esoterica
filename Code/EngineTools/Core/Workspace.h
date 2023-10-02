@@ -8,6 +8,8 @@
 #include "Base/Drawing/DebugDrawing.h"
 #include "Base/Types/Function.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE
@@ -396,7 +398,7 @@ private:
     template<typename T>
     class TWorkspace : public Workspace
     {
-        static_assert( std::is_base_of<Resource::IResource, T>::value, "T must derived from IResource" );
+        static_assert( eastl::is_base_of<Resource::IResource, T>::value, "T must derived from IResource" );
 
     public:
 

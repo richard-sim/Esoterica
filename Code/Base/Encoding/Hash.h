@@ -146,7 +146,7 @@ namespace EE::Hash
 
     // from boost
     template <class T>
-    inline void HashCombine( std::size_t& seed, const T& v )
+    inline void HashCombine( size_t& seed, const T& v )
     {
         eastl::hash<T> hasher;
         seed ^= hasher( v ) + 0x9e3779b9 + ( seed << 6 ) + ( seed >> 2 );

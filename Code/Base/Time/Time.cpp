@@ -1,5 +1,5 @@
 #include "Time.h"
-#include <chrono>
+#include <EASTL/chrono.h>
 
 //-------------------------------------------------------------------------
 
@@ -11,8 +11,8 @@ namespace EE
 
     Nanoseconds::operator Microseconds() const
     {
-        auto const duration = std::chrono::duration<uint64_t, std::chrono::steady_clock::period>( m_value );
-        uint64_t const numMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>( duration ).count();
+        auto const duration = eastl::chrono::duration<uint64_t, eastl::chrono::steady_clock::period>( m_value );
+        uint64_t const numMicroseconds = eastl::chrono::duration_cast<eastl::chrono::microseconds>( duration ).count();
         return float( numMicroseconds );
     }
 
@@ -20,7 +20,7 @@ namespace EE
 
     Nanoseconds PlatformClock::GetTime()
     {
-        auto const time = std::chrono::high_resolution_clock::now();
+        auto const time = eastl::chrono::high_resolution_clock::now();
         uint64_t const numNanosecondsSinceEpoch = time.time_since_epoch().count();
         return Nanoseconds( numNanosecondsSinceEpoch );
     }

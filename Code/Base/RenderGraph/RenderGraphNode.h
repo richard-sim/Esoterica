@@ -8,7 +8,7 @@
 #include "Base/Types/Arrays.h"
 #include "Base/Types/String.h"
 
-#include <limits>
+#include <EASTL/type_traits.h>
 
 namespace EE::RG
 {
@@ -30,10 +30,10 @@ namespace EE::RG
 	template <typename Tag, RGResourceViewType RVT>
 	class RGNodeResourceRef
 	{
-		static_assert( std::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+		static_assert( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
 
 		typedef typename Tag::DescType DescType;
-		typedef typename std::add_lvalue_reference_t<std::add_const_t<DescType>> DescCVType;
+		typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
 
 	public:
 

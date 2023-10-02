@@ -1,5 +1,5 @@
+#include <cctype>
 #include "Encoding.h"
-#include <locale>
 #include "Base/Types/Arrays.h"
 
 //-------------------------------------------------------------------------

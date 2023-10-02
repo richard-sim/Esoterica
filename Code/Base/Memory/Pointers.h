@@ -1,5 +1,6 @@
 #pragma once
 
+#include <EASTL/type_traits.h>
 #include <EASTL/shared_ptr.h>
 #include <EASTL/unique_ptr.h>
 
@@ -81,6 +82,6 @@ namespace EE::Trait
     }
 
     template <typename T>
-    struct IsPointerIncludeSmartPointer : std::bool_constant<_Impl::IsPointerIncludeSmartPointerImpl<T>::value>
+    struct IsPointerIncludeSmartPointer : eastl::bool_constant<_Impl::IsPointerIncludeSmartPointerImpl<T>::value>
     {};
 }

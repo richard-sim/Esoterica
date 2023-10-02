@@ -9,6 +9,8 @@
 #include "Base/Time/TimeStamp.h"
 #include "Base/Types/HashMap.h"
 
+#include <EASTL/atomic.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE { class TaskScheduler; }
@@ -152,7 +154,7 @@ namespace EE::Resource
 
         // ASync
         AsyncTask                                               m_asyncProcessingTask;
-        std::atomic<bool>                                       m_isAsyncTaskRunning = false;
+        eastl::atomic<bool>                                     m_isAsyncTaskRunning = false;
 
         #if EE_DEVELOPMENT_TOOLS
         TVector<ResourceRequesterID>                            m_usersThatRequireReload;

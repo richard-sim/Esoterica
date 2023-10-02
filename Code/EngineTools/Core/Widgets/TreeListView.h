@@ -9,6 +9,8 @@
 #include "Base/Types/HashMap.h"
 #include "Base/Types/BitFlags.h"
 
+#include <EASTL/type_traits.h>
+
 //-------------------------------------------------------------------------
 
 namespace EE
@@ -143,7 +145,7 @@ namespace EE
         template< typename T, typename ... ConstructorParams >
         T* CreateChild( ConstructorParams&&... params )
         {
-            static_assert( std::is_base_of<TreeListViewItem, T>::value, "T must derive from TreeViewItem" );
+            static_assert( eastl::is_base_of<TreeListViewItem, T>::value, "T must derive from TreeViewItem" );
             TreeListViewItem* pAddedItem = m_children.emplace_back( EE::New<T>( this, eastl::forward<ConstructorParams>( params )... ) );
             EE_ASSERT( pAddedItem->GetUniqueID() != 0 );
             return static_cast<T*>( pAddedItem );
@@ -300,7 +302,7 @@ namespace EE
             : m_flags( flags )
         {}
 
-        template<typename... Args, class Enable = std::enable_if_t<( ... && std::is_convertible_v<Args, Flags> )>>
+        template<typename... Args, class Enable = eastl::enable_if_t<( ... && eastl::is_convertible_v<Args, Flags> )>>
         TreeListView( Args&&... args )
             : m_flags( args... )
         {}

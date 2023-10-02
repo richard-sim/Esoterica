@@ -4,6 +4,8 @@
 #include "ResourcePath.h"
 #include "Base/Types/UUID.h"
 
+#include <EASTL/utility.h>
+
 //-------------------------------------------------------------------------
 // Unique ID for a resource - Used for resource look up and dependencies
 //-------------------------------------------------------------------------
@@ -40,7 +42,7 @@ namespace EE
 
         ResourceID() = default;
         ResourceID( ResourcePath const& path ) : m_path( path ) { EE_ASSERT( m_path.IsValid() ); OnPathChanged(); }
-        ResourceID( ResourcePath&& path ) : m_path( std::move( path ) ) { EE_ASSERT( m_path.IsValid() ); OnPathChanged(); }
+        ResourceID( ResourcePath&& path ) : m_path( eastl::move( path ) ) { EE_ASSERT( m_path.IsValid() ); OnPathChanged(); }
         inline ResourceID( String&& path ) : m_path( path ) { OnPathChanged(); }
         inline ResourceID( String const& path ) : m_path( path ) { OnPathChanged(); }
         inline ResourceID( char const* pPath ) : m_path( pPath ) { OnPathChanged(); }

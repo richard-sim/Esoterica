@@ -2,6 +2,7 @@
 #include "Engine/_Module/API.h"
 #include "EntityIDs.h"
 #include "Engine/UpdateContext.h"
+#include <EASTL/type_traits.h>
 
 //-------------------------------------------------------------------------
 
@@ -34,7 +35,7 @@ namespace EE
         // Get an entity world system - threadsafe since these never changed during the lifetime of a world
         template<typename T> inline T* GetWorldSystem() const
         {
-            static_assert( std::is_base_of<EE::EntityWorldSystem, T>::value, "T is not derived from IEntityWorldSystem" );
+            static_assert( eastl::is_base_of<EE::EntityWorldSystem, T>::value, "T is not derived from IEntityWorldSystem" );
             return Cast<T>( GetWorldSystem( T::s_entitySystemID ) );
         }
 

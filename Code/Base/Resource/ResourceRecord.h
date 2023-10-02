@@ -5,7 +5,8 @@
 #include "Base/Types/LoadingStatus.h"
 #include "Base/Types/UUID.h"
 #include "Base/Time/Time.h"
-#include <atomic>
+
+#include <EASTL/atomic.h>
 
 //-------------------------------------------------------------------------
 
@@ -81,7 +82,7 @@ namespace EE::Resource
 
         ResourceID                              m_resourceID;                                   // The ID of the resource this record refers to
         IResource*                              m_pResource = nullptr;                          // The actual loaded resource data
-        std::atomic<LoadingStatus>              m_loadingStatus = LoadingStatus::Unloaded;      // The state of this resource (atomic since it will be modify by resource requests which run across multiple frames)
+        eastl::atomic<LoadingStatus>            m_loadingStatus = LoadingStatus::Unloaded;      // The state of this resource (atomic since it will be modify by resource requests which run across multiple frames)
         TVector<ResourceRequesterID>            m_references;                                   // The list of references to this resources
         TInlineVector<ResourceID, 4>            m_installDependencyResourceIDs;                 // The list of resources that need to be loaded and installed before we can install this resource
 

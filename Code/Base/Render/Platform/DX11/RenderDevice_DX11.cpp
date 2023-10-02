@@ -1,5 +1,6 @@
 #if defined(_WIN32) && defined(EE_DX11)
 
+#include <EASTL/utility.h>
 #include "RenderDevice_DX11.h"
 //#include "TextureLoader_Win32.h"
 #include "Base/Render/RenderCoreResources.h"
@@ -543,7 +544,7 @@ namespace EE::Render
 
         // remove shader code immediately
         auto emptyBlob = Blob{};
-        std::swap( shader.m_byteCode, emptyBlob );
+        eastl::swap( shader.m_byteCode, emptyBlob );
 
         EE_ASSERT( shader.m_byteCode.capacity() == 0 );
     }

@@ -1,6 +1,7 @@
 #include "TimeStamp.h"
 #include "Base/Math/Math.h"
 #include <cmath>
+#include <time.h>
 
 //-------------------------------------------------------------------------
 
@@ -13,7 +14,10 @@ namespace EE
 
     void TimeStamp::Update()
     {
-        m_time = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
+        // EASTL doesn't have to_time_t
+        const eastl::chrono::system_clock::time_point tp = eastl::chrono::system_clock::now();
+        m_time = eastl::chrono::duration_cast<eastl::chrono::seconds>( tp.time_since_epoch() ).count();
+        // m_time = std::chrono::system_clock::to_time_t( stl::chrono::system_clock::now() );
     }
 
     String TimeStamp::GetTime() const

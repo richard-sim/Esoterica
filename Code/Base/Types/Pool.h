@@ -1,5 +1,6 @@
 #pragma once
 #include "Arrays.h"
+#include <EASTL/utility.h>
 
 // Simple Pool Helper
 //-------------------------------------------------------------------------
@@ -49,7 +50,7 @@ namespace EE
         inline size_t RequestBuffer( T&& value )
         {
             EE_ASSERT( m_firstFreeBufferIdx < m_pool.size() && !m_pool[m_firstFreeBufferIdx].m_isUsed );
-            m_pool[m_firstFreeBufferIdx] = std::move( value );
+            m_pool[m_firstFreeBufferIdx] = eastl::move( value );
             m_pool[m_firstFreeBufferIdx].m_isUsed = true;
 
             // Find the next free buffer

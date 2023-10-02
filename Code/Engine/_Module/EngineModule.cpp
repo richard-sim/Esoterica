@@ -20,6 +20,8 @@
 #include "Base/RHI/RHIDevice.h"
 #include "Base/RHI/Resource/RHIRenderPass.h"
 
+#include <EASTL/utility.h>
+
 namespace EE
 {
     namespace
@@ -376,7 +378,7 @@ namespace EE
             pipelineDesc.SetRenderPass( m_pImguiRenderPass );
             pipelineDesc.DepthTest( false );
             pipelineDesc.DepthWrite( false );
-            node.RegisterRasterPipeline( std::move( pipelineDesc ) );
+            node.RegisterRasterPipeline( eastl::move( pipelineDesc ) );
 
             EE_ASSERT( handle0_ref.GetDesc().m_desc.m_desireSize == 512 );
             EE_ASSERT( handle1_ref.GetDesc().m_desc.m_desireSize == 256 );

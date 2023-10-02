@@ -4,6 +4,7 @@
 #include "Engine/Render/Components/Component_SkeletalMesh.h"
 #include "Engine/Entity/EntityLog.h"
 #include "Base/Types/StringID.h"
+#include <EASTL/type_traits.h>
 
 
 //-------------------------------------------------------------------------
@@ -221,7 +222,7 @@ namespace EE::Animation
         template<typename T>
         inline T* GetSubGraphController() const
         {
-            static_assert( std::is_base_of<EE::Animation::SubGraphController, T>::value, "T is not derived from SubGraphController" );
+            static_assert( eastl::is_base_of<EE::Animation::SubGraphController, T>::value, "T is not derived from SubGraphController" );
 
             for ( auto pController : m_subGraphControllers )
             {
@@ -242,7 +243,7 @@ namespace EE::Animation
         template<typename T>
         T* TryCreateExternalGraphController( StringID slotID, GraphVariation const* pGraph, bool autoDestroy = false )
         {
-            static_assert( std::is_base_of<EE::Animation::ExternalGraphController, T>::value, "T is not derived from ExternalGraphController" );
+            static_assert( eastl::is_base_of<EE::Animation::ExternalGraphController, T>::value, "T is not derived from ExternalGraphController" );
             EE_ASSERT( slotID.IsValid() && pGraph != nullptr );
 
             if ( !m_pGraphInstance->IsValidExternalGraphSlotID( slotID ) )

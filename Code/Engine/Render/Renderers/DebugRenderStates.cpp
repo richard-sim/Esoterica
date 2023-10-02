@@ -3,6 +3,7 @@
 #include "Base/ThirdParty/stb/stb_truetype.h"
 #include "Base/Fonts/FontData_Proggy.h"
 #include "Base/Fonts/FontDecompressor.h"
+#include <EASTL/utility.h>
 
 //-------------------------------------------------------------------------
 
@@ -762,7 +763,7 @@ namespace EE::Render
                 glyph.m_texCoordsTL = Float2( q.s0, q.t0 );
                 glyph.m_texCoordsBR = Float2( q.s1, q.t1 );
                 glyph.m_advanceX = pos.m_x + 0.5f;
-                fontInfo.m_glyphs.emplace_back( std::move( glyph ) );
+                fontInfo.m_glyphs.emplace_back( eastl::move( glyph ) );
             }
         }
 

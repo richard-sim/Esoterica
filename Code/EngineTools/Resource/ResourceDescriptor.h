@@ -6,6 +6,8 @@
 #include "Base/Resource/ResourceID.h"
 #include "Base/Types/Function.h"
 
+#include <EASTL/type_traits.h>
+
 
 //-------------------------------------------------------------------------
 
@@ -53,7 +55,7 @@ namespace EE::Resource
         template<typename T>
         static bool TryReadFromFile( TypeSystem::TypeRegistry const& typeRegistry, FileSystem::Path const& descriptorPath, T& outData )
         {
-            static_assert( std::is_base_of<ResourceDescriptor, T>::value, "T must be a child of ResourceDescriptor" );
+            static_assert( eastl::is_base_of<ResourceDescriptor, T>::value, "T must be a child of ResourceDescriptor" );
 
             Serialization::TypeArchiveReader typeReader( typeRegistry );
             if ( !typeReader.ReadFromFile( descriptorPath ) )
@@ -74,7 +76,7 @@ namespace EE::Resource
         template<typename T>
         static bool TryWriteToFile( TypeSystem::TypeRegistry const& typeRegistry, FileSystem::Path const& descriptorPath, T const* pDescriptorData )
         {
-            static_assert( std::is_base_of<ResourceDescriptor, T>::value, "T must be a child of ResourceDescriptor" );
+            static_assert( eastl::is_base_of<ResourceDescriptor, T>::value, "T must be a child of ResourceDescriptor" );
 
             EE_ASSERT( descriptorPath.IsFilePath() );
 

@@ -11,6 +11,9 @@
 #include "Base/RHI/Resource/RHISemaphore.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 
+#include <EASTL/numeric_limits.h>
+#include <EASTL/utility.h>
+
 namespace EE::Render
 {
 	namespace Backend
@@ -98,11 +101,11 @@ namespace EE::Render
 
 			Int2 extent = Int2::Zero;
 
-			if ( surfaceCaps.currentExtent.width != std::numeric_limits<uint32_t>::max() )
+			if ( surfaceCaps.currentExtent.width != eastl::numeric_limits<uint32_t>::max() )
 			{
 				extent.m_x = surfaceCaps.currentExtent.width;
 			}
-			if ( surfaceCaps.currentExtent.height != std::numeric_limits<uint32_t>::max() )
+			if ( surfaceCaps.currentExtent.height != eastl::numeric_limits<uint32_t>::max() )
 			{
 				extent.m_y = surfaceCaps.currentExtent.height;
 			}
@@ -193,7 +196,7 @@ namespace EE::Render
 
 				auto image = EE::New<VulkanTexture>();
                 image->m_pHandle = swapchainImages[i];
-                image->m_desc = std::move( desc );
+                image->m_desc = eastl::move( desc );
 
 				m_images.push_back( image );
 			}
