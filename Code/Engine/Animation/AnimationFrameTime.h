@@ -41,7 +41,7 @@ namespace EE::Animation
                 percent.Clamp( true );
                 float integerPortion = 0;
                 m_percentageThrough = Percentage( Math::ModF( percent.ToFloat() * lastFrameIdx, integerPortion ) );
-                if ( Math::IsNearZero( m_percentageThrough, Math::LargeEpsilon ) )
+                if ( Math::IsNearZero( m_percentageThrough.ToFloat(), Math::LargeEpsilon ) )
                 {
                     m_percentageThrough = 0.0f;
                 }
