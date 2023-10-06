@@ -1,6 +1,6 @@
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 #include "VulkanPhysicalDevice.h"
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 #include "VulkanInstance.h"
 #include "VulkanSurface.h"
 #include "Base/Logging/Log.h"

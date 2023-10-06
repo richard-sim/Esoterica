@@ -133,6 +133,13 @@ namespace EE::RHI
                     && m_depth == 1
                     && m_flag.IsFlagSet( ETextureCreateFlag::CubeCompatible );
             }
+            case ETextureType::TCubemapArray:
+            {
+                return m_array >= 6
+                    && m_width == m_height
+                    && m_depth == 1
+                    && m_flag.IsFlagSet( ETextureCreateFlag::CubeCompatible );
+            }
             break;
             default:
             break;

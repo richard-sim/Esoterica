@@ -1,6 +1,6 @@
 #if defined(EE_VULKAN)
 #include "VulkanSwapchain.h"
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 #include "VulkanInstance.h"
 #include "VulkanSurface.h"
 #include "VulkanDevice.h"
@@ -191,11 +191,11 @@ namespace EE::Render
                 // TODO: fill in image usage flags
 				//desc.m_usage = swapchainCI.imageUsage;
 
-				auto image = EE::New<VulkanTexture>();
-                image->m_pHandle = swapchainImages[i];
-                image->m_desc = std::move( desc );
+				auto* pImage = EE::New<VulkanTexture>();
+                pImage->m_pHandle = swapchainImages[i];
+                pImage->m_desc = std::move( desc );
 
-				m_images.push_back( image );
+				m_images.push_back( pImage );
 			}
 
 			EE_ASSERT( m_images.size() == swapchainImages.size() );

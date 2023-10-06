@@ -18,16 +18,6 @@ namespace EE::RHI
 
         RHISwapchain( RHISwapchain&& ) = default;
         RHISwapchain& operator=( RHISwapchain&& ) = default;
-
-        //-------------------------------------------------------------------------
-
-        inline ERHIType GetDynamicRHIType() const { return m_DynamicRHIType; }
-
-    protected:
-
-        ERHIType            m_DynamicRHIType;
     };
 
 }
-
-

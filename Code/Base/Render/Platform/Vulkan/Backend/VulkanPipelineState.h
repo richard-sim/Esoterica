@@ -15,6 +15,7 @@ namespace EE::Render
         class VulkanPipelineState : public RHI::RHIRasterPipelineState
         {
             friend class VulkanDevice;
+            friend class VulkanCommandBuffer;
 
             using SetDescriptorLayout = TMap<uint32_t, VkDescriptorType>;
 

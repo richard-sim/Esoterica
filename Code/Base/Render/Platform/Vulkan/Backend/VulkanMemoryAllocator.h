@@ -2,7 +2,7 @@
 #if defined(EE_VULKAN)
 
 #include "Base/Memory/Pointers.h"
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 
 #if VULKAN_USE_VMA_ALLOCATION
 #define VK_API_VERSION_MAJOR(version) (((uint32_t)(version) >> 22) & 0x7FU)

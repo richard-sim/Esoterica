@@ -1,6 +1,6 @@
 #if defined(EE_VULKAN)
 #include "VulkanDevice.h"
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 #include "VulkanInstance.h"
 #include "VulkanSurface.h"
 #include "VulkanShader.h"
@@ -10,6 +10,8 @@
 #include "VulkanBuffer.h"
 #include "VulkanRenderPass.h"
 #include "VulkanPipelineState.h"
+#include "VulkanCommandBuffer.h"
+#include "VulkanCommandQueue.h"
 #include "RHIToVulkanSpecification.h"
 #include "Base/RHI/RHIDowncastHelper.h"
 #include "Base/Logging/Log.h"
@@ -21,29 +23,6 @@ namespace EE::Render
 {
 	namespace Backend
 	{
-		VulkanQueue::VulkanQueue( VulkanDevice const& device, QueueFamily const& queueFamily )
-			: m_queueFamily( queueFamily )
-		{
-			vkGetDeviceQueue( device.m_pHandle, queueFamily.m_index, 0, &m_pHandle );
-
-			if ( queueFamily.IsGraphicQueue() )
-			{
-				m_type = Type::Graphic;
-			}
-			else if ( queueFamily.IsComputeQueue() )
-			{
-				m_type = Type::Compute;
-			}
-			else if ( queueFamily.IsTransferQueue() )
-			{
-				m_type = Type::Transfer;
-			}
-
-			EE_ASSERT( m_pHandle != nullptr );
-		}
-
-		//-------------------------------------------------------------------------
-
 		VulkanDevice::InitConfig VulkanDevice::InitConfig::GetDefault( bool enableDebug )
 		{
 			InitConfig config;
@@ -55,7 +34,7 @@ namespace EE::Render
 		//-------------------------------------------------------------------------
 
 		VulkanDevice::VulkanDevice()
-            : RHIDevice( RHI::ERHIType::Vulkan )
+            : RHIDevice( RHI::ERHIType::Vulkan ), m_deviceFrameCount( 0 )
 		{
             m_pInstance = MakeShared<VulkanInstance>();
             EE_ASSERT( m_pInstance != nullptr );
@@ -73,7 +52,7 @@ namespace EE::Render
         }
 
         VulkanDevice::VulkanDevice( InitConfig config )
-            : RHIDevice( RHI::ERHIType::Vulkan )
+            : RHIDevice( RHI::ERHIType::Vulkan ), m_deviceFrameCount( 0 )
 		{
             m_pInstance = MakeShared<VulkanInstance>();
             EE_ASSERT( m_pInstance != nullptr );
@@ -92,12 +71,73 @@ namespace EE::Render
 		{
 			EE_ASSERT( m_pHandle != nullptr );
 
+            for ( auto& commandPool : m_commandBufferPool )
+            {
+                vkDestroyCommandPool( m_pHandle, commandPool.m_pHandle, nullptr );
+            }
+
+            if ( m_pGlobalGraphicQueue )
+            {
+                EE::Delete( m_pGlobalGraphicQueue );
+            }
+
             DestroyStaticSamplers();
             m_globalMemoryAllcator.Shutdown();
 
 			vkDestroyDevice( m_pHandle, nullptr );
 			m_pHandle = nullptr;
 		}
+
+        //-------------------------------------------------------------------------
+
+        size_t VulkanDevice::BeginFrame()
+        {
+            EE_ASSERT( !m_frameExecuting );
+
+            // TODO: make sure all command buffers which allocated from
+            //       this command pool had finished execution in GPU side.
+
+            auto& commandPool = GetCurrentFrameCommandBufferPool();
+            vkResetCommandPool( m_pHandle, commandPool.m_pHandle, 0 );
+
+            m_frameExecuting = true;
+
+            return m_deviceFrameCount;
+        }
+
+        void VulkanDevice::EndFrame()
+        {
+            EE_ASSERT( m_frameExecuting );
+
+            ++m_deviceFrameCount;
+
+            m_frameExecuting = false;
+        }
+
+        RHI::RHICommandBuffer* VulkanDevice::AllocateCommandBuffer()
+        {
+            EE_ASSERT( m_frameExecuting );
+
+            auto& commandPool = GetCurrentFrameCommandBufferPool();
+
+            VkCommandBufferAllocateInfo allocInfo = {};
+            allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            allocInfo.commandPool = commandPool.m_pHandle;
+            allocInfo.commandBufferCount = 1;
+
+            auto* pVkCommandBuffer = EE::New<VulkanCommandBuffer>();
+            if ( pVkCommandBuffer )
+            {
+                VK_SUCCEEDED( vkAllocateCommandBuffers( m_pHandle, &allocInfo, &(pVkCommandBuffer->m_pHandle) ) );
+            
+                return pVkCommandBuffer;
+            }
+
+            // TODO: remember to destroy delete command buffer
+
+            return nullptr;
+        }
 
 		//-------------------------------------------------------------------------
 
@@ -195,6 +235,8 @@ namespace EE::Render
             EE_ASSERT( pTexture != nullptr );
             auto* pVkTexture = RHI::RHIDowncast<VulkanTexture>( pTexture );
             EE_ASSERT( pVkTexture->m_pHandle != nullptr );
+
+            pVkTexture->ClearAllViews( this );
         
             #if VULKAN_USE_VMA_ALLOCATION
             if ( pVkTexture->m_allocation )
@@ -439,9 +481,9 @@ namespace EE::Render
             renderPassCI.pSubpasses = &subpassDescription;
             
             VK_SUCCEEDED( vkCreateRenderPass( m_pHandle, &renderPassCI, nullptr, &(pVkRenderPass->m_pHandle) ) );
-            if ( !pVkRenderPass->m_frameBufferCache.Initialize( pVkRenderPass, createDesc ) )
+            if ( !pVkRenderPass->m_pFramebufferCache->Initialize( pVkRenderPass, createDesc ) )
             {
-                pVkRenderPass->m_frameBufferCache.ClearUp( this );
+                pVkRenderPass->m_pFramebufferCache->ClearUp( this );
                 EE::Delete( pVkRenderPass );
                 return nullptr;
             }
@@ -456,7 +498,7 @@ namespace EE::Render
             auto* pVkRenderPass = RHI::RHIDowncast<VulkanRenderPass>( pRenderPass );
             EE_ASSERT( pVkRenderPass->m_pHandle != nullptr );
 
-            pVkRenderPass->m_frameBufferCache.ClearUp( this );
+            pVkRenderPass->m_pFramebufferCache->ClearUp( this );
             vkDestroyRenderPass( m_pHandle, pVkRenderPass->m_pHandle, nullptr );
 
             EE::Delete( pVkRenderPass );
@@ -617,13 +659,13 @@ namespace EE::Render
             VulkanRenderPass* pVkRenderPass = reinterpret_cast<VulkanRenderPass*>( createDesc.m_pRenderpass );
             
             TFixedVector<VkPipelineColorBlendAttachmentState, RHI::RHIRenderPassCreateDesc::NumMaxColorAttachmentCount> colorBlendAttachmentStates(
-                pVkRenderPass->m_frameBufferCache.GetColorAttachmentCount(),
+                pVkRenderPass->m_pFramebufferCache->GetColorAttachmentCount(),
                 colorBlendAttachmentState
             );
 
             VkPipelineColorBlendStateCreateInfo colorBlendState = {};
             colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-            colorBlendState.attachmentCount = pVkRenderPass->m_frameBufferCache.GetColorAttachmentCount();
+            colorBlendState.attachmentCount = pVkRenderPass->m_pFramebufferCache->GetColorAttachmentCount();
             colorBlendState.pAttachments = colorBlendAttachmentStates.data();
 
             //-------------------------------------------------------------------------
@@ -855,7 +897,19 @@ namespace EE::Render
 			// fetch global device queue
 			//-------------------------------------------------------------------------
 
-			m_globalGraphicQueue = VulkanQueue( *this, deviceQueueFamilies[0] );
+            m_pGlobalGraphicQueue = EE::New<VulkanCommandQueue>( *this, deviceQueueFamilies[0] );
+
+            // create global render command pools
+            //-------------------------------------------------------------------------
+
+            for ( auto& commandPool : m_commandBufferPool )
+            {
+                VkCommandPoolCreateInfo poolCI = {};
+                poolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+                poolCI.queueFamilyIndex = m_pGlobalGraphicQueue->GetQueueFamilyIndex();
+
+                VK_SUCCEEDED( vkCreateCommandPool( m_pHandle, &poolCI, nullptr, &(commandPool.m_pHandle) ) );
+            }
 
 			return true;
 		}
@@ -1339,6 +1393,12 @@ namespace EE::Render
                 m_physicalDevice.m_props.limits.maxPerStageDescriptorSampledImages - DescriptorSetReservedSampledImageCount,
                 BindlessDescriptorSetDesiredSampledImageCount
                 );
+        }
+
+        VulkanCommandBufferPool& VulkanDevice::GetCurrentFrameCommandBufferPool()
+        {
+            auto deviceFrameIndex = m_deviceFrameCount % VulkanDevice::NumDeviceFrameCount;
+            return m_commandBufferPool[deviceFrameIndex];
         }
     }
 }
