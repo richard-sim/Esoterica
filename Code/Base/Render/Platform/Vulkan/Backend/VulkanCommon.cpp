@@ -1,6 +1,5 @@
-#ifdef EE_VULKAN
-
-#include "VulkanCommonSettings.h"
+#if defined(EE_VULKAN)
+#include "VulkanCommon.h"
 
 #include <vulkan/vulkan_core.h>
 

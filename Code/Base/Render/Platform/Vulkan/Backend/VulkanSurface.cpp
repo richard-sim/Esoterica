@@ -1,7 +1,7 @@
-#ifdef EE_VULKAN
+#if defined(EE_VULKAN)
 
 #include "VulkanSurface.h"
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 #include "VulkanInstance.h"
 
 namespace EE::Render

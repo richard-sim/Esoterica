@@ -1,6 +1,6 @@
 #pragma once
 #if defined(EE_VULKAN)
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 #include "Base\RHI\Resource\RHIResourceCreationCommons.h"
 
 #include <vulkan/vulkan_core.h>
@@ -24,6 +24,9 @@ namespace EE::Render
         VkFormat ToVulkanFormat( Render::DataFormat format );
 
         VkImageType ToVulkanImageType( RHI::ETextureType type );
+        VkImageViewType ToVulkanImageViewType( RHI::ETextureType type );
+        VkImageViewType ToVulkanImageViewType( RHI::ETextureViewType type );
+        VkImageAspectFlagBits ToVulkanImageAspectFlags( TBitFlags<RHI::ETextureViewAspect> aspect );
         VkSampleCountFlagBits ToVulkanSampleCountFlags( TBitFlags<RHI::ESampleCount> sample );
         VkImageUsageFlagBits ToVulkanImageUsageFlags( TBitFlags<RHI::ETextureUsage> usage );
         //VkImageLayout ToVulkanImageLayout();

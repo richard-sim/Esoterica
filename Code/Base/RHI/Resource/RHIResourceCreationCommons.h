@@ -3,13 +3,13 @@
 #include "Base/Types/Arrays.h"
 #include "Base/Types/BitFlags.h"
 #include "Base/Types/Set.h"
+#include "Base/Types/Optional.h"
 #include "Base/Encoding/Hash.h"
 #include "Base/Render/RenderAPI.h"
 #include "Base/Render/RenderShader.h"
 #include "Base/Resource/ResourcePath.h"
 #include "Base/Resource/ResourceTypeID.h"
 
-#include <EASTL/optional.h>
 #include <numeric>
 
 namespace EE::RHI
@@ -60,7 +60,8 @@ namespace EE::RHI
         T2D,
         T2DArray,
         T3D,
-        TCubemap
+        TCubemap,
+        TCubemapArray
     };
 
     enum class ETextureUsage : uint8_t
@@ -123,6 +124,53 @@ namespace EE::RHI
         uint32_t                                m_allocatedSize;
         ERenderResourceMemoryUsage              m_memoryUsage;
         TBitFlags<ERenderResourceMemoryFlag>    m_memoryFlag;
+    };
+
+    enum class ETextureViewType
+    {
+        TV1D,
+        TV2D,
+        TV3D,
+        TVCubemap,
+        TV1DArray,
+        TV2DArray,
+        TVCubemapArray,
+    };
+
+    enum class ETextureViewAspect
+    {
+        Color = 0,
+        Depth,
+        Stencil,
+        Metadata,
+        Plane0,
+        Plane1,
+        Plane2,
+        None
+    };
+
+    struct RHITextureViewCreateDesc
+    {
+        // If this is not set, infer texture view type from ETextureType in RHITextureCreateDesc.
+        TOptional<ETextureViewType>                   m_viewType = {};
+        // If this is not set, infer texture format from EPixelFormat in RHITextureCreateDesc.
+        TOptional<EPixelFormat>                       m_format = {};
+        // If this is not set, infer texture view aspect from TBitFlags<ETextureUsage> in RHITextureCreateDesc.
+        TBitFlags<ETextureViewAspect>                 m_viewAspect = TBitFlags<ETextureViewAspect>( ETextureViewAspect::Color );
+        // If this is not set, the level count will always be the left mipmaps.
+        // (i.e. m_levelCount = RHITextureCreateDesc::m_mipmap - m_baseMipmap)
+        TOptional<uint32_t>                           m_levelCount = {};
+
+        uint32_t                                      m_baseMipmap = 0;
+
+        friend bool operator==( RHITextureViewCreateDesc const& lhs, RHITextureViewCreateDesc const& rhs )
+        {
+            return lhs.m_viewType == rhs.m_viewType
+                && lhs.m_format == rhs.m_format
+                && lhs.m_viewAspect == rhs.m_viewAspect
+                && lhs.m_levelCount == rhs.m_levelCount
+                && lhs.m_baseMipmap == rhs.m_baseMipmap;
+        }
     };
 
     //-------------------------------------------------------------------------
@@ -226,13 +274,71 @@ namespace EE::RHI
 
     struct RHIRenderPassCreateDesc
     {
+        // TODO: do some code clear up. This constants should be placed in a single setting file.
         static constexpr size_t NumMaxColorAttachmentCount = 9;
         static constexpr size_t NumMaxAttachmentCount = 10;
 
         bool IsValid() const;
 
         TFixedVector<RHIRenderPassAttachmentDesc, NumMaxColorAttachmentCount>       m_colorAttachments;
-        eastl::optional<RHIRenderPassAttachmentDesc>                                m_depthAttachment;
+        TOptional<RHIRenderPassAttachmentDesc>                                      m_depthAttachment;
+    };
+
+    //-------------------------------------------------------------------------
+
+    // TODO: Is this redundant? Maybe we can infer this from RHITextureCreateDesc
+    // Necessary attachment flags to determine a unique framebuffer attachment.
+    struct RHIFramebufferAttachmentHash
+    {
+        TBitFlags<ETextureUsage>                   m_usage;
+        TBitFlags<ETextureCreateFlag>              m_createFlags;
+
+        RHIFramebufferAttachmentHash( TBitFlags<ETextureUsage> usage, TBitFlags<ETextureCreateFlag> createFlags )
+            : m_usage( usage ), m_createFlags( createFlags )
+        {}
+
+        inline friend bool operator==( RHIFramebufferAttachmentHash const& lhs, RHIFramebufferAttachmentHash const& rhs )
+        {
+            return lhs.m_createFlags == rhs.m_createFlags
+                && lhs.m_usage == rhs.m_usage;
+        }
+
+        inline friend bool operator!=( RHIFramebufferAttachmentHash const& lhs, RHIFramebufferAttachmentHash const& rhs )
+        {
+            return !operator==( lhs, rhs );
+        }
+    };
+
+    // Key to determine a unique framebuffer.
+    struct RHIFramebufferCacheKey
+    {
+        using RHIFrameBufferAttachmentHashes = TFixedVector<RHIFramebufferAttachmentHash, RHIRenderPassCreateDesc::NumMaxAttachmentCount>;
+
+        uint32_t                                    m_extentX;
+        uint32_t                                    m_extentY;
+        RHIFrameBufferAttachmentHashes              m_attachmentHashs;
+
+        friend bool operator==( RHIFramebufferCacheKey const& lhs, RHIFramebufferCacheKey const& rhs )
+        {
+            bool result = lhs.m_extentX == rhs.m_extentX
+                && lhs.m_extentY == rhs.m_extentY
+                && lhs.m_attachmentHashs.size() == rhs.m_attachmentHashs.size();
+
+            if ( !result )
+            {
+                return result;
+            }
+
+            for ( uint32_t i = 0; i < lhs.m_attachmentHashs.size(); ++i )
+            {
+                if ( lhs.m_attachmentHashs[i] != rhs.m_attachmentHashs[i] )
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     };
 
     //-------------------------------------------------------------------------
@@ -500,10 +606,53 @@ namespace EE::RHI
 
 namespace eastl
 {
+    template <>
+    struct hash<EE::RHI::RHITextureViewCreateDesc>
+    {
+        eastl_size_t operator()( EE::RHI::RHITextureViewCreateDesc const& textureViewCreateDesc ) const noexcept
+        {
+            eastl::hash<eastl::optional<EE::RHI::ETextureViewType>> hasher;
+            eastl_size_t hash = hasher( textureViewCreateDesc.m_viewType );
+            EE::Hash::HashCombine( hash, textureViewCreateDesc.m_format );
+            EE::Hash::HashCombine( hash, textureViewCreateDesc.m_viewAspect.Get() );
+            EE::Hash::HashCombine( hash, textureViewCreateDesc.m_levelCount );
+            EE::Hash::HashCombine( hash, textureViewCreateDesc.m_baseMipmap );
+            return hash;
+        }
+    };
+
+    template <>
+    struct hash<EE::RHI::RHIFramebufferAttachmentHash>
+    {
+        eastl_size_t operator()( EE::RHI::RHIFramebufferAttachmentHash const& attachmentHash ) const noexcept
+        {
+            eastl_size_t hash = eastl::hash<uint32_t>()( attachmentHash.m_createFlags.Get() );
+            EE::Hash::HashCombine( hash, attachmentHash.m_usage.Get() );
+            return hash;
+        }
+    };
+
+    template <>
+    struct hash<EE::RHI::RHIFramebufferCacheKey>
+    {
+        eastl_size_t operator()( EE::RHI::RHIFramebufferCacheKey const& key ) const noexcept
+        {
+            eastl_size_t hash = eastl::hash<uint32_t>()( key.m_extentX );
+            EE::Hash::HashCombine( hash, key.m_extentY );
+            for ( auto const& attachmentHash : key.m_attachmentHashs )
+            {
+                EE::Hash::HashCombine( hash, attachmentHash );
+            }
+            return hash;
+        }
+    };
+    
+    //-------------------------------------------------------------------------
+
     template<>
     struct hash<EE::RHI::RHIPipelineShader>
     {
-        eastl_size_t operator()( EE::RHI::RHIPipelineShader const& pipelineShader ) const
+        eastl_size_t operator()( EE::RHI::RHIPipelineShader const& pipelineShader ) const noexcept
         {
             eastl_size_t hash = eastl::hash<uint8_t>()( static_cast<uint8_t>( pipelineShader.m_stage ) );
             EE::Hash::HashCombine(hash, pipelineShader.m_shaderPath.c_str() );
@@ -515,9 +664,10 @@ namespace eastl
     template<>
     struct hash<EE::RHI::RHIRasterPipelineStateCreateDesc>
     {
-        EE_FORCE_INLINE eastl_size_t operator()( EE::RHI::RHIRasterPipelineStateCreateDesc const& pipelineDesc ) const
+        EE_FORCE_INLINE eastl_size_t operator()( EE::RHI::RHIRasterPipelineStateCreateDesc const& pipelineDesc ) const noexcept
         {
             return pipelineDesc.GetHashCode();
         }
     };
+
 }

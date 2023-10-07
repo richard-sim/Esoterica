@@ -1,72 +1,27 @@
 #if defined(EE_VULKAN)
 #include "VulkanRenderPass.h"
 #include "VulkanDevice.h"
-#include "VulkanCommonSettings.h"
-#include "RHIToVulkanSpecification.h"
-#include "Base/Logging/Log.h"
 #include "Base/Types/Arrays.h"
+#include "Base/RHI/RHIDowncastHelper.h"
+#include "VulkanCommon.h"
+#include "RHIToVulkanSpecification.h"
 
 namespace EE::Render
 {
     namespace Backend
     {
-        bool VulkanFramebufferCache::Initialize( VulkanRenderPass* pRenderPass, RHI::RHIRenderPassCreateDesc const& createDesc )
+        RHI::RHIFramebuffer* VulkanFramebufferCache::CreateFramebuffer( RHI::RHIDevice* pDevice, RHI::RHIFramebufferCacheKey const& key )
         {
-            if ( !m_bIsInitialized && pRenderPass != nullptr )
+            auto* pVkDevice = RHI::RHIDowncast<VulkanDevice>( pDevice );
+            if ( !pVkDevice )
             {
-                EE_ASSERT( m_pRenderPass == nullptr );
-                m_pRenderPass = pRenderPass;
-
-                EE_ASSERT( createDesc.IsValid() );
-                for ( auto const& colorAttachment : createDesc.m_colorAttachments )
-                {
-                    m_attachmentDescs.push_back( colorAttachment );
-                }
-
-                m_colorAttachmentCount = static_cast<uint32_t>( m_attachmentDescs.size() );
-
-                if ( createDesc.m_depthAttachment.has_value() )
-                {
-                    m_attachmentDescs.push_back( createDesc.m_depthAttachment.value() );
-                }
-
-                m_bIsInitialized = true;
-                return true;
+                return nullptr;
             }
 
-            return false;
-        }
-
-        void VulkanFramebufferCache::ClearUp( VulkanDevice* pDevice )
-        {
-            if ( pDevice != nullptr && m_bIsInitialized )
+            auto* pVkRenderPass = RHI::RHIDowncast<VulkanRenderPass>( m_pRenderPass );
+            if ( !pVkRenderPass )
             {
-                for ( auto& framebuffer : m_cachedFrameBuffers )
-                {
-                    vkDestroyFramebuffer( pDevice->m_pHandle, framebuffer.second, nullptr );
-                }
-
-                m_cachedFrameBuffers.clear();
-                m_attachmentDescs.clear();
-                m_pRenderPass = nullptr;
-                m_bIsInitialized = false;
-            }
-            else
-            {
-                EE_LOG_WARNING("Render", "VulkanFrameBufferCache::ClearUp", "Trying to call ClearUp() on uninitialized VulkanFrameBufferCache!");
-            }
-        }
-
-        VkFramebuffer VulkanFramebufferCache::GetOrCreate( VulkanDevice* pDevice, VulkanFramebufferCacheKey const& key )
-        {
-            EE_ASSERT( m_bIsInitialized );
-            EE_ASSERT( m_attachmentDescs.size() == key.m_attachmentHashs.size() );
-            EE_ASSERT( key.m_extentX != 0 && key.m_extentY != 0 );
-
-            auto iter = m_cachedFrameBuffers.find( key );
-            if ( iter != m_cachedFrameBuffers.end() )
-            {
-                return iter->second;
+                return nullptr;
             }
 
             TFixedVector<VkFramebufferAttachmentImageInfo, RHI::RHIRenderPassCreateDesc::NumMaxAttachmentCount> attachmentImageInfos;
@@ -81,8 +36,8 @@ namespace EE::Render
                 attachmentImageInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
                 attachmentImageInfo.width = key.m_extentX;
                 attachmentImageInfo.height = key.m_extentY;
-                attachmentImageInfo.usage = hash.m_imageUsageFlags;
-                attachmentImageInfo.flags = hash.m_imageCreateFlags;
+                attachmentImageInfo.usage = hash.m_usage;
+                attachmentImageInfo.flags = hash.m_createFlags;
                 attachmentImageInfo.layerCount = 1;
                 attachmentImageInfo.viewFormatCount = 1;
                 attachmentImageInfo.pViewFormats = &attachmentImageFormats[i];
@@ -99,20 +54,60 @@ namespace EE::Render
             framebufferCI.pNext = &attachmentsCI;
             framebufferCI.width = key.m_extentX;
             framebufferCI.height = key.m_extentY;
-            framebufferCI.renderPass = m_pRenderPass->m_pHandle;
+            framebufferCI.renderPass = pVkRenderPass->m_pHandle;
             framebufferCI.layers = 1;
-            // Note: lazy bound images
+            // Note: lazy bound image views
             framebufferCI.flags = VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT;
             framebufferCI.attachmentCount = static_cast<uint32_t>( attachmentImageInfos.size() );
             // Note: we specified VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT flag, so this can be nullptr
             framebufferCI.pAttachments = nullptr;
 
-            VkFramebuffer newFramebuffer;
-            VK_SUCCEEDED( vkCreateFramebuffer( pDevice->m_pHandle, &framebufferCI, nullptr, &newFramebuffer ) );
+            auto* pFramebuffer = EE::New<VulkanFramebuffer>();
+            if ( !pFramebuffer )
+            {
+                EE_ASSERT( false );
+            }
+            VK_SUCCEEDED( vkCreateFramebuffer( pVkDevice->m_pHandle, &framebufferCI, nullptr, &(pFramebuffer->m_pHandle) ) );
 
-            m_cachedFrameBuffers.insert( { key, newFramebuffer } );
+            return pFramebuffer;
+        }
 
-            return newFramebuffer;
+        void VulkanFramebufferCache::DestroyFramebuffer( RHI::RHIDevice* pDevice, RHI::RHIFramebuffer* pFramebuffer )
+        {
+            auto* pVkDevice = RHI::RHIDowncast<VulkanDevice>( pDevice );
+            if ( !pVkDevice )
+            {
+                EE_ASSERT( false );
+                return;
+            }
+
+            auto* pVkFramebuffer = RHI::RHIDowncast<VulkanFramebuffer>( pFramebuffer );
+            if ( !pVkFramebuffer )
+            {
+                EE_ASSERT( false );
+                return;
+            }
+
+            vkDestroyFramebuffer( pVkDevice->m_pHandle, pVkFramebuffer->m_pHandle, nullptr );
+
+            EE::Delete( pFramebuffer );
+        }
+
+        //-------------------------------------------------------------------------
+
+        VulkanRenderPass::VulkanRenderPass()
+            : RHIRenderPass( RHI::ERHIType::Vulkan )
+        {
+            m_pFramebufferCache = EE::New<VulkanFramebufferCache>();
+            EE_ASSERT( m_pFramebufferCache );
+        }
+
+        VulkanRenderPass::~VulkanRenderPass()
+        {
+            if ( m_pFramebufferCache )
+            {
+                EE::Delete( m_pFramebufferCache );
+            }
         }
     }
 }

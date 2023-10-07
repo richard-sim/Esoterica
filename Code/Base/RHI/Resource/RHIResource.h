@@ -20,6 +20,22 @@ namespace EE::RHI
         RHIResource& operator=( RHIResource&& ) = default;
     };
 
+    class RHIResourceView : public RHITaggedType
+    {
+    public:
+
+        RHIResourceView( ERHIType rhiType = ERHIType::Invalid )
+            : RHITaggedType( rhiType )
+        {}
+        virtual ~RHIResourceView() = default;
+
+        RHIResourceView( RHIResourceView const& ) = delete;
+        RHIResourceView& operator=( RHIResourceView const& ) = delete;
+
+        RHIResourceView( RHIResourceView&& ) = default;
+        RHIResourceView& operator=( RHIResourceView&& ) = default;
+    };
+
     class RHISynchronazationPrimitive : public RHIResource
     {
     public:

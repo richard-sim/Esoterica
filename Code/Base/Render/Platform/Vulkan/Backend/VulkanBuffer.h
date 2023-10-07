@@ -2,7 +2,7 @@
 #if defined(EE_VULKAN)
 
 #include "Base/RHI/Resource/RHIBuffer.h"
-#include "VulkanCommonSettings.h"
+#include "VulkanCommon.h"
 
 #include <vulkan/vulkan_core.h>
 #if VULKAN_USE_VMA_ALLOCATION
@@ -16,6 +16,7 @@ namespace EE::Render
         class VulkanBuffer : public RHI::RHIBuffer
         {
             friend class VulkanDevice;
+            friend class VulkanCommandBuffer;
 
         public:
 

@@ -1,41 +1,43 @@
 #pragma once
 #if defined(EE_VULKAN)
 
-#include "VulkanFramebuffer.h"
-#include "Base/Types/HashMap.h"
-#include "Base/Types/Arrays.h"
 #include "Base/RHI/Resource/RHIRenderPass.h"
 
 #include <vulkan/vulkan_core.h>
+
+namespace EE::RHI
+{
+    class RHIDevice;
+}
 
 namespace EE::Render
 {
     namespace Backend
     {
-        class VulkanRenderPass;
-        class VulkanDevice;
-
-        class VulkanFramebufferCache
+        class VulkanFramebuffer : public RHI::RHIFramebuffer
         {
-            using RHIRenderPassAttachmentDescs = TFixedVector<RHI::RHIRenderPassAttachmentDesc, RHI::RHIRenderPassCreateDesc::NumMaxAttachmentCount>;
-        
+            friend class VulkanFramebufferCache;
+
         public:
 
-            bool Initialize( VulkanRenderPass* pRenderPass, RHI::RHIRenderPassCreateDesc const& createDesc );
-            void ClearUp( VulkanDevice* pDevice );
+            EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
 
-            VkFramebuffer GetOrCreate( VulkanDevice* pDevice, VulkanFramebufferCacheKey const& key );
-
-            inline uint32_t GetColorAttachmentCount() const { return m_colorAttachmentCount; }
+            VulkanFramebuffer()
+                : RHIFramebuffer( RHI::ERHIType::Vulkan )
+            {}
+            virtual ~VulkanFramebuffer() = default;
 
         private:
 
-            THashMap<VulkanFramebufferCacheKey, VkFramebuffer>  m_cachedFrameBuffers;
-            RHIRenderPassAttachmentDescs                        m_attachmentDescs;
-            VulkanRenderPass*                                   m_pRenderPass = nullptr;
-            uint32_t                                            m_colorAttachmentCount = 0;
+            VkFramebuffer                       m_pHandle = nullptr;
+        };
 
-            bool                                                m_bIsInitialized = false;
+        class VulkanFramebufferCache final : public RHI::RHIFramebufferCache
+        {
+        private:
+
+            virtual RHI::RHIFramebuffer* CreateFramebuffer( RHI::RHIDevice* pDevice, RHI::RHIFramebufferCacheKey const& key ) override;
+            virtual void                 DestroyFramebuffer( RHI::RHIDevice* pDevice, RHI::RHIFramebuffer* pFramebuffer ) override;
         };
 
         class VulkanRenderPass : public RHI::RHIRenderPass
@@ -47,18 +49,12 @@ namespace EE::Render
 
             EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
 
-            VulkanRenderPass()
-                : RHIRenderPass( RHI::ERHIType::Vulkan )
-            {}
-            virtual ~VulkanRenderPass() = default;
-
-        public:
-
-            VulkanFramebufferCache          m_frameBufferCache;
+            VulkanRenderPass();
+            virtual ~VulkanRenderPass();
         
         private:
 
-            VkRenderPass				    m_pHandle = nullptr;
+            VkRenderPass                        m_pHandle = nullptr;
         };
     }
 }
