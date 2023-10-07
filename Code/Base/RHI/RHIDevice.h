@@ -3,10 +3,14 @@
 #include "Base/Render/RenderAPI.h"
 #include "Base/Memory/Pointers.h"
 #include "Base/Types/Arrays.h"
-#include "Base/Render/RenderShader.h"
 #include "Base/Resource/ResourcePtr.h"
 #include "Resource/RHIResourceCreationCommons.h"
 #include "RHITaggedType.h"
+
+namespace EE::Render
+{
+    class Shader;
+}
 
 namespace EE::RHI
 {
@@ -17,8 +21,14 @@ namespace EE::RHI
     class RHIRenderPass;
     class RHIPipelineState;
 
+    class RHICommandBuffer;
+
     class RHIDevice : public RHITaggedType
     {
+    public:
+
+        static constexpr size_t NumDeviceFrameCount = 3;
+
     public:
 
         using CompiledShaderArray = TFixedVector<Render::Shader const*, static_cast<size_t>( Render::NumPipelineStages )>;
@@ -35,6 +45,15 @@ namespace EE::RHI
 
         RHIDevice( RHIDevice&& ) = default;
         RHIDevice& operator=( RHIDevice&& ) = default;
+
+        //-------------------------------------------------------------------------
+
+        virtual size_t BeginFrame() = 0;
+        virtual void   EndFrame() = 0;
+
+        virtual size_t GetCurrentDeviceFrameIndex() const = 0;
+
+        virtual RHICommandBuffer* AllocateCommandBuffer() = 0;
 
         //-------------------------------------------------------------------------
 

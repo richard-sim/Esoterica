@@ -15,10 +15,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RenderGraph\RenderGraphResourceBarrier.h" />
+    <ClInclude Include="RenderGraph\RenderGraphNodeBuilder.h" />
+    <ClInclude Include="RenderGraph\RenderGraphResourceRegistry.h" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBufferPool.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandQueue.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="RHI\RHICommandBuffer.h" />
+    <ClInclude Include="RHI\RHICommandQueue.h" />
     <ClInclude Include="RHI\RHIDowncastHelper.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBuffer.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanFramebuffer.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanPipelineState.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanSampler.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
@@ -184,6 +188,7 @@
     <ClInclude Include="ThirdParty\bgfx\bx\include\tinystl\unordered_set.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
     <ClInclude Include="ThirdParty\bgfx\bx\include\tinystl\vector.h" Condition="$(EE_BGFX_INCLUDED) == 'True'" />
     <ClInclude Include="Types\Map.h" />
+    <ClInclude Include="Types\Optional.h" />
     <ClInclude Include="Utils\Sort.h" />
     <ClInclude Include="Encoding\Hash.h" />
     <ClInclude Include="Encoding\Quantization.h" />
@@ -240,10 +245,9 @@
     <ClInclude Include="RenderGraph\RenderGraphResource.h" />
     <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h" Condition="$(EE_DX11_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h" Condition="$(EE_DX11_INCLUDED) == 'True'" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanBarrier.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanUtils.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
-    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommon.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanDevice.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanTexture.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanInstance.h" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
@@ -256,7 +260,6 @@
     <ClInclude Include="Render\RenderAPI.h" />
     <ClInclude Include="Render\RenderPipeline.h" />
     <ClInclude Include="Render\RenderPipelineRegistry.h" />
-    <ClInclude Include="Render\RenderResourceBarrier.h" />
     <ClInclude Include="Render\RenderBuffer.h" />
     <ClInclude Include="Render\RenderCoreResources.h" />
     <ClInclude Include="Render\RenderDevice.h" />
@@ -701,11 +704,18 @@
     <ClCompile Include="Logging\LoggingSystem.cpp" />
     <ClCompile Include="Logging\Platform\Log_Win32.cpp" />
     <ClCompile Include="Math\Platform\Math_Win32.h" />
-    <ClCompile Include="RenderGraph\RenderGraphResourceBarrier.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphNodeBuilder.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphResource.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphResourceRegistry.cpp" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\RHIToVulkanSpecification.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommandBuffer.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommandQueue.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanRenderPass.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanTexture.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="RHI\Resource\RHIRenderPass.cpp" />
     <ClCompile Include="RHI\Resource\RHIResourceCreationCommons.cpp" />
-    <ClCompile Include="RHI\RHISwapchain.cpp" />
+    <ClCompile Include="RHI\Resource\RHITexture.cpp" />
+    <ClCompile Include="RHI\RHICommandBuffer.cpp" />
     <ClCompile Include="ThirdParty\implot\implot.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_demo.cpp" />
     <ClCompile Include="ThirdParty\implot\implot_items.cpp" />
@@ -750,8 +760,7 @@
     <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp" Condition="$(EE_DX11_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp" Condition="$(EE_DX11_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\Platform\VulkanUtils_Win32.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanBarrier.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
-    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommonSettings.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
+    <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanCommon.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanDevice.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanInstance.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
     <ClCompile Include="Render\Platform\Vulkan\Backend\VulkanMemoryAllocator.cpp" Condition="$(EE_VULKAN_INCLUDED) == 'True'" />
@@ -761,7 +770,6 @@
     <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp" />
     <ClCompile Include="Render\RenderPipelineRegistry.cpp" />
     <ClCompile Include="Render\RenderPipelineState.cpp" />
-    <ClCompile Include="Render\RenderResourceBarrier.cpp" />
     <ClCompile Include="Render\RenderCoreResources.cpp" />
     <ClCompile Include="Render\RenderShader.cpp" />
     <ClCompile Include="Render\RenderTarget.cpp" />

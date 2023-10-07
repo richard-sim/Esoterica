@@ -3,7 +3,8 @@
 #include "Base/_Module/API.h"
 
 #include "RenderGraphResource.h"
-#include "Base/Render/RenderResourceBarrier.h"
+// TODO: may be decouple pipeline barrier from command buffer 
+#include "Base/RHI/RHICommandBuffer.h"
 #include "Base/Render/RenderPipelineRegistry.h"
 #include "Base/Types/Arrays.h"
 #include "Base/Types/String.h"
@@ -14,17 +15,17 @@ namespace EE::RG
 {
 	class EE_BASE_API RGNodeResource
 	{
-        friend class RenderGraph;
+        friend class RGResourceRegistry;
 
 	public:
 
 		RGNodeResource() = default;
-		RGNodeResource( _Impl::RGResourceID slotID, Render::RenderResourceAccessState access );
+		RGNodeResource( _Impl::RGResourceID slotID, RHI::RenderResourceAccessState access );
 
 	private:
 
         _Impl::RGResourceID					    m_slotID;
-		Render::RenderResourceAccessState		m_passAccess;
+        RHI::RenderResourceAccessState		    m_passAccess;
 	};
 
 	template <typename Tag, RGResourceViewType RVT>

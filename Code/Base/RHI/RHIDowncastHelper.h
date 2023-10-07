@@ -12,6 +12,11 @@ namespace EE::RHI
     {
         EE_STATIC_ASSERT( ( eastl::is_base_of<RHITaggedType, From>::value ), "Try to downcast a non-decorated rhi type!" );
 
+        if ( !pRHI )
+        {
+            return nullptr;
+        }
+
         EE_ASSERT( pRHI->GetDynamicRHIType() != ERHIType::Invalid );
 
         if ( pRHI->GetDynamicRHIType() == To::GetStaticRHIType() )
@@ -31,6 +36,11 @@ namespace EE::RHI
     To const* RHIDowncast( From const* pRHI )
     {
         EE_STATIC_ASSERT( ( eastl::is_base_of<RHITaggedType, From>::value ), "Try to downcast a non-decorated rhi type!" );
+
+        if ( !pRHI )
+        {
+            return nullptr;
+        }
 
         EE_ASSERT( pRHI->GetDynamicRHIType() != ERHIType::Invalid );
 

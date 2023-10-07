@@ -99,7 +99,10 @@ namespace EE::Render
 
 		inline PipelineHandle GetID() const { return m_handle; }
 		inline bool IsReadyToCreatePipelineLayout() const { return m_vertexShader.IsLoaded() && m_pixelShader.IsLoaded(); }
-        inline bool IsEntryRegisteredIntoRHI() const { return false; }
+        // A pipeline entry is visible means that it is ready to be used outside.
+        // If a pipeline is NOT fully ready, it is invisible to outside, as if it doesn't exist.
+        // This function should only be called with PipelineRegistry.
+        inline bool IsVisible() const { return m_pPipelineState != nullptr; }
 
 	private:
 
@@ -153,12 +156,18 @@ namespace EE::Render
 		[[nodiscard]] PipelineHandle RegisterComputePipeline( ComputePipelineDesc const& computePipelineDesc );
 
 		void LoadAndUpdatePipelines( RHI::RHIDevice* pDevice );
+        void DestroyAllPipelineState( RHI::RHIDevice* pDevice );
 
 	private:
 
-		void LoadPipelineShaders();
-        bool CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, RHI::RHIDevice* pDevice );
+        // Call once to update all the loading status of a shader.
+		void UpdateLoadPipelineShaders();
 
+        // Create RHI raster pipeline state for certain RasterPipelineEntry.
+        // This function can't have any side-effects, since it may be call for the same entry multiple time.
+        bool TryCreateRHIRasterPipelineStateForEntry( TSharedPtr<RasterPipelineEntry>& rasterEntry, RHI::RHIDevice* pDevice );
+
+        // Unload all pipeline shaders inside all registries.
 		void UnloadAllPipelineShaders();
 
 	private:

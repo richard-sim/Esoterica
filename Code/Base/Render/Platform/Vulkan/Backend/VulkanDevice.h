@@ -4,6 +4,7 @@
 #include "VulkanPhysicalDevice.h"
 #include "VulkanMemoryAllocator.h"
 #include "VulkanSampler.h"
+#include "VulkanCommandBufferPool.h"
 #include "Base/Types/Map.h"
 #include "Base/Types/String.h"
 #include "Base/Types/HashMap.h"
@@ -20,6 +21,8 @@ namespace EE::RHI
     class RHIBuffer;
     class RHITexture;
     class RHISemaphore;
+
+    class RHICommandBuffer;
 }
 
 //-------------------------------------------------------------------------
@@ -30,47 +33,15 @@ namespace EE::Render
 	{
 		class VulkanInstance;
 		class VulkanSurface;
+        class VulkanCommandQueue;
         class VulkanPipelineState;
-
-		class VulkanQueue
-		{
-		public:
-
-			enum class Type : uint8_t
-			{
-				Graphic,
-				Compute,
-				Transfer,
-				Unknown
-			};
-
-		public:
-
-			VulkanQueue() = default;
-			VulkanQueue( VulkanDevice const& device, QueueFamily const& queueFamily );
-
-			VulkanQueue( VulkanQueue const& ) = delete;
-			VulkanQueue& operator=( VulkanQueue const& ) = delete;
-
-			VulkanQueue( VulkanQueue&& ) = default;
-			VulkanQueue& operator=( VulkanQueue&& ) = default;
-
-		public:
-
-			inline bool IsValid() const { return m_pHandle != nullptr; }
-
-		private:
-
-			VkQueue								m_pHandle = nullptr;
-			Type								m_type = Type::Unknown;
-			QueueFamily							m_queueFamily;
-		};
 
 		class VulkanDevice final : public RHI::RHIDevice
 		{
             friend class VulkanMemoryAllocator;
-            friend class VulkanQueue;
+            friend class VulkanCommandQueue;
             friend class VulkanSwapchain;
+            friend class VulkanTexture;
             friend class VulkanFramebufferCache;
 
         public:
@@ -100,6 +71,16 @@ namespace EE::Render
 			~VulkanDevice();
 
 		public:
+
+            // Begin a device frame. Return current device frame index.
+            virtual size_t BeginFrame() override;
+            virtual void   EndFrame() override;
+
+            inline virtual size_t GetCurrentDeviceFrameIndex() const override { return m_deviceFrameCount % NumDeviceFrameCount; }
+
+            virtual RHI::RHICommandBuffer* AllocateCommandBuffer() override;
+
+            //-------------------------------------------------------------------------
 
             virtual RHI::RHITexture* CreateTexture( RHI::RHITextureCreateDesc const& createDesc ) override;
             virtual void             DestroyTexture( RHI::RHITexture* pTexture ) override;
@@ -163,6 +144,8 @@ namespace EE::Render
             bool VulkanDevice::GetMemoryType( uint32_t typeBits, VkMemoryPropertyFlags properties, uint32_t& memTypeFound ) const;
             uint32_t GetMaxBindlessDescriptorSampledImageCount() const;
 
+            VulkanCommandBufferPool& GetCurrentFrameCommandBufferPool();
+
 		private:
 
 			TSharedPtr<VulkanInstance>			            m_pInstance = nullptr;
@@ -172,7 +155,11 @@ namespace EE::Render
 			CollectedInfo						            m_collectInfos;
 			VulkanPhysicalDevice				            m_physicalDevice;
 
-			VulkanQueue							            m_globalGraphicQueue;
+            size_t                                          m_deviceFrameCount;
+            // During BeginFrame() and EndFrame(), this must be true.
+            bool                                            m_frameExecuting = false;
+			VulkanCommandQueue*							    m_pGlobalGraphicQueue = nullptr;
+            VulkanCommandBufferPool                         m_commandBufferPool[NumDeviceFrameCount];
             VulkanMemoryAllocator                           m_globalMemoryAllcator;
 
             THashMap<VulkanStaticSamplerDesc, VkSampler>    m_immutableSamplers;

@@ -88,11 +88,86 @@ namespace EE::Render
                 case RHI::ETextureType::T2DArray: return VK_IMAGE_TYPE_2D;
                 case RHI::ETextureType::T3D: return VK_IMAGE_TYPE_3D;
                 case RHI::ETextureType::TCubemap: return VK_IMAGE_TYPE_2D;
+                case RHI::ETextureType::TCubemapArray: return VK_IMAGE_TYPE_2D;
                 default:
                 break;
             }
             EE_UNREACHABLE_CODE();
             return VK_IMAGE_TYPE_MAX_ENUM;
+        }
+
+        VkImageViewType ToVulkanImageViewType( RHI::ETextureType type )
+        {
+            switch ( type )
+            {
+                case EE::RHI::ETextureType::T1D: return VK_IMAGE_VIEW_TYPE_1D;
+                case EE::RHI::ETextureType::T1DArray: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+                case EE::RHI::ETextureType::T2D: return VK_IMAGE_VIEW_TYPE_2D;
+                case EE::RHI::ETextureType::T2DArray: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+                case EE::RHI::ETextureType::T3D: return VK_IMAGE_VIEW_TYPE_3D;
+                case EE::RHI::ETextureType::TCubemap: return VK_IMAGE_VIEW_TYPE_CUBE;
+                case EE::RHI::ETextureType::TCubemapArray: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+                default:
+                break;
+            }
+            EE_UNREACHABLE_CODE();
+            return VK_IMAGE_VIEW_TYPE_MAX_ENUM;
+        }
+
+        VkImageViewType ToVulkanImageViewType( RHI::ETextureViewType type )
+        {
+            switch ( type )
+            {
+                case EE::RHI::ETextureViewType::TV1D: return VK_IMAGE_VIEW_TYPE_1D;
+                case EE::RHI::ETextureViewType::TV2D: return VK_IMAGE_VIEW_TYPE_2D;
+                case EE::RHI::ETextureViewType::TV3D: return VK_IMAGE_VIEW_TYPE_3D;
+                case EE::RHI::ETextureViewType::TVCubemap: return VK_IMAGE_VIEW_TYPE_CUBE;
+                case EE::RHI::ETextureViewType::TV1DArray: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+                case EE::RHI::ETextureViewType::TV2DArray: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+                case EE::RHI::ETextureViewType::TVCubemapArray: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+                default:
+                break;
+            }            
+            EE_UNREACHABLE_CODE();
+            return VK_IMAGE_VIEW_TYPE_MAX_ENUM;
+        }
+
+        VkImageAspectFlagBits ToVulkanImageAspectFlags( TBitFlags<RHI::ETextureViewAspect> aspect )
+        {
+            VkFlags flag = 0u;
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Color ) )
+            {
+                flag |= VK_IMAGE_ASPECT_COLOR_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Depth ) )
+            {
+                flag |= VK_IMAGE_ASPECT_DEPTH_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Stencil ) )
+            {
+                flag |= VK_IMAGE_ASPECT_STENCIL_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Metadata ) )
+            {
+                flag |= VK_IMAGE_ASPECT_METADATA_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Plane0 ) )
+            {
+                flag |= VK_IMAGE_ASPECT_PLANE_0_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Plane1 ) )
+            {
+                flag |= VK_IMAGE_ASPECT_PLANE_1_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::Plane2 ) )
+            {
+                flag |= VK_IMAGE_ASPECT_PLANE_2_BIT;
+            }
+            if ( aspect.IsFlagSet( RHI::ETextureViewAspect::None ) )
+            {
+                flag = VK_IMAGE_ASPECT_NONE;
+            }
+            return VkImageAspectFlagBits( flag );
         }
 
         VkSampleCountFlagBits ToVulkanSampleCountFlags( TBitFlags<RHI::ESampleCount> sample )

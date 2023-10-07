@@ -349,6 +349,10 @@ namespace EE
 
         m_renderPipelineRegistry.Initialize( m_systemRegistry );
         m_renderGraph.AttachToPipelineRegistry( m_renderPipelineRegistry );
+        RHI::RHIDevice* pDevice = m_pRenderDevice->GetRHIDevice();
+
+        auto const frameIndex = pDevice->BeginFrame();
+        m_renderGraph.BeginFrame( pDevice );
 
         auto bufferDesc = RG::BufferDesc::NewSize( 512 );
         auto handle0 = m_renderGraph.CreateResource( bufferDesc );
@@ -363,8 +367,8 @@ namespace EE
 
         {
             auto node = m_renderGraph.AddNode( "Clear Color RT" );
-            auto handle0_ref = node.CommonRead( handle0, Render::RenderResourceBarrierState::ComputeShaderReadOther );
-            auto handle1_ref = node.CommonRead( handle1, Render::RenderResourceBarrierState::VertexBuffer );
+            auto handle0_ref = node.CommonRead( handle0, RHI::RenderResourceBarrierState::ComputeShaderReadOther );
+            auto handle1_ref = node.CommonRead( handle1, RHI::RenderResourceBarrierState::VertexBuffer );
 
             RHI::RHIRenderPassCreateDesc renderPassCreateDesc = {};
             renderPassCreateDesc.m_colorAttachments.push_back( RHI::RHIRenderPassAttachmentDesc::TrivialColor( RHI::EPixelFormat::BGRA8Unorm ) );
@@ -386,8 +390,8 @@ namespace EE
 
         {
             auto node = m_renderGraph.AddNode( "Draw Shadow" );
-            auto handle1_ref = node.RasterRead( handle1, Render::RenderResourceBarrierState::ColorAttachmentRead );
-            auto handle2_ref = node.CommonWrite( handle2, Render::RenderResourceBarrierState::ColorAttachmentWrite );
+            auto handle1_ref = node.RasterRead( handle1, RHI::RenderResourceBarrierState::ColorAttachmentRead );
+            auto handle2_ref = node.CommonWrite( handle2, RHI::RenderResourceBarrierState::ColorAttachmentWrite );
 
             EE_ASSERT( handle2_ref.GetDesc().m_desc.m_width == 512 );
             EE_ASSERT( handle2_ref.GetDesc().m_desc.m_height == 512 );
@@ -401,35 +405,11 @@ namespace EE
 
         m_renderGraph.LogGraphNodes();
 
-        m_renderGraph.Compile( m_pRenderDevice->GetRHIDevice() );
+        m_renderGraph.Compile( pDevice );
         m_renderGraph.Execute();
 
-        if ( Trait::IsPointerIncludeSmartPointer<TSharedPtr<int>>::value )
-        {
-            EE_LOG_INFO( "Test", "Pointer Trait", "TSharedPtr<int> is a smart pointer!" );
-        }
-        else
-        {
-            EE_LOG_INFO( "Test", "Pointer Trait", "TSharedPtr<int> is not a smart pointer!" );
-        }
-
-        if ( Trait::IsPointerIncludeSmartPointer<int*>::value )
-        {
-            EE_LOG_INFO( "Test", "Pointer Trait", "int* is a smart pointer!" );
-        }
-        else
-        {
-            EE_LOG_INFO( "Test", "Pointer Trait", "int* is not a smart pointer!" );
-        }
-
-        if ( Trait::IsPointerIncludeSmartPointer<TUniquePtr<RG::BufferDesc>>::value )
-        {
-            EE_LOG_INFO( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is a smart pointer!" );
-        }
-        else
-        {
-            EE_LOG_INFO( "Test", "Pointer Trait", "TUniquePtr<RG::BufferDesc> is not a smart pointer!" );
-        }
+        m_renderGraph.EndFrame();
+        pDevice->EndFrame();
 
         //-------------------------------------------------------------------------
 
@@ -445,9 +425,10 @@ namespace EE
         //-------------------------------------------------------------------------
 
         m_pRenderDevice->GetRHIDevice()->DestroyRenderPass( m_pImguiRenderPass );
+        m_renderPipelineRegistry.DestroyAllPipelineState( m_pRenderDevice->GetRHIDevice() );
         m_pImguiRenderPass = nullptr;
 
-        m_renderGraph.ClearAllRHIResources( m_pRenderDevice->GetRHIDevice() );
+        m_renderGraph.ClearAllResources( m_pRenderDevice->GetRHIDevice() );
         m_renderPipelineRegistry.Shutdown();
 
         // Unregister resource loaders

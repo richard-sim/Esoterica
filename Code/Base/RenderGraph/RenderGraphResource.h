@@ -1,19 +1,24 @@
 #pragma once
 
 #include "Base/_Module/API.h"
-
+#include "Base/Logging/Log.h"
 #include "Base/Types/Variant.h"
+#include "Base/Types/Optional.h"
 #include "Base/Memory/Pointers.h"
 #include "Base/Render/RenderAPI.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
-#include "RenderGraphResourceBarrier.h"
+#include "Base/RHI/RHICommandBuffer.h"
 
 #include <EASTL/type_traits.h>
 #include <EASTL/numeric_limits.h>
+#include "EASTL/utility.h"
 
 namespace EE::RHI
 {
+    class RHIDevice;
     class RHIResource;
+    class RHIBuffer;
+    class RHITexture;
 }
 
 //-------------------------------------------------------------------------
@@ -95,6 +100,7 @@ namespace EE::RG
 
 		typedef _Impl::RGBufferDesc RGDescType;
 		typedef RGResourceTagBuffer RGResourceTypeTag;
+        typedef RHI::RHIBuffer*     RGCompiledResourceType;
 
     public:
 
@@ -137,6 +143,7 @@ namespace EE::RG
 
 		typedef _Impl::RGTextureDesc RGDescType;
 		typedef RGResourceTagTexture RGResourceTypeTag;
+        typedef RHI::RHITexture*     RGCompiledResourceType;
 
 	public:
 
@@ -172,6 +179,7 @@ namespace EE::RG
 
 		    typedef BufferDesc DescType;
 		    typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
+            typedef typename BufferDesc::RGCompiledResourceType RGCompiledResourceType;
 
         public:
 
@@ -184,6 +192,7 @@ namespace EE::RG
 
 		    typedef TextureDesc DescType;
 		    typedef typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>> DescCVType;
+            typedef typename TextureDesc::RGCompiledResourceType RGCompiledResourceType;
 
         public:
 
@@ -233,16 +242,28 @@ namespace EE::RG
 		RT   // render target
 	};
 
+    // Empty struct, use as a tag.
 	struct RGLazyCreateResource
 	{
-        RHI::RHIResource*                       m_pRhiResource = nullptr;
+        //RHI::RHIResource*                       m_pRhiResource = nullptr;
 	};
 
 	struct RGImportedResource
 	{
-		TSharedPtr<void*>						m_pImportedResource;
-		RGResourceBarrierState					m_currentAccess;
+		TSharedPtr<RHI::RHIResource>			m_pImportedResource;
+		RHI::RenderResourceBarrierState			m_currentAccess;
 	};
+
+    class RGCompiledResource;
+
+    namespace _Impl
+    {
+        static constexpr size_t BufferDescVariantIndex = 0;
+        static constexpr size_t TextureDescVariantIndex = 1;
+
+        static constexpr size_t LazyCreateResourceVariantIndex = 0;
+        static constexpr size_t ImportedResourceVariantIndex = 1;
+    }
 
 	class EE_BASE_API RGResource
 	{
@@ -252,6 +273,22 @@ namespace EE::RG
 
         template <typename RGDescType, typename DescType>
         RGResource( _Impl::RGResourceDesc<RGDescType, DescType> const& desc );
+        ~RGResource() = default;
+
+        RGResource( RGResource const& ) = delete;
+        RGResource& operator=( RGResource const& ) = delete;
+
+        RGResource( RGResource&& rhs ) noexcept
+        {
+            m_desc = eastl::exchange( rhs.m_desc, {} );
+            m_resource = eastl::exchange( rhs.m_resource, {} );
+        }
+        RGResource& operator=( RGResource&& rhs ) noexcept
+        {
+            RGResource copy( eastl::move( rhs ) );
+            copy.swap( *this );
+            return *this;
+        }
 
 	public:
 
@@ -261,19 +298,13 @@ namespace EE::RG
 		>
 		DescConstRefType GetDesc() const;
 
-        inline RGLazyCreateResource&       GetLazyCreateResource()       { return eastl::get<LazyCreateResourceVariantIndex>( m_resource); }
-        inline RGLazyCreateResource const& GetLazyCreateResource() const { return eastl::get<LazyCreateResourceVariantIndex>( m_resource); }
-
-        inline RGImportedResource&       GetImportedResource()       { return eastl::get<ImportedResourceVariantIndex>( m_resource ); }
-        inline RGImportedResource const& GetImportedResource() const { return eastl::get<ImportedResourceVariantIndex>( m_resource ); }
-
         inline RGResourceType GetResourceType() const
         {
-            if ( m_desc.index() == BufferDescVariantIndex )
+            if ( m_desc.index() == _Impl::BufferDescVariantIndex )
             {
                 return RGResourceType::Buffer;
             }
-            else if ( m_desc.index() == TextureDescVariantIndex )
+            else if ( m_desc.index() == _Impl::TextureDescVariantIndex )
             {
                 return RGResourceType::Texture;
             }
@@ -283,15 +314,29 @@ namespace EE::RG
             }
         }
 
-        inline bool IsLazyCreateResource() const { return m_resource.index() == LazyCreateResourceVariantIndex; }
+        inline bool IsImportedResource() const { return m_resource.index() == _Impl::ImportedResourceVariantIndex; }
 
-    private:
+        inline RGImportedResource&       GetImportedResource()       { return eastl::get<_Impl::ImportedResourceVariantIndex>( m_resource ); }
+        inline RGImportedResource const& GetImportedResource() const { return eastl::get<_Impl::ImportedResourceVariantIndex>( m_resource ); }
 
-        static constexpr size_t BufferDescVariantIndex = 0;
-        static constexpr size_t TextureDescVariantIndex = 1;
+        //-------------------------------------------------------------------------
 
-        static constexpr size_t LazyCreateResourceVariantIndex = 0;
-        static constexpr size_t ImportedResourceVariantIndex = 1;
+        // This function only operates on rvalue.
+        // You must give out the ownership of origin resource to get a compiled resource.
+        RGCompiledResource Compile( RHI::RHIDevice* pDevice ) &&;
+
+    public:
+
+        friend void swap( RGResource& lhs, RGResource& rhs ) noexcept
+        {
+            lhs.swap( rhs );
+        }
+
+        void swap( RGResource& rhs ) noexcept
+        {
+            eastl::swap( m_desc, rhs.m_desc );
+            eastl::swap( m_resource, rhs.m_resource );
+        }
 
 	private:
 
@@ -311,9 +356,85 @@ namespace EE::RG
 	template <typename Tag, typename DescType, typename DescConstRefType>
 	DescConstRefType RGResource::GetDesc() const
 	{
-		static_assert( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value, "Invalid render graph resource tag!" );
+        EE_STATIC_ASSERT( ( eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value ), "Invalid render graph resource tag!" );
 
 		constexpr size_t const index = static_cast<size_t>( Tag::GetRGResourceType() );
 		return eastl::get<index>( m_desc ).GetDesc();
 	}
+
+    class RGCompiledResource
+    {
+        friend class RGResource;
+
+    public:
+
+        template <typename Tag,
+            typename DescType = typename Tag::DescType,
+            typename DescConstRefType = typename eastl::add_lvalue_reference_t<eastl::add_const_t<DescType>>
+        >
+        DescConstRefType GetDesc() const;
+
+        template <typename Tag,
+            typename DescType = typename Tag::DescType,
+            typename RGCompiledResourceRefType = typename eastl::add_lvalue_reference_t<typename DescType::RGCompiledResourceType>
+        >
+        RGCompiledResourceRefType GetResource();
+
+        inline RGResourceType GetResourceType() const
+        {
+            if ( m_desc.index() == _Impl::BufferDescVariantIndex )
+            {
+                return RGResourceType::Buffer;
+            }
+            else if ( m_desc.index() == _Impl::TextureDescVariantIndex )
+            {
+                return RGResourceType::Texture;
+            }
+            else
+            {
+                return RGResourceType::Unknown;
+            }
+        }
+
+        inline bool IsImportedResource() const { return m_importedResource.has_value(); }
+
+        //-------------------------------------------------------------------------
+
+        // TODO: change RGCompiledResource into RGRetiredResource
+        void Retire( RHI::RHIDevice* pDevice );
+
+    private:
+
+        // TODO: compile-time enum element expand (use macro?)
+        TVariant<
+            _Impl::RGBufferDesc,
+            _Impl::RGTextureDesc
+        >														        m_desc;
+        TVariant<
+            typename _Impl::RGBufferDesc::RGCompiledResourceType,
+            typename _Impl::RGTextureDesc::RGCompiledResourceType
+        >		                                                        m_resource;
+        // Note: Imported resources contain share pointer to outer resource.
+        //       It is our duty to keep this share pointer alive until finish using this imported resource.
+        //       So after compile RGResource to RGCompiledResource, we should keep a copy of imported resource if it is.
+        TOptional<RGImportedResource>                                   m_importedResource = {};
+    };
+
+    template <typename Tag, typename DescType, typename DescConstRefType>
+    DescConstRefType RGCompiledResource::GetDesc() const
+    {
+        EE_STATIC_ASSERT( (eastl::is_base_of<RGResourceTagTypeBase<Tag>, Tag>::value), "Invalid render graph resource tag!" );
+
+        constexpr size_t const index = static_cast<size_t>( Tag::GetRGResourceType() );
+        return eastl::get<index>( m_desc ).GetDesc();
+    }
+
+    template <typename Tag, typename DescType, typename RGCompiledResourceRefType>
+    RGCompiledResourceRefType EE::RG::RGCompiledResource::GetResource()
+    {
+        EE_ASSERT( GetResourceType() == Tag::GetRGResourceType() );
+
+        constexpr size_t const index = static_cast<size_t>( Tag::GetRGResourceType() );
+        return eastl::get<index>( m_resource );
+    }
 }

@@ -39,6 +39,19 @@ namespace EE::Render
 
 		UnloadAllPipelineShaders();
 
+        // check if the RHI resources is already release
+        for ( auto const& entry : m_rasterPipelineStatesCache )
+        {
+            if ( entry->IsVisible() )
+            {
+                EE_LOG_ERROR( "Render", "PipelineRegistry::Shutdown", "Pipeline states not clear up. Did you forget to call DestroyAllPipelineState()?" );
+                EE_ASSERT( false );
+            }
+        }
+
+        m_rasterPipelineStatesCache.clear();
+        m_rasterPipelineHandlesCache.clear();
+
 		m_pResourceSystem->WaitForAllRequestsToComplete();
 		m_isInitialized = false;
 	}
@@ -49,7 +62,7 @@ namespace EE::Render
 	{
 		EE_ASSERT( Threading::IsMainThread() );
 		EE_ASSERT( m_isInitialized );
-		//EE_ASSERT( rasterPipelineDesc.IsValid() );
+		EE_ASSERT( rasterPipelineDesc.IsValid() );
 
 		// Already exists, immediately return
 		//-------------------------------------------------------------------------
@@ -129,16 +142,20 @@ namespace EE::Render
 		EE_ASSERT( m_isInitialized );
         EE_ASSERT( pDevice != nullptr );
 
-		LoadPipelineShaders();
-
+        // Update loading
         //-------------------------------------------------------------------------
 
-        for ( auto const& rasterEntry : m_waitToRegisteredRasterPipelines )
+		UpdateLoadPipelineShaders();
+
+        // Registered loaded pipelines to create actual RHI resources
+        //-------------------------------------------------------------------------
+
+        for ( auto& rasterEntry : m_waitToRegisteredRasterPipelines )
         {
             // double checked again in case pipeline entry is unloaded by chance.
             if ( rasterEntry->IsReadyToCreatePipelineLayout() )
             {
-                if ( !CreateRasterPipelineStateLayout( rasterEntry, pDevice ) )
+                if ( !TryCreateRHIRasterPipelineStateForEntry( rasterEntry, pDevice ) )
                 {
                     m_retryRasterPipelineCaches.push_back( rasterEntry );
                 }
@@ -152,9 +169,28 @@ namespace EE::Render
         }
 	}
 
+    void PipelineRegistry::DestroyAllPipelineState( RHI::RHIDevice* pDevice )
+    {
+        EE_ASSERT( Threading::IsMainThread() );
+        EE_ASSERT( m_isInitialized );
+
+        EE_ASSERT( m_rasterPipelineStatesCache.size() == m_rasterPipelineHandlesCache.size() );
+        for ( auto& entry : m_rasterPipelineStatesCache )
+        {
+            if ( entry->IsVisible() )
+            {
+                pDevice->DestroyRasterPipelineState( entry->m_pPipelineState );
+                entry->m_pPipelineState = nullptr;
+            }
+        }
+
+        // Note: can NOT call m_rasterPipelineStatesCache here, because entry contains TResourcePtr.
+        // We need to unload it first before we destroy the whole entry.
+    }
+
 	//-------------------------------------------------------------------------
 
-	void PipelineRegistry::LoadPipelineShaders()
+	void PipelineRegistry::UpdateLoadPipelineShaders()
 	{
 		EE_ASSERT( m_pResourceSystem != nullptr );
 
@@ -261,8 +297,8 @@ namespace EE::Render
 	void PipelineRegistry::UnloadAllPipelineShaders()
 	{
 		EE_ASSERT( m_pResourceSystem );
-		EE_ASSERT( m_rasterPipelineStatesCache.size() == m_rasterPipelineHandlesCache.size() );
 
+		EE_ASSERT( m_rasterPipelineStatesCache.size() == m_rasterPipelineHandlesCache.size() );
 		for ( auto const& pPipeline : m_rasterPipelineStatesCache )
 		{
 			if ( pPipeline->m_vertexShader.IsLoaded() )
@@ -275,12 +311,11 @@ namespace EE::Render
 				m_pResourceSystem->UnloadResource( pPipeline->m_pixelShader, Resource::ResourceRequesterID( pPipeline->GetID().m_ID ) );
 			}
 		}
-		m_rasterPipelineStatesCache.clear();
-		m_rasterPipelineHandlesCache.clear();
 	}
 
-    bool PipelineRegistry::CreateRasterPipelineStateLayout( TSharedPtr<RasterPipelineEntry> const& rasterEntry, RHI::RHIDevice* pDevice )
+    bool PipelineRegistry::TryCreateRHIRasterPipelineStateForEntry( TSharedPtr<RasterPipelineEntry>& rasterEntry, RHI::RHIDevice* pDevice )
     {
+        EE_ASSERT( !rasterEntry->IsVisible() );
         EE_ASSERT( Threading::IsMainThread() );
 
         // Safety: We make sure raster pipeline state layout will only be created by single thread,
@@ -289,13 +324,17 @@ namespace EE::Render
         compiledShaders.push_back( rasterEntry->m_vertexShader.GetPtr() );
         compiledShaders.push_back( rasterEntry->m_pixelShader.GetPtr() );
         auto* pPipelineState = pDevice->CreateRasterPipelineState( rasterEntry->m_desc, compiledShaders );
+        if ( pPipelineState )
+        {
+            rasterEntry->m_pPipelineState = pPipelineState;
 
-        // Note: test purpose
-        bool bResult = pPipelineState != nullptr;
-        pDevice->DestroyRasterPipelineState( pPipelineState );
-        
-        return bResult;
+            // TODO: add render graph debug name
+            EE_LOG_MESSAGE( "Render", "PipelineRegistry", "[%ull] Pipeline Visible.", rasterEntry->m_desc.GetHashCode() );
+
+            return true;
+        }
+
+        return false;
     }
-
 }
 
