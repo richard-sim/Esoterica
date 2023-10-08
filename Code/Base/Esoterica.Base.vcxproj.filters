@@ -2400,38 +2400,102 @@
     <ClInclude Include="ThirdParty\bgfx\bimg\3rdparty\tinyexr\deps\miniz\miniz.h">
       <Filter>Render\Platform\BGFX\bimg\3rdparty\tinyexr\deps\miniz</Filter>
     </ClInclude>
-    <ClInclude Include="ThirdParty\bgfx\bgfx\src\bgfx.idl.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\allocator.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\bounds.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\bx.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\cpu.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\easing.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\endian.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\error.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\float4x4_t.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\handlealloc.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\hash.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\math.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\mpscqueue.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\mutex.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\os.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\pixelformat.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\readerwriter.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\ringbuffer.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\rng.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_langext.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_neon.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_ref.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_sse.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_swizzle.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd256_avx.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd256_ref.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd_ni.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\sort.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\spscqueue.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\string.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\typetraits.inl" />
-    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\uint32_t.inl" />
+    <ClInclude Include="ThirdParty\bgfx\bgfx\src\bgfx.idl.inl">
+      <Filter>Render\Platform\BGFX\bgfx\src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\allocator.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\bounds.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\bx.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\cpu.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\easing.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\endian.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\error.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\float4x4_t.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\handlealloc.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\hash.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\math.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\mpscqueue.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\mutex.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\os.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\pixelformat.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\readerwriter.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\ringbuffer.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\rng.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_langext.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_neon.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_ref.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_sse.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd128_swizzle.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd256_avx.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd256_ref.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\simd_ni.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\sort.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\spscqueue.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\string.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\typetraits.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\bgfx\bx\include\bx\inline\uint32_t.inl">
+      <Filter>Render\Platform\BGFX\bx\include\bx\inline</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">
@@ -2726,7 +2790,7 @@
     <Filter Include="Render\Platform\BGFX\bx\include\bx\include">
       <UniqueIdentifier>{e09d2069-641c-449e-aee1-10256b894a6b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\Platform\BGFX\bx\include\bx\include\inline">
+    <Filter Include="Render\Platform\BGFX\bx\include\bx\inline">
       <UniqueIdentifier>{3a20e277-1f27-464f-9298-bd8df529c947}</UniqueIdentifier>
     </Filter>
     <Filter Include="Render\Platform\BGFX\bx\3rdparty">
