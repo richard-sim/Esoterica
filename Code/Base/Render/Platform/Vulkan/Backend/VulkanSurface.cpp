@@ -1,5 +1,7 @@
 #if defined(EE_VULKAN)
 
+#include "Base/Application/Platform/Application_Win32.h"
+
 #include "VulkanSurface.h"
 #include "VulkanCommon.h"
 #include "VulkanInstance.h"
@@ -8,8 +10,9 @@ namespace EE::Render
 {
 	namespace Backend
 	{
-		VulkanSurface::VulkanSurface( TSharedPtr<VulkanInstance> pInstance )
-			: m_pInstance ( pInstance )
+		VulkanSurface::VulkanSurface( TSharedPtr<VulkanInstance> pInstance, Application* pApplication )
+			: m_pApplication( pApplication )
+	        , m_pInstance( pInstance )
 		{
 			LoadVulkanFuncPointer();
 
@@ -42,6 +45,7 @@ namespace EE::Render
 		#ifdef _WIN32
 		bool VulkanSurface::CreateWin32Surface()
 		{
+            Win32Application* pWIn32Application = static_cast<Win32Application*>( m_pApplication );
 			HWND hwnd = GetActiveWindow();
 
 			if ( hwnd == nullptr )

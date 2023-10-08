@@ -94,7 +94,8 @@ namespace EE
 
     bool Win32Application::FatalError( String const& error )
     {
-        MessageBox( GetActiveWindow(), error.c_str(), "Fatal Error Occurred!", MB_OK | MB_ICONERROR );
+        HWND hwnd = GetWindowHandle() != nullptr ? GetWindowHandle() : GetActiveWindow();
+        MessageBox( hwnd, error.c_str(), "Fatal Error Occurred!", MB_OK | MB_ICONERROR );
         return false;
     }
 

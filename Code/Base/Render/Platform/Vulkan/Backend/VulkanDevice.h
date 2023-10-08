@@ -5,6 +5,7 @@
 #include "VulkanMemoryAllocator.h"
 #include "VulkanSampler.h"
 #include "VulkanCommandBufferPool.h"
+#include "Base/Application/Application.h"
 #include "Base/Types/Map.h"
 #include "Base/Types/String.h"
 #include "Base/Types/HashMap.h"
@@ -65,8 +66,8 @@ namespace EE::Render
             EE_RHI_STATIC_TAGGED_TYPE( RHI::ERHIType::Vulkan )
 
 			// Only support single physical device for now.
-			VulkanDevice();
-			VulkanDevice( InitConfig config );
+			VulkanDevice( Application* pApplication );
+			VulkanDevice( Application* pApplication, InitConfig config );
 
 			~VulkanDevice();
 
@@ -148,7 +149,9 @@ namespace EE::Render
 
 		private:
 
-			TSharedPtr<VulkanInstance>			            m_pInstance = nullptr;
+            Application*                                    m_pApplication = nullptr;
+
+		    TSharedPtr<VulkanInstance>			            m_pInstance = nullptr;
             TSharedPtr<VulkanSurface>                       m_pSurface = nullptr;
 
 			VkDevice							            m_pHandle = nullptr;

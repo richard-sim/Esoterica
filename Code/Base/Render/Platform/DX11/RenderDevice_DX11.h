@@ -2,6 +2,7 @@
 #if defined(_WIN32) && defined(EE_DX11)
 
 #include "RenderContext_DX11.h"
+#include "Base/Application/Platform/Application_Win32.h"
 #include "Base/Types/Color.h"
 #include "Base/Threading/Threading.h"
 
@@ -36,8 +37,8 @@ namespace EE::Render
         //-------------------------------------------------------------------------
 
         bool IsInitialized() const;
-        bool Initialize( IniFile const& iniFile );
-        bool Initialize();
+        bool Initialize( Application* pApplication, IniFile const& iniFile );
+        bool Initialize( Application* pApplication );
         void Shutdown();
 
         inline RenderContext const& GetImmediateContext() const { return m_immediateContext; }
@@ -120,6 +121,7 @@ namespace EE::Render
 
     private:
 
+        Win32Application*                       m_pApplication = nullptr;
         Int2                                    m_resolution = Int2( 1280, 720 );
         float                                   m_refreshRate = 60;
         bool                                    m_isFullscreen = false;

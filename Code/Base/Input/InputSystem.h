@@ -4,6 +4,7 @@
 #include "InputDevices/InputDevice_KeyboardMouse.h"
 #include "InputDevices/InputDevice_Controller.h"
 #include "Base/Types/Arrays.h"
+#include "Base/Application/Application.h"
 #include "Base/Systems.h"
 
 //-------------------------------------------------------------------------
@@ -31,7 +32,7 @@ namespace EE::Input
 
     public:
 
-        bool Initialize();
+        bool Initialize( Application* pApplication );
         void Shutdown();
         void Update( Seconds deltaTime );
         void ClearFrameState();

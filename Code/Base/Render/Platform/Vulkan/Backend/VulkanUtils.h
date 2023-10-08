@@ -1,6 +1,7 @@
 #pragma once
 #if defined(EE_VULKAN)
 
+#include "Base/Application/Application.h"
 #include "Base/Math/Math.h"
 #include "Base/RHI/Resource/RHIResourceCreationCommons.h"
 
@@ -8,7 +9,7 @@ namespace EE::Render
 {
 	namespace Backend::Util
 	{
-		Int2 GetCurrentActiveWindowUserExtent();
+		Int2 GetCurrentActiveWindowUserExtent( Application* pApplication );
 
         inline bool IsUniformBuffer( RHI::RHIBufferCreateDesc const& bufferCreateDesc )
         {

@@ -241,7 +241,7 @@ namespace EE
         //-------------------------------------------------------------------------
 
         m_pRenderDevice = EE::New<Render::RenderDevice>();
-        if ( !m_pRenderDevice->Initialize() )
+        if ( !m_pRenderDevice->Initialize( this ) )
         {
             EE::Delete( m_pRenderDevice );
             return FatalError( "Failed to create render device!" );
@@ -268,7 +268,7 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
-        m_imguiSystem.Initialize( m_pRenderDevice );
+        m_imguiSystem.Initialize( this, m_pRenderDevice );
         m_imguiRenderer.Initialize( m_pRenderDevice );
         m_resourceServerUI.Initialize();
 

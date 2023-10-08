@@ -2,6 +2,7 @@
 #if defined(EE_VULKAN)
 
 #include "Base/Types/Arrays.h"
+#include "Base/Application/Application.h"
 
 #include "Base/RHI/RHISwapchain.h"
 
@@ -21,7 +22,7 @@ namespace EE::Render
 
 			struct InitConfig
 			{
-				static InitConfig GetDefault();
+				static InitConfig GetDefault( Application* pApplication );
 
 				bool				m_enableVsync;
 				uint32_t			m_width;
@@ -40,14 +41,16 @@ namespace EE::Render
 
 		public:
 
-			VulkanSwapchain( VulkanDevice* pDevice );
-			VulkanSwapchain( InitConfig config, VulkanDevice* pDevice );
+			VulkanSwapchain( Application* pApplication, VulkanDevice* pDevice );
+			VulkanSwapchain( InitConfig config, Application* pApplication, VulkanDevice* pDevice );
 
 			~VulkanSwapchain();
 
 		private:
 
-            // Cache device pointer (Use TSharedPtr ?)
+            Application*                            m_pApplication = nullptr;
+
+		    // Cache device pointer (Use TSharedPtr ?)
 			VulkanDevice*           				m_pDevice = nullptr;
 
 			VkSwapchainKHR							m_pHandle;

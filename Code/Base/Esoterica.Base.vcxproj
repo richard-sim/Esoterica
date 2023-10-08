@@ -15,6 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Application\Application.h" />
     <ClInclude Include="RenderGraph\RenderGraphNodeBuilder.h" />
     <ClInclude Include="RenderGraph\RenderGraphResourceRegistry.h" />
     <ClInclude Include="Render\Platform\Vulkan\Backend\VulkanCommandBufferPool.h" />

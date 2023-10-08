@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Base/_Module/API.h"
+#include "Base/Application/Application.h"
 #include "Base/Esoterica.h"
 
 #if EE_DEVELOPMENT_TOOLS
@@ -30,7 +31,7 @@ namespace EE::ImGuiX
 
     public:
 
-        bool Initialize( Render::RenderDevice* pRenderDevice, Input::InputSystem* pInputSystem = nullptr, bool enableViewports = false );
+        bool Initialize( Application* pApplication, Render::RenderDevice* pRenderDevice, Input::InputSystem* pInputSystem = nullptr, bool enableViewports = false );
         void Shutdown();
 
         //-------------------------------------------------------------------------
@@ -53,6 +54,7 @@ namespace EE::ImGuiX
 
     private:
 
+        Application*                    m_pApplication = nullptr;
         Input::InputSystem*             m_pInputSystem = nullptr;
         ImageCache                      m_imageCache;
         String                          m_iniFilename;

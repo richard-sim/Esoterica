@@ -1,5 +1,6 @@
 #ifdef _WIN32
 #include "Base/Input/InputDevices/InputDevice_KeyboardMouse.h"
+#include "Base/Application/Platform/Application_Win32.h"
 #include "Base/Math/Vector.h"
 #include "Base/Types/Arrays.h"
 #include "Base/Types/HashMap.h"
@@ -224,11 +225,13 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
-        void KeyboardMouseInputDevice::Initialize()
+        void KeyboardMouseInputDevice::Initialize( Application* pApplication )
         {
             RAWINPUTDEVICE inputDevices[2];
 
-            HWND activeWindow = GetActiveWindow();
+            Win32Application* pWin32Application = static_cast<Win32Application*>( pApplication );
+
+            HWND activeWindow = pWin32Application->GetWindowHandle();
 
             // Mouse
             inputDevices[0].usUsagePage = 0x01;

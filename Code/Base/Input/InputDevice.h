@@ -2,6 +2,7 @@
 
 #include "Base/Esoterica.h"
 #include "Base/Time/Time.h"
+#include "Base/Application/Application.h"
 
 //-------------------------------------------------------------------------
 
@@ -40,7 +41,7 @@ namespace EE
         public:
 
             virtual ~InputDevice() = default;
-            virtual void Initialize() = 0;
+            virtual void Initialize( Application* pApplication ) = 0;
             virtual void Shutdown() = 0;
 
             // Get the category for this device (controller/mice), this is necessary since we may have multiple controller device types (e.g. XBox, PS, 3rdParty)

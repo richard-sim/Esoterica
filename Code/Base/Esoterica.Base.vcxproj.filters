@@ -107,10 +107,10 @@
       <Filter>Render</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\DX11\RenderContext_DX11.cpp">
-      <Filter>Render\Platform</Filter>
+      <Filter>Render\Platform\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\DX11\RenderDevice_DX11.cpp">
-      <Filter>Render\Platform</Filter>
+      <Filter>Render\Platform\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Render\Platform\Windows\TextureLoader_Win32.cpp">
       <Filter>Render\Platform</Filter>
@@ -1514,10 +1514,10 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\DX11\RenderContext_DX11.h">
-      <Filter>Render\Platform</Filter>
+      <Filter>Render\Platform\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\DX11\RenderDevice_DX11.h">
-      <Filter>Render\Platform</Filter>
+      <Filter>Render\Platform\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Render\Platform\Windows\TextureLoader_Win32.h">
       <Filter>Render\Platform</Filter>
@@ -2052,6 +2052,9 @@
     <ClInclude Include="RenderGraph\RenderGraphNodeBuilder.h">
       <Filter>RenderGraph</Filter>
     </ClInclude>
+    <ClInclude Include="Application\Application.h">
+      <Filter>Application</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ThirdParty\cmdParser\LICENSE">
@@ -2315,6 +2318,9 @@
     </Filter>
     <Filter Include="Render\Platform\Vulkan\Backend\Platform">
       <UniqueIdentifier>{901c0ff1-37b7-47d5-a5c1-a1008abffced}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Platform\DX11">
+      <UniqueIdentifier>{0509f50a-2b15-451b-a4a4-177c1ca178ad}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
