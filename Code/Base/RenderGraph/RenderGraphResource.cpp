@@ -15,8 +15,8 @@ namespace EE::RG
             {
                 BufferDesc const& desc = GetDesc<RGResourceTagBuffer>();
 
-                EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Desired Size = %d", desc.m_desc.m_desireSize );
-                EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Allocated Size = %d", desc.m_desc.m_desireSize );
+                EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Desired Size = %d", desc.m_desc.m_desireSize );
+                EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Buffer Allocated Size = %d", desc.m_desc.m_desireSize );
 
                 if ( !IsImportedResource() )
                 {
@@ -24,7 +24,7 @@ namespace EE::RG
                     EE_ASSERT( pBuffer != nullptr );
                     compiled.m_resource = pBuffer;
 
-                    EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Lazy created buffer resource:" );
+                    EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Lazy created buffer resource:" );
                 }
                 else
                 {
@@ -32,7 +32,7 @@ namespace EE::RG
                     // Safety: We make sure this shared pointer will be alive as long as this raw pointer alive.
                     RHI::RHIResource* pResource = compiled.m_importedResource->m_pImportedResource.get();
                     compiled.m_resource = static_cast<RHI::RHIBuffer*>( pResource );
-                    EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Import a buffer resource:" );
+                    EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Import a buffer resource:" );
                 }
             }
             break;
@@ -41,8 +41,8 @@ namespace EE::RG
             {
                 TextureDesc const& desc = GetDesc<RGResourceTagTexture>();
 
-                EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Width = %d", desc.m_desc.m_width );
-                EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Height = %d", desc.m_desc.m_height );
+                EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Width = %d", desc.m_desc.m_width );
+                EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Texture Height = %d", desc.m_desc.m_height );
 
                 if ( !IsImportedResource() )
                 {
@@ -50,7 +50,7 @@ namespace EE::RG
                     EE_ASSERT( pTexture != nullptr );
                     compiled.m_resource = pTexture;
 
-                    EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Lazy created texture resource:" );
+                    EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Lazy created texture resource:" );
                 }
                 else
                 {
@@ -58,7 +58,7 @@ namespace EE::RG
                     // Safety: We make sure this shared pointer will be alive as long as this raw pointer alive.
                     RHI::RHIResource* pResource = compiled.m_importedResource->m_pImportedResource.get();
                     compiled.m_resource = static_cast<RHI::RHITexture*>( pResource );
-                    EE_LOG_MESSAGE( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Import a texture resource:" );
+                    EE_LOG_INFO( "RenderGraph", "RenderGraph::CreateNodeRHIResource()", "Import a texture resource:" );
                 }
             }
             break;
