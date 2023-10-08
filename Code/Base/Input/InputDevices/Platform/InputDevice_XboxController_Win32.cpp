@@ -16,7 +16,7 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
-        void XBoxControllerInputDevice::Initialize()
+        void XBoxControllerInputDevice::Initialize( Application* pApplication )
         {
             XINPUT_STATE state;
             DWORD result = XInputGetState( m_hardwareControllerIdx, &state );

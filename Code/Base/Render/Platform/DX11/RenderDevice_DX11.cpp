@@ -73,7 +73,7 @@ namespace EE::Render
         return m_pDevice != nullptr;
     }
 
-    bool RenderDevice::Initialize( IniFile const& iniFile )
+    bool RenderDevice::Initialize( Application* pApplication, IniFile const& iniFile )
     {
         EE_ASSERT( iniFile.IsValid() );
 
@@ -90,11 +90,13 @@ namespace EE::Render
             return false;
         }
 
-        return Initialize();
+        return Initialize( pApplication );
     }
 
-    bool RenderDevice::Initialize()
+    bool RenderDevice::Initialize( Application* pApplication )
     {
+        m_pApplication = static_cast<Win32Application*>( pApplication );
+
         if ( !CreateDeviceAndSwapchain() )
         {
             return false;
@@ -113,9 +115,9 @@ namespace EE::Render
         CoreResources::Initialize( this );
 
         #if defined(EE_VULKAN)
-        auto pVkRHIDevice = EE::New<Backend::VulkanDevice>();
+        auto pVkRHIDevice = EE::New<Backend::VulkanDevice>( m_pApplication );
         m_pRHIDevice = pVkRHIDevice;
-        m_pRHISwapchain = EE::New<Backend::VulkanSwapchain>( pVkRHIDevice );
+        m_pRHISwapchain = EE::New<Backend::VulkanSwapchain>( m_pApplication, pVkRHIDevice );
         #endif
 
         return true;
@@ -145,7 +147,7 @@ namespace EE::Render
         DXGI_SWAP_CHAIN_DESC swapChainDesc;
         EE::Memory::MemsetZero( &swapChainDesc, sizeof( swapChainDesc ) );
 
-        HWND pActiveWindow = GetActiveWindow();
+        HWND pActiveWindow = m_pApplication->GetWindowHandle();
         if ( pActiveWindow == nullptr )
         {
             return false;

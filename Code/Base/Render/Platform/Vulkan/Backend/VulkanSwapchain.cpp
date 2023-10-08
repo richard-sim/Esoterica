@@ -18,9 +18,9 @@ namespace EE::Render
 {
 	namespace Backend
 	{
-		VulkanSwapchain::InitConfig VulkanSwapchain::InitConfig::GetDefault()
+		VulkanSwapchain::InitConfig VulkanSwapchain::InitConfig::GetDefault( Application* pApplication )
 		{
-			Int2 extent = Util::GetCurrentActiveWindowUserExtent();
+			Int2 extent = Util::GetCurrentActiveWindowUserExtent( pApplication );
 
 			InitConfig config = {};
 			config.m_width = static_cast<uint32_t>( extent.m_x );
@@ -31,12 +31,14 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanSwapchain::VulkanSwapchain( VulkanDevice* pDevice )
-			: VulkanSwapchain( InitConfig::GetDefault(), pDevice )
+		VulkanSwapchain::VulkanSwapchain( Application* pApplication, VulkanDevice* pDevice )
+			: VulkanSwapchain( InitConfig::GetDefault( pApplication ), pApplication, pDevice )
 		{}
 
-		VulkanSwapchain::VulkanSwapchain( InitConfig config, VulkanDevice* pDevice )
-			: RHISwapchain( RHI::ERHIType::Vulkan ), m_pDevice( pDevice )
+		VulkanSwapchain::VulkanSwapchain( InitConfig config, Application* pApplication, VulkanDevice* pDevice )
+			: RHISwapchain( RHI::ERHIType::Vulkan )
+            , m_pApplication( pApplication )
+	        , m_pDevice( pDevice )
 		{
 			// load function
 			//-------------------------------------------------------------------------

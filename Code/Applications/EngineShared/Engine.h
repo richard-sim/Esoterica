@@ -4,6 +4,7 @@
 #include "Engine/ToolsUI/IDevelopmentToolsUI.h"
 #include "Base/Types/Function.h"
 #include "Engine/UpdateContext.h"
+#include "Base/Application/Application.h"
 
 #include "Engine/_Module/EngineModule.h"
 #include "Game/_Module/GameModule.h"
@@ -26,7 +27,7 @@ namespace EE
         Engine( TFunction<bool( EE::String const& error )>&& errorHandler );
         virtual ~Engine() = default;
 
-        bool Initialize( Int2 const& windowDimensions );
+        bool Initialize( Application* pApplication, Int2 const& windowDimensions );
         bool Shutdown();
         bool Update();
 
@@ -85,6 +86,7 @@ namespace EE
         // Application data
         //-------------------------------------------------------------------------
 
+        Application*                                    m_pApplication = nullptr;
         ResourcePath                                    m_startupMap;
         bool                                            m_moduleInitStageReached = false;
         bool                                            m_moduleResourcesInitStageReached = false;

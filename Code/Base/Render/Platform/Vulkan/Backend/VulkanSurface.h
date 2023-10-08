@@ -2,6 +2,7 @@
 #if defined(EE_VULKAN)
 
 #include "Base/Memory/Pointers.h"
+#include "Base/Application/Application.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -32,7 +33,7 @@ namespace EE::Render
 
 		public:
 
-			VulkanSurface( TSharedPtr<VulkanInstance> pInstance );
+			VulkanSurface( TSharedPtr<VulkanInstance> pInstance, Application* pApplication );
 
 			VulkanSurface( VulkanSurface const& ) = delete;
 			VulkanSurface& operator=( VulkanSurface const& ) = delete;
@@ -56,6 +57,8 @@ namespace EE::Render
 
 			friend class VulkanPhysicalDevice;
 			friend class VulkanSwapchain;
+
+            Application*                            m_pApplication = nullptr;
 
 			TSharedPtr<VulkanInstance>				m_pInstance = nullptr;
 			LoadFuncs								m_loadFuncs;

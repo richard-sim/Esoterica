@@ -35,13 +35,15 @@ namespace EE::Render
 
 		//-------------------------------------------------------------------------
 
-		VulkanDevice::VulkanDevice()
-            : RHIDevice( RHI::ERHIType::Vulkan ), m_deviceFrameCount( 0 )
+		VulkanDevice::VulkanDevice( Application* pApplication )
+            : RHIDevice( RHI::ERHIType::Vulkan )
+            , m_pApplication( pApplication )
+	        , m_deviceFrameCount( 0 )
 		{
             m_pInstance = MakeShared<VulkanInstance>();
             EE_ASSERT( m_pInstance != nullptr );
 
-            m_pSurface = MakeShared<VulkanSurface>( m_pInstance );
+            m_pSurface = MakeShared<VulkanSurface>( m_pInstance, pApplication );
             EE_ASSERT( m_pSurface != nullptr );
 
             InitConfig const config = InitConfig::GetDefault( m_pInstance->IsEnableDebug() );
@@ -53,13 +55,15 @@ namespace EE::Render
             CreateStaticSamplers();
         }
 
-        VulkanDevice::VulkanDevice( InitConfig config )
-            : RHIDevice( RHI::ERHIType::Vulkan ), m_deviceFrameCount( 0 )
+        VulkanDevice::VulkanDevice( Application* pApplication, InitConfig config )
+            : RHIDevice( RHI::ERHIType::Vulkan )
+            , m_pApplication( pApplication )
+	        , m_deviceFrameCount( 0 )
 		{
             m_pInstance = MakeShared<VulkanInstance>();
             EE_ASSERT( m_pInstance != nullptr );
 
-            m_pSurface = MakeShared<VulkanSurface>( m_pInstance );
+            m_pSurface = MakeShared<VulkanSurface>( m_pInstance, pApplication );
             EE_ASSERT( m_pSurface != nullptr );
 
             PickPhysicalDeviceAndCreate( config );

@@ -18,7 +18,7 @@ namespace EE
 
         private:
 
-            virtual void Initialize() override final;
+            virtual void Initialize( Application* pApplication ) override final;
             virtual void Shutdown() override final;
             virtual void UpdateState( Seconds deltaTime ) override final;
 

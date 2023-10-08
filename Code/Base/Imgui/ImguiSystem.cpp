@@ -19,8 +19,9 @@
 
 namespace EE::ImGuiX
 {
-    bool ImguiSystem::Initialize( Render::RenderDevice* pRenderDevice, Input::InputSystem* pInputSystem, bool enableViewports )
+    bool ImguiSystem::Initialize( Application* pApplication, Render::RenderDevice* pRenderDevice, Input::InputSystem* pInputSystem, bool enableViewports )
     {
+        m_pApplication = pApplication;
         m_pInputSystem = pInputSystem;
 
         //-------------------------------------------------------------------------

@@ -11,7 +11,7 @@ namespace EE::Input
 
     //-------------------------------------------------------------------------
 
-    bool InputSystem::Initialize()
+    bool InputSystem::Initialize( Application* pApplication )
     {
         // Create a keyboard and mouse device
         m_inputDevices.emplace_back( EE::New<KeyboardMouseInputDevice>() );
@@ -26,7 +26,7 @@ namespace EE::Input
 
         for ( auto pDevice : m_inputDevices )
         {
-            pDevice->Initialize();
+            pDevice->Initialize( pApplication );
         }
 
         return true;

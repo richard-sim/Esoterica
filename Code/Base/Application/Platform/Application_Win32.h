@@ -1,6 +1,7 @@
 #ifdef _WIN32
 #pragma once
 
+#include "Base/Application/Application.h"
 #include "Base/Application/ApplicationGlobalState.h"
 #include "Base/Esoterica.h"
 #include "Base/Types/String.h"
@@ -16,7 +17,7 @@ namespace EE
 
     //-------------------------------------------------------------------------
 
-    class EE_BASE_API Win32Application
+    class EE_BASE_API Win32Application : public Application
     {
     protected:
 
@@ -29,7 +30,7 @@ namespace EE
     public:
 
         Win32Application( HINSTANCE hInstance, char const* applicationName, int32_t iconResourceID, TBitFlags<InitOptions> options = TBitFlags<InitOptions>() );
-        virtual ~Win32Application();
+        virtual ~Win32Application() override;
 
         int32_t Run( int32_t argc, char** argv );
 
@@ -43,6 +44,9 @@ namespace EE
 
         // Get the application icon
         inline HICON GetIcon() const { return m_windowIcon; }
+
+        // Get the window handle
+        inline HWND GetWindowHandle() const { return m_windowHandle; }
 
     protected:
 
@@ -70,13 +74,6 @@ namespace EE
         // These function allows the application to read/write any layout/positioning specific settings it needs
         virtual void WriteLayoutSettings();
         virtual void ReadLayoutSettings();
-
-        // Initialize/Shutdown
-        virtual bool Initialize() = 0;
-        virtual bool Shutdown() = 0;
-
-        // The actual application loop
-        virtual bool ApplicationLoop() = 0;
 
         //-------------------------------------------------------------------------
 

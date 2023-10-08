@@ -30,6 +30,7 @@
 #include "Base/Resource/ResourceSystem.h"
 #include "Base/TypeSystem/TypeRegistry.h"
 #include "Base/Threading/TaskSystem.h"
+#include "Base/Application/Application.h"
 #include "Base/Systems.h"
 
 #include "Base/RenderGraph/RenderGraph.h"
@@ -54,7 +55,7 @@ namespace EE
 
     public:
 
-        bool InitializeCoreSystems( IniFile const& iniFile );
+        bool InitializeCoreSystems( Application* pApplication, IniFile const& iniFile );
         void ShutdownCoreSystems();
 
         bool InitializeModule();
@@ -93,6 +94,7 @@ namespace EE
         bool                                            m_moduleInitialized = false;
 
         // System
+        Application*                                    m_pApplication = nullptr;
         TaskSystem                                      m_taskSystem = TaskSystem( Threading::GetProcessorInfo().m_numPhysicalCores - 1 );
         TypeSystem::TypeRegistry                        m_typeRegistry;
         SystemRegistry                                  m_systemRegistry;

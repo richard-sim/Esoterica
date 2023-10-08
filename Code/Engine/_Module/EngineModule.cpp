@@ -86,8 +86,10 @@ namespace EE
 
     //-------------------------------------------------------------------------
 
-    bool EngineModule::InitializeCoreSystems( IniFile const& iniFile )
+    bool EngineModule::InitializeCoreSystems( Application* pApplication, IniFile const& iniFile )
     {
+        m_pApplication = pApplication;
+
         #if EE_DEVELOPMENT_TOOLS
         EntityModel::InitializeLogQueue();
         #endif
@@ -142,7 +144,7 @@ namespace EE
 
         m_taskSystem.Initialize();
         m_resourceSystem.Initialize( m_pResourceProvider );
-        m_inputSystem.Initialize();
+        m_inputSystem.Initialize(pApplication);
         Physics::Core::Initialize();
         m_physicsMaterialRegistry.Initialize();
 
@@ -151,7 +153,7 @@ namespace EE
         #endif
 
         m_pRenderDevice = EE::New<Render::RenderDevice>();
-        if ( !m_pRenderDevice->Initialize( iniFile ) )
+        if ( !m_pRenderDevice->Initialize( pApplication, iniFile ) )
         {
             EE_LOG_ERROR( "Render", nullptr, "Failed to create render device" );
             EE::Delete( m_pRenderDevice );
@@ -159,7 +161,7 @@ namespace EE
         }
 
         #if EE_DEVELOPMENT_TOOLS
-        m_imguiSystem.Initialize( m_pRenderDevice, &m_inputSystem, true );
+        m_imguiSystem.Initialize( pApplication, m_pRenderDevice, &m_inputSystem, true );
         #endif
 
         // Initialize and register renderers

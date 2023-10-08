@@ -109,7 +109,7 @@ namespace EE
     bool EditorApplication::Initialize()
     {
         Int2 const windowDimensions( ( m_windowRect.right - m_windowRect.left ), ( m_windowRect.bottom - m_windowRect.top ) );
-        if ( !m_engine.Initialize( windowDimensions ) )
+        if ( !m_engine.Initialize( this, windowDimensions ) )
         {
             return false;
         }

@@ -22,7 +22,7 @@ namespace EE::Input
 
         virtual DeviceCategory GetDeviceCategory() const override final { return DeviceCategory::KeyboardMouse; }
 
-        virtual void Initialize() override final;
+        virtual void Initialize( Application* pApplication ) override final;
         virtual void Shutdown() override final;
 
         virtual void UpdateState( Seconds deltaTime ) override final;

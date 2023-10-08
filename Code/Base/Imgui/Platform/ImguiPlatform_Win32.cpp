@@ -1,5 +1,6 @@
 #if _WIN32
 #include "ImguiPlatform_Win32.h"
+#include "Base/Application/Platform/Application_Win32.h"
 #include "Base/Imgui/ImguiSystem.h"
 #include "Base/ThirdParty/imgui/imgui.h"
 #include "Base/Input/InputSystem.h"
@@ -8,7 +9,6 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <tchar.h>
-#include "Base/Application/Platform/Application_Win32.h"
 
 //-------------------------------------------------------------------------
 
@@ -943,11 +943,13 @@ namespace EE::ImGuiX
     {
         ImGuiIO& io = ImGui::GetIO();
 
+        const Win32Application* const pApplication = static_cast<Win32Application*>( m_pApplication );
+
         //-------------------------------------------------------------------------
 
         auto pBackendData = EE::New<Platform::ImGui_ImplWin32_Data>();
 
-        pBackendData->hWnd = GetActiveWindow();
+        pBackendData->hWnd = pApplication->GetWindowHandle();
         pBackendData->WantUpdateHasGamepad = true;
         pBackendData->WantUpdateMonitors = true;
         pBackendData->LastMouseCursor = ImGuiMouseCursor_COUNT;

@@ -2052,6 +2052,9 @@
     <ClInclude Include="RenderGraph\RenderGraphNodeBuilder.h">
       <Filter>RenderGraph</Filter>
     </ClInclude>
+    <ClInclude Include="Application\Application.h">
+      <Filter>Application</Filter>
+    </ClInclude>
     <ClInclude Include="ThirdParty\bgfx\bgfx\include\bgfx\bgfx.h">
       <Filter>Render\Platform\BGFX\bgfx\include\bgfx</Filter>
     </ClInclude>
