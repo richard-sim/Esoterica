@@ -79,7 +79,9 @@ namespace EE
         bool const backButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_S );
         bool const leftButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_A );
         bool const rightButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_D );
-        bool const needsPositionUpdate = fwdButton || backButton || leftButton || rightButton;
+        bool const upButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_Q );
+        bool const downButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_E );
+        bool const needsPositionUpdate = fwdButton || backButton || leftButton || rightButton || upButton || downButton;
 
         if ( needsPositionUpdate )
         {
@@ -91,7 +93,24 @@ namespace EE
             if ( fwdButton ) { FB += 1.0f; }
             if ( backButton ) { FB -= 1.0f; }
 
-            m_pCameraComponent->MoveCamera( deltaTime, FB, LR, 0.0f );
+            float UD = 0;
+            if ( upButton ) { UD += 1.0f; }
+            if ( downButton ) { UD -= 1.0f; }
+
+            if ( pKeyboardState->IsShiftHeldDown() )
+            {
+                LR *= 0.1f;
+                FB *= 0.1f;
+                UD *= 0.1f;
+            }
+            else if ( pKeyboardState->IsCtrlHeldDown() )
+            {
+                LR *= 10.0f;
+                FB *= 10.0f;
+                UD *= 10.0f;
+            }
+
+            m_pCameraComponent->MoveCamera( deltaTime, FB, LR, UD );
         }
 
         // Orientation update

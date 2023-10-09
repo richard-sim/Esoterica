@@ -979,7 +979,7 @@ namespace EE
         if ( isVisible && isFocused )
         {
             auto& IO = ImGui::GetIO();
-            if ( IO.KeyCtrl && ImGui::IsKeyPressed( ImGuiKey_Z ) )
+            if ( IO.KeyCtrl && ImGui::IsKeyPressed( ImGuiKey_Z ) && !IO.KeyShift )
             {
                 if ( CanUndo() )
                 {
@@ -987,7 +987,8 @@ namespace EE
                 }
             }
 
-            if ( IO.KeyCtrl && ImGui::IsKeyPressed( ImGuiKey_Y ) )
+            if ( ( IO.KeyCtrl && ImGui::IsKeyPressed( ImGuiKey_Y ) ) ||
+                 ( IO.KeyCtrl && IO.KeyShift && ImGui::IsKeyPressed( ImGuiKey_Z) ) )
             {
                 if ( CanRedo() )
                 {

@@ -22,15 +22,18 @@ namespace EE
         Transform cameraTransform = GetWorldTransform();
         Vector const forwardDirection = cameraTransform.GetForwardVector();
         Vector const rightDirection = cameraTransform.GetRightVector();
+        Vector const upDirection = cameraTransform.GetUpVector();
 
         Vector const moveDelta = Vector( m_moveSpeed * deltaTime );
         Vector const deltaForward = spatialInput.GetSplatY() * moveDelta;
         Vector const deltaRight = spatialInput.GetSplatX() * moveDelta;
+        Vector const deltaUp = spatialInput.GetSplatZ() * moveDelta;
 
         // Calculate position delta
         Vector positionDelta = Vector::Zero;
         positionDelta = deltaRight * rightDirection;
         positionDelta += deltaForward * forwardDirection;
+        positionDelta += deltaUp * upDirection;
         positionDelta.SetW0();
 
         // Update camera transform
