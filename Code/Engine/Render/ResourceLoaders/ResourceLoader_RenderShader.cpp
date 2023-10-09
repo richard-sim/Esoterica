@@ -34,7 +34,7 @@ namespace EE::Render
 
         // Create shader
         m_pRenderDevice->LockDevice();
-        m_pRenderDevice->CreateVkShader( *pShaderResource );
+        m_pRenderDevice->CreateShader( *pShaderResource );
         m_pRenderDevice->UnlockDevice();
         pResourceRecord->SetResourceData( pShaderResource );
         return true;
@@ -48,7 +48,7 @@ namespace EE::Render
         if ( pShaderResource != nullptr )
         {
             m_pRenderDevice->LockDevice();
-            m_pRenderDevice->DestroyVkShader( *pShaderResource );
+            m_pRenderDevice->DestroyShader( *pShaderResource );
             m_pRenderDevice->UnlockDevice();
         }
 

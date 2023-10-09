@@ -7,12 +7,19 @@
 #include "Base/Types/String.h"
 #include "Base/Utils/Sort.h"
 
-#include "EngineTools/Render/ResourceCompilers/Platform/DxcShaderCompiler.h"
+#if defined(EE_DX11)
 
 // DX11 compile header
 #include <d3dcompiler.h>
+
+#elif defined(EE_VULKAN)
+
+#include "EngineTools/Render/ResourceCompilers/Platform/DxcShaderCompiler.h"
+
 // Spirv Reflection
 #include <spirv_cross/spirv_cross.hpp>
+
+#endif
 
 //-------------------------------------------------------------------------
 
@@ -59,6 +66,8 @@ namespace EE::Render
             return {};
         }
     }
+
+#if defined(EE_DX11)
 
     static bool GetCBufferDescs( ID3D11ShaderReflection* pShaderReflection, TVector<RenderBuffer>& cbuffers )
     {
@@ -218,8 +227,11 @@ namespace EE::Render
         return true;
     }
 
+#endif
+
     //-------------------------------------------------------------------------
 
+#if defined(EE_VULKAN)
     //static uint32_t SpirvTypeToShaderDataType( const spirv_cross::SPIRType& type )
     //{
     //    if ( type.basetype == spirv_cross::SPIRType::Float )
@@ -661,6 +673,8 @@ namespace EE::Render
         return true;
     }
 
+    #endif
+
     //-------------------------------------------------------------------------
 
     Resource::CompilationResult ShaderCompiler::CompileShader( Resource::CompileContext const& ctx, int32_t compilerVersion ) const
@@ -673,10 +687,20 @@ namespace EE::Render
 
         if ( resourceDescriptor.m_shaderBackendLanguage == ShaderBackendLanguage::DX11 )
         {
+            #if defined(EE_DX11)
+
             return CompileDX11Shader( ctx, resourceDescriptor, compilerVersion );
+
+            #else
+
+            return Error( "Unsupportedshader graphic backend" );
+
+            #endif
         }
         else if ( resourceDescriptor.m_shaderBackendLanguage == ShaderBackendLanguage::Vulkan )
         {
+            #if defined(EE_VULKAN)
+
             TSharedPtr<Shader> pShader = nullptr;
             Resource::CompilationResult result = CompileVulkanShader( ctx, resourceDescriptor, pShader );
             if ( result == Resource::CompilationResult::Failure )
@@ -691,12 +715,18 @@ namespace EE::Render
             }
 
             return WriteShaderToFile( ctx, pShader, compilerVersion );
+
+            #else
+
+            return Error( "Unsupported shader graphic backend" );
+
+            #endif
         }
-        else
-        {
-            return Error( "Unknown shader graphic backend" );
-        }
+
+        return Error( "Unknown shader graphic backend" );
     }
+
+    #if defined(EE_DX11)
 
     Resource::CompilationResult ShaderCompiler::CompileDX11Shader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const
     {
@@ -828,6 +858,10 @@ namespace EE::Render
         }
     }
 
+    #endif
+
+    #if defined(EE_VULKAN)
+
     Resource::CompilationResult ShaderCompiler::CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, TSharedPtr<Shader>& OutShader ) const
     {
         uint32_t shaderCompileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
@@ -951,6 +985,8 @@ namespace EE::Render
 
         return Resource::CompilationResult::Success;
     }
+
+    #endif
 
     //-------------------------------------------------------------------------
 

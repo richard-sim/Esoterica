@@ -351,6 +351,9 @@ namespace EE
 
         m_renderPipelineRegistry.Initialize( m_systemRegistry );
         m_renderGraph.AttachToPipelineRegistry( m_renderPipelineRegistry );
+
+        #if defined(EE_VULKAN)
+
         RHI::RHIDevice* pDevice = m_pRenderDevice->GetRHIDevice();
 
         auto const frameIndex = pDevice->BeginFrame();
@@ -413,6 +416,8 @@ namespace EE
         m_renderGraph.EndFrame();
         pDevice->EndFrame();
 
+        #endif
+
         //-------------------------------------------------------------------------
 
         m_moduleInitialized = true;
@@ -426,11 +431,16 @@ namespace EE
 
         //-------------------------------------------------------------------------
 
+        #if defined(EE_VULKAN)
+
         m_pRenderDevice->GetRHIDevice()->DestroyRenderPass( m_pImguiRenderPass );
         m_renderPipelineRegistry.DestroyAllPipelineState( m_pRenderDevice->GetRHIDevice() );
         m_pImguiRenderPass = nullptr;
 
         m_renderGraph.ClearAllResources( m_pRenderDevice->GetRHIDevice() );
+
+        #endif
+
         m_renderPipelineRegistry.Shutdown();
 
         // Unregister resource loaders

@@ -72,9 +72,6 @@ namespace EE::Render
         void CreateShader( Shader& shader );
         void DestroyShader( Shader& shader );
 
-        void CreateVkShader( Shader& shader );
-        void DestroyVkShader( Shader& shader );
-
         // Buffers
         void CreateBuffer( RenderBuffer& buffer, void const* pInitializationData = nullptr );
         void ResizeBuffer( RenderBuffer& buffer, uint32_t newSize );

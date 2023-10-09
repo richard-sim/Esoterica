@@ -14,7 +14,7 @@
     <OutDir>$(EE_BUILD_DIR)$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(EE_BUILD_DIR)_Temp\$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
     <EE_GRAPHIC_DX11>True</EE_GRAPHIC_DX11>
-    <EE_GRAPHIC_VULKAN>True</EE_GRAPHIC_VULKAN>
+    <EE_GRAPHIC_VULKAN>False</EE_GRAPHIC_VULKAN>
     <EE_GRAPHIC_BGFX>True</EE_GRAPHIC_BGFX>
   </PropertyGroup>
   <ImportGroup Label="PropertySheets" Condition="$(EE_GRAPHIC_DX11) == 'True'">
