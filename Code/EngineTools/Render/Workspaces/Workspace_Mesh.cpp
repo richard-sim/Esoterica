@@ -7,6 +7,7 @@
 #include "Engine/Entity/EntityWorld.h"
 #include "Engine/UpdateContext.h"
 #include "Base/Math/MathUtils.h"
+#include "Base/Input/InputSystem.h"
 
 //-------------------------------------------------------------------------
 // Shared
@@ -112,14 +113,21 @@ namespace EE::Render
 
         //-------------------------------------------------------------------------
 
+        auto pInputSystem = context.GetSystem<Input::InputSystem>();
+        EE_ASSERT( pInputSystem != nullptr );
+
+        auto const pKeyboardState = pInputSystem->GetKeyboardState();
+
         if ( m_isViewportFocused && m_pPreviewEntity != nullptr )
         {
-            if ( ImGui::IsKeyPressed( ImGuiKey_Backspace ) )
+            bool const resetButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_Backspace );
+            if ( resetButton )
             {
                 ResetCameraView();
             }
 
-            if ( ImGui::IsKeyPressed( ImGuiKey_F ) )
+            bool const focusButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_F );
+            if ( focusButton )
             {
                 FocusCameraView( m_pPreviewEntity );
             }
@@ -393,14 +401,21 @@ namespace EE::Render
 
         //-------------------------------------------------------------------------
 
+        auto pInputSystem = context.GetSystem<Input::InputSystem>();
+        EE_ASSERT( pInputSystem != nullptr );
+
+        auto const pKeyboardState = pInputSystem->GetKeyboardState();
+
         if ( m_isViewportFocused && m_pPreviewEntity != nullptr )
         {
-            if ( ImGui::IsKeyPressed( ImGuiKey_Backspace ) )
+            bool const resetButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_Backspace );
+            if ( resetButton )
             {
                 ResetCameraView();
             }
 
-            if ( ImGui::IsKeyPressed( ImGuiKey_F ) )
+            bool const focusButton = pKeyboardState->IsHeldDown( Input::KeyboardButton::Key_F );
+            if ( focusButton )
             {
                 FocusCameraView( m_pPreviewEntity );
             }
