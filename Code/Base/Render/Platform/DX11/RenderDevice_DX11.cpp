@@ -125,11 +125,18 @@ namespace EE::Render
 
     void RenderDevice::Shutdown()
     {
-        if ( m_pRHIDevice != nullptr )
+        #if defined(EE_VULKAN)
+        if (m_pRHISwapchain != nullptr )
         {
             EE::Delete( m_pRHISwapchain );
-            EE::Delete( m_pRHIDevice );
+            m_pRHISwapchain = nullptr;
         }
+        if ( m_pRHIDevice != nullptr )
+        {
+            EE::Delete( m_pRHIDevice );
+            m_pRHIDevice = nullptr;
+        }
+        #endif
 
         CoreResources::Shutdown( this );
 
@@ -453,6 +460,21 @@ namespace EE::Render
     {
         EE_ASSERT( IsInitialized() && !shader.IsValid() );
 
+        #if defined(EE_VULKAN)
+
+        auto createDesc = RHI::RHIShaderCreateDesc{ shader.m_byteCode };
+        auto pShader = m_pRHIDevice->CreateShader( createDesc );
+        shader.m_shaderHandle.m_pData = nullptr;
+        shader.m_rhiShader = pShader;
+
+        // remove shader code immediately
+        auto emptyBlob = Blob{};
+        eastl::swap( shader.m_byteCode, emptyBlob );
+
+        EE_ASSERT( shader.m_byteCode.capacity() == 0 );
+
+        #else
+
         if ( shader.GetPipelineStage() == PipelineStage::Vertex )
         {
             ID3D11VertexShader* pVertexShader;
@@ -497,12 +519,22 @@ namespace EE::Render
             EE_ASSERT( cbuffer.IsValid() );
         }
 
+        #endif
+
         EE_ASSERT( shader.IsValid() );
     }
 
     void RenderDevice::DestroyShader( Shader& shader )
     {
         EE_ASSERT( IsInitialized() && shader.IsValid() && shader.GetPipelineStage() != PipelineStage::None );
+
+        #if defined(EE_VULKAN)
+
+        RHI::RHIShader*& pShader = reinterpret_cast<RHI::RHIShader*&>( shader.m_rhiShader );
+        m_pRHIDevice->DestroyShader( pShader );
+        pShader = nullptr;
+
+        #else
 
         if ( shader.GetPipelineStage() == PipelineStage::Vertex )
         {
@@ -532,32 +564,8 @@ namespace EE::Render
             DestroyBuffer( cbuffer );
         }
         shader.m_cbuffers.clear();
-    }
 
-    void RenderDevice::CreateVkShader( Shader& shader )
-    {
-        // TODO: temporary, move this to vulkan render device
-        EE_ASSERT( IsInitialized() && !shader.IsValid() );
-
-        auto createDesc = RHI::RHIShaderCreateDesc{ shader.m_byteCode };
-        auto pShader = m_pRHIDevice->CreateShader( createDesc );
-        shader.m_shaderHandle.m_pData = nullptr;
-        shader.m_rhiShader = pShader;
-
-        // remove shader code immediately
-        auto emptyBlob = Blob{};
-        eastl::swap( shader.m_byteCode, emptyBlob );
-
-        EE_ASSERT( shader.m_byteCode.capacity() == 0 );
-    }
-
-    void RenderDevice::DestroyVkShader( Shader& shader )
-    {
-        EE_ASSERT( IsInitialized() && shader.IsValid() );
-
-        RHI::RHIShader*& pShader = reinterpret_cast<RHI::RHIShader*&>( shader.m_rhiShader );
-        m_pRHIDevice->DestroyShader( pShader );
-        pShader = nullptr;
+        #endif
     }
 
     //-------------------------------------------------------------------------

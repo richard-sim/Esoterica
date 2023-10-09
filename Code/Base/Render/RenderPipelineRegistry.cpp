@@ -140,7 +140,6 @@ namespace EE::Render
 	{
 		EE_ASSERT( Threading::IsMainThread() );
 		EE_ASSERT( m_isInitialized );
-        EE_ASSERT( pDevice != nullptr );
 
         // Update loading
         //-------------------------------------------------------------------------
@@ -150,7 +149,11 @@ namespace EE::Render
         // Registered loaded pipelines to create actual RHI resources
         //-------------------------------------------------------------------------
 
-        for ( auto& rasterEntry : m_waitToRegisteredRasterPipelines )
+        #if defined(EE_VULKAN)
+
+	    EE_ASSERT( pDevice != nullptr );
+
+	    for ( auto& rasterEntry : m_waitToRegisteredRasterPipelines )
         {
             // double checked again in case pipeline entry is unloaded by chance.
             if ( rasterEntry->IsReadyToCreatePipelineLayout() )
@@ -167,7 +170,9 @@ namespace EE::Render
             m_waitToRegisteredRasterPipelines.clear();
             eastl::swap( m_waitToRegisteredRasterPipelines, m_retryRasterPipelineCaches );
         }
-	}
+
+	    #endif
+    }
 
     void PipelineRegistry::DestroyAllPipelineState( RHI::RHIDevice* pDevice )
     {

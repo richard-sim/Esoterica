@@ -27,12 +27,18 @@ namespace EE::Render
 
     private:
 
+        #if defined(EE_DX11)
+
         Resource::CompilationResult CompileDX11Shader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, int32_t compilerVersion ) const;
+
+        #elif defined(EE_VULKAN)
 
         Resource::CompilationResult CompileVulkanShader( Resource::CompileContext const& ctx, ShaderResourceDescriptor const& desc, TSharedPtr<Shader>& OutShader ) const;
         Resource::CompilationResult ReflectVulkanShader( Resource::CompileContext const& ctx, TSharedPtr<Shader>& pShader ) const;
 
         Resource::CompilationResult WriteShaderToFile( Resource::CompileContext const& ctx, TSharedPtr<Shader> const& pShader, int32_t compilerVersion ) const;
+
+        #endif
     };
 
     //-------------------------------------------------------------------------
