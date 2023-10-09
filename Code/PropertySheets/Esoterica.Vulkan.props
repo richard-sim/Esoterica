@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <EE_VULKAN_INCLUDED>True</EE_VULKAN_INCLUDED>
+    <EE_VULKAN_INCLUDED>False</EE_VULKAN_INCLUDED>
     <EE_VK_PATH>$(VULKAN_SDK)</EE_VK_PATH>
   </PropertyGroup>
   <ItemDefinitionGroup>
