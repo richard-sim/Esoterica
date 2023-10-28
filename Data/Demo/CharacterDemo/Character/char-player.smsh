@@ -1,0 +1,9 @@
+{
+    "TypeID": "EE::Render::SkeletalMeshResourceDescriptor",
+    "m_meshPath": "data://demo/characterdemo/character/char-player.fbx",
+    "m_meshesToInclude": [],
+    "m_materials": [
+        "data://demo/characterdemo/character/char-player-soldier.mtrl"
+    ],
+    "m_mergeSectionsByMaterial": "True"
+}

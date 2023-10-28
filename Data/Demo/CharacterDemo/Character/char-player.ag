@@ -1,0 +1,215 @@
+{
+    "TypeID": "EE::Animation::GraphResourceDescriptor",
+    "GraphDefinition": {
+        "RootGraph": {
+            "TypeData": {
+                "TypeID": "EE::Animation::FlowGraph",
+                "m_ID": "b8f000c4-59c6-174d-819b-e3b9f58df831",
+                "m_viewOffset": "-543.000000,-406.000000",
+                "m_viewScaleFactor": "0.850000",
+                "m_type": "BlendTree"
+            },
+            "ViewOffsetX": -543.0,
+            "ViewOffsetY": -406.0,
+            "Nodes": [
+                {
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphNodes::PoseResultToolsNode",
+                        "m_ID": "fe3b4d33-6783-124e-b653-75e38a590549",
+                        "m_canvasPosition": "685.000000,-12.000000",
+                        "m_valueType": "Pose"
+                    },
+                    "InputPins": [
+                        {
+                            "ID": "1881d9be-21bd-7a43-a4e7-7c308b0216f7",
+                            "Name": "Out",
+                            "Type": "Pose",
+                            "IsDynamic": false
+                        }
+                    ],
+                    "OutputPins": []
+                },
+                {
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphNodes::FloatControlParameterToolsNode",
+                        "m_ID": "6e762b60-099f-7645-acbf-c5c25db046ee",
+                        "m_canvasPosition": "0.000000,0.000000",
+                        "m_name": "speed",
+                        "m_parameterCategory": "",
+                        "m_previewStartValue": "0.000000",
+                        "m_previewMin": "0.000000",
+                        "m_previewMax": "1.000000"
+                    },
+                    "InputPins": [],
+                    "OutputPins": [
+                        {
+                            "ID": "b6d08109-94da-aa41-ae9b-4c33bfa8349d",
+                            "Name": "Value",
+                            "Type": "Float",
+                            "AllowMultipleConnections": true
+                        }
+                    ]
+                },
+                {
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphNodes::FloatParameterReferenceToolsNode",
+                        "m_ID": "0c379b89-0ec8-5f4f-ba8b-30fbe08f9f7d",
+                        "m_canvasPosition": "-461.353027,-115.176468",
+                        "m_parameterUUID": "6e762b60-099f-7645-acbf-c5c25db046ee",
+                        "m_parameterValueType": "Float",
+                        "m_parameterName": "speed",
+                        "m_parameterCategory": ""
+                    },
+                    "InputPins": [],
+                    "OutputPins": [
+                        {
+                            "ID": "91ac63f0-0808-ab44-96bd-a5cc3bf625b2",
+                            "Name": "Value",
+                            "Type": "Float",
+                            "AllowMultipleConnections": true
+                        }
+                    ]
+                },
+                {
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphNodes::AnimationClipToolsNode",
+                        "m_ID": "4bd3dac1-fb45-274e-9f69-de8a69d42f6c",
+                        "m_canvasPosition": "-503.000000,-402.000000",
+                        "m_name": "char-player-idle",
+                        "m_defaultResourceID": "data://demo/characterdemo/character/char-player-idle.anim",
+                        "m_overrides": [],
+                        "m_sampleRootMotion": "True",
+                        "m_allowLooping": "True"
+                    },
+                    "InputPins": [
+                        {
+                            "ID": "66229625-a21e-ba4a-a492-232890ebe08f",
+                            "Name": "Play In Reverse",
+                            "Type": "Bool",
+                            "IsDynamic": false
+                        },
+                        {
+                            "ID": "c249e866-7ce1-e14d-a06e-f10792b12106",
+                            "Name": "Reset Time",
+                            "Type": "Bool",
+                            "IsDynamic": false
+                        }
+                    ],
+                    "OutputPins": [
+                        {
+                            "ID": "88a418e1-3b5c-0745-8e57-c32358b9bffb",
+                            "Name": "Pose",
+                            "Type": "Pose",
+                            "AllowMultipleConnections": false
+                        }
+                    ]
+                },
+                {
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphNodes::AnimationClipToolsNode",
+                        "m_ID": "b804a047-7bea-2c4a-9bdb-2055d1fe9c0b",
+                        "m_canvasPosition": "-535.000000,227.000000",
+                        "m_name": "char-player-run",
+                        "m_defaultResourceID": "data://demo/characterdemo/character/char-player-run.anim",
+                        "m_overrides": [],
+                        "m_sampleRootMotion": "True",
+                        "m_allowLooping": "True"
+                    },
+                    "InputPins": [
+                        {
+                            "ID": "d2682799-159c-914d-9860-d605eb99ee49",
+                            "Name": "Play In Reverse",
+                            "Type": "Bool",
+                            "IsDynamic": false
+                        },
+                        {
+                            "ID": "3aded40c-b165-3640-b01d-1187e2f83d35",
+                            "Name": "Reset Time",
+                            "Type": "Bool",
+                            "IsDynamic": false
+                        }
+                    ],
+                    "OutputPins": [
+                        {
+                            "ID": "a06ebe19-6543-b549-9452-09cd9779864d",
+                            "Name": "Pose",
+                            "Type": "Pose",
+                            "AllowMultipleConnections": false
+                        }
+                    ]
+                },
+                {
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphNodes::ParameterizedAnimationClipSelectorToolsNode",
+                        "m_ID": "36b644bf-fd5b-cc45-b0d7-8a202d497d42",
+                        "m_canvasPosition": "119.000000,-158.000000",
+                        "m_name": "Selector: Parameterized Clip Selector_0"
+                    },
+                    "InputPins": [
+                        {
+                            "ID": "07d8c978-7515-f843-8c12-8a0f982dc352",
+                            "Name": "Parameter",
+                            "Type": "Float",
+                            "IsDynamic": false
+                        },
+                        {
+                            "ID": "07bc4688-1c30-5d49-8418-d7a84f2752f7",
+                            "Name": "Option 0",
+                            "Type": "Pose",
+                            "IsDynamic": false
+                        },
+                        {
+                            "ID": "c3d155e0-62ae-ed44-884f-01c4a2c751f4",
+                            "Name": "Option 1",
+                            "Type": "Pose",
+                            "IsDynamic": false
+                        }
+                    ],
+                    "OutputPins": [
+                        {
+                            "ID": "bd7a3644-b7b3-8e41-b19d-67aeeb074778",
+                            "Name": "Pose",
+                            "Type": "Pose",
+                            "AllowMultipleConnections": false
+                        }
+                    ]
+                }
+            ],
+            "Connections": [
+                {
+                    "StartNode": "4bd3dac1-fb45-274e-9f69-de8a69d42f6c",
+                    "StartPin": "88a418e1-3b5c-0745-8e57-c32358b9bffb",
+                    "EndNode": "36b644bf-fd5b-cc45-b0d7-8a202d497d42",
+                    "EndPin": "07bc4688-1c30-5d49-8418-d7a84f2752f7"
+                },
+                {
+                    "StartNode": "0c379b89-0ec8-5f4f-ba8b-30fbe08f9f7d",
+                    "StartPin": "91ac63f0-0808-ab44-96bd-a5cc3bf625b2",
+                    "EndNode": "36b644bf-fd5b-cc45-b0d7-8a202d497d42",
+                    "EndPin": "07d8c978-7515-f843-8c12-8a0f982dc352"
+                },
+                {
+                    "StartNode": "36b644bf-fd5b-cc45-b0d7-8a202d497d42",
+                    "StartPin": "bd7a3644-b7b3-8e41-b19d-67aeeb074778",
+                    "EndNode": "fe3b4d33-6783-124e-b653-75e38a590549",
+                    "EndPin": "1881d9be-21bd-7a43-a4e7-7c308b0216f7"
+                },
+                {
+                    "StartNode": "b804a047-7bea-2c4a-9bdb-2055d1fe9c0b",
+                    "StartPin": "a06ebe19-6543-b549-9452-09cd9779864d",
+                    "EndNode": "36b644bf-fd5b-cc45-b0d7-8a202d497d42",
+                    "EndPin": "c3d155e0-62ae-ed44-884f-01c4a2c751f4"
+                }
+            ],
+            "GraphType": 0
+        },
+        "Variations": [
+            {
+                "TypeID": "EE::Animation::Variation",
+                "m_ID": "Default",
+                "m_parentID": "",
+                "m_skeleton": "data://demo/characterdemo/character/char-player.skel"
+            }
+        ]
+    }
+}

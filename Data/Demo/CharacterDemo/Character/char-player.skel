@@ -1,0 +1,8 @@
+{
+    "TypeID": "EE::Animation::SkeletonResourceDescriptor",
+    "m_skeletonPath": "data://demo/characterdemo/character/char-player.fbx",
+    "m_skeletonRootBoneName": "spine",
+    "m_previewMesh": "data://demo/characterdemo/character/char-player.smsh",
+    "m_boneMaskDefinitions": [],
+    "m_highLODBones": []
+}

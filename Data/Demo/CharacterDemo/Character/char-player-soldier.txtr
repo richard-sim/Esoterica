@@ -1,0 +1,6 @@
+{
+    "TypeID": "EE::Render::TextureResourceDescriptor",
+    "m_path": "data://demo/characterdemo/character/soldier-tex.png",
+    "m_type": "Default",
+    "m_name": "char-player-soldier"
+}

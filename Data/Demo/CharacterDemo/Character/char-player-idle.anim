@@ -1,0 +1,16 @@
+{
+    "TypeID": "EE::Animation::AnimationClipResourceDescriptor",
+    "m_animationPath": "data://demo/characterdemo/character/char-player-idle.fbx",
+    "m_skeleton": "data://demo/characterdemo/character/char-player.skel",
+    "m_animationName": "idle",
+    "m_rootMotionBoneID": "",
+    "m_limitFrameRange": "2147483647,-2147483648",
+    "m_regenerateRootMotion": "True",
+    "m_rootMotionGenerationRestrictToHorizontalPlane": "False",
+    "m_rootMotionGenerationBoneID": "spine",
+    "m_rootMotionGenerationPreRotation": "0.000000,0.000000,0.000000",
+    "m_additiveType": "None",
+    "m_additiveBaseAnimation": "",
+    "m_additiveBaseFrameIndex": "0",
+    "TimelineTracks": []
+}

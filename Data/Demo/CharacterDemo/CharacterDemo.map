@@ -1,0 +1,105 @@
+{
+    "TypeID": "EE::EntityModel::EntityMapDescriptor",
+    "Entities": [
+        {
+            "Name": "floor",
+            "Components": [
+                {
+                    "Name": "Static Mesh Component",
+                    "TypeData": {
+                        "TypeID": "EE::Render::StaticMeshComponent",
+                        "m_name": "Static Mesh Component",
+                        "m_mesh": "data://demo/characterdemo/floor/floor.msh"
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "lightDir",
+            "Components": [
+                {
+                    "Name": "Directional Light Component",
+                    "TypeData": {
+                        "TypeID": "EE::Render::DirectionalLightComponent",
+                        "m_name": "Directional Light Component",
+                        "m_transform": "-165.000000,0.000000,-0.000000,0.000000,0.000000,5.000000,1.000000",
+                        "m_intensity": "2500.000000",
+                        "m_shadowed": "True"
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "lightSpot",
+            "Components": [
+                {
+                    "Name": "Spot Light Component",
+                    "TypeData": {
+                        "TypeID": "EE::Render::SpotLightComponent",
+                        "m_name": "Spot Light Component",
+                        "m_transform": "135.000000,-0.000000,0.000000,0.000000,-2.000000,5.000000,1.000000",
+                        "m_intensity": "2500.000000",
+                        "m_shadowed": "True",
+                        "m_innerUmbraAngle": "30.000000",
+                        "m_radius": "100.000000"
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "skybox",
+            "Components": [
+                {
+                    "Name": "Global Environment Map Component",
+                    "TypeData": {
+                        "TypeID": "EE::Render::GlobalEnvironmentMapComponent",
+                        "m_name": "Global Environment Map Component",
+                        "m_skyboxTexture": "data://demo/characterdemo/skybox/skybox.cbmp",
+                        "m_skyboxRadianceTexture": "data://demo/characterdemo/skybox/skybox.cbmp",
+                        "m_exposure": "0.000000"
+                    }
+                }
+            ]
+        },
+        {
+            "Name": "charplayersoldier",
+            "Components": [
+                {
+                    "Name": "Character Component",
+                    "TypeData": {
+                        "TypeID": "EE::Physics::CharacterComponent",
+                        "m_name": "Character Component",
+                        "m_collisionSettings/m_category": "Character"
+                    }
+                },
+                {
+                    "Name": "Character Mesh Component",
+                    "SpatialParent": "Character Component",
+                    "TypeData": {
+                        "TypeID": "EE::Render::CharacterMeshComponent",
+                        "m_name": "Character Mesh Component",
+                        "m_mesh": "data://demo/characterdemo/character/char-player.smsh",
+                        "m_skeleton": "data://demo/characterdemo/character/char-player.skel"
+                    }
+                },
+                {
+                    "Name": "Graph Component",
+                    "TypeData": {
+                        "TypeID": "EE::Animation::GraphComponent",
+                        "m_name": "Graph Component",
+                        "m_pGraphVariation": "data://demo/characterdemo/character/char-player@default.agv",
+                        "m_applyRootMotionToEntity": "True"
+                    }
+                }
+            ],
+            "Systems": [
+                {
+                    "TypeID": "EE::Animation::AnimationSystem"
+                }
+            ]
+        },
+        {
+            "Name": "GameSystems"
+        }
+    ]
+}

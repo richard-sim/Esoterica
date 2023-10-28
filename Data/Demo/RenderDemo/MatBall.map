@@ -2,15 +2,16 @@
     "TypeID": "EE::EntityModel::EntityMapDescriptor",
     "Entities": [
         {
-            "Name": "Floor",
+            "Name": "MatBallCopper 000",
             "Components": [
                 {
-                    "Name": "FloorMesh",
+                    "Name": "MatBallMeshCopper",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_name": "FloorMesh",
-                        "m_transform": "0.000000,-0.000000,0.000000,0.000000,0.000000,-0.222681,1.000000",
-                        "m_mesh": "data://demo/renderdemo/floor/floor.msh"
+                        "m_name": "MatBallMeshCopper",
+                        "m_transform": "-0.000000,-0.000000,180.000000,0.000000,0.000000,2.000000,2.000000",
+                        "m_materialOverrides/0": "data://demo/renderdemo/materials/copper.mtrl",
+                        "m_mesh": "data://demo/renderdemo/matball/matball.msh"
                     }
                 }
             ]
@@ -23,7 +24,7 @@
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
                         "m_name": "MatBallMeshBronze",
-                        "m_transform": "0.000000,-0.000000,0.000100,-0.000000,0.000000,2.000000,1.000000",
+                        "m_transform": "-0.000000,-0.000000,180.000000,-5.000000,0.000000,2.000000,1.000000",
                         "m_materialOverrides/0": "data://demo/renderdemo/materials/bronze.mtrl",
                         "m_localScale": "2.000000,2.000000,2.000000",
                         "m_mesh": "data://demo/renderdemo/matball/matball.msh"
@@ -39,7 +40,7 @@
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
                         "m_name": "MatBallMeshCopper",
-                        "m_transform": "0.000000,-0.000000,0.000100,5.000000,0.000000,2.000000,1.000000",
+                        "m_transform": "-0.000000,-0.000000,180.000000,5.000000,0.000000,2.000000,1.000000",
                         "m_materialOverrides/0": "data://demo/renderdemo/materials/copper.mtrl",
                         "m_localScale": "2.000000,2.000000,2.000000",
                         "m_mesh": "data://demo/renderdemo/matball/matball.msh"
@@ -55,7 +56,7 @@
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
                         "m_name": "MatBallMeshOldIron",
-                        "m_transform": "0.000000,-0.000000,0.000100,10.000000,0.000000,2.000000,1.000000",
+                        "m_transform": "-0.000000,-0.000000,180.000000,10.000000,0.000000,2.000000,1.000000",
                         "m_materialOverrides/0": "data://demo/renderdemo/materials/old_iron.mtrl",
                         "m_localScale": "2.000000,2.000000,2.000000",
                         "m_mesh": "data://demo/renderdemo/matball/matball.msh"
@@ -71,7 +72,7 @@
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
                         "m_name": "MatBallMeshScratchedGold",
-                        "m_transform": "0.000000,-0.000000,0.000100,15.000000,0.000000,2.000000,1.000000",
+                        "m_transform": "-0.000000,-0.000000,180.000000,15.000000,0.000000,2.000000,1.000000",
                         "m_materialOverrides/0": "data://demo/renderdemo/materials/scratched_gold.mtrl",
                         "m_localScale": "2.000000,2.000000,2.000000",
                         "m_mesh": "data://demo/renderdemo/matball/matball.msh"
@@ -89,7 +90,7 @@
                         "m_name": "GlobalEnvMapComp",
                         "m_skyboxTexture": "data://demo/renderdemo/matball/skybox.cbmp",
                         "m_skyboxRadianceTexture": "data://demo/renderdemo/matball/skybox.cbmp",
-                        "m_skyboxIntensity": "2.000000"
+                        "m_exposure": "0.000000"
                     }
                 }
             ]
@@ -176,16 +177,15 @@
             ]
         },
         {
-            "Name": "MatBallCopper 000",
+            "Name": "Floor",
             "Components": [
                 {
-                    "Name": "MatBallMeshCopper",
+                    "Name": "FloorMesh",
                     "TypeData": {
                         "TypeID": "EE::Render::StaticMeshComponent",
-                        "m_name": "MatBallMeshCopper",
-                        "m_transform": "0.000000,-0.000000,0.000100,0.197349,0.000000,2.000000,2.000000",
-                        "m_materialOverrides/0": "data://demo/renderdemo/materials/copper.mtrl",
-                        "m_mesh": "data://demo/renderdemo/matball/matball.msh"
+                        "m_name": "FloorMesh",
+                        "m_transform": "0.000000,-0.000000,0.000000,0.000000,0.000000,-0.050000,1.000000",
+                        "m_mesh": "data://demo/renderdemo/floor/floor.msh"
                     }
                 }
             ]

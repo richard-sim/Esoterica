@@ -1,0 +1,5 @@
+{
+    "TypeID": "EE::Animation::GraphVariationResourceDescriptor",
+    "m_graphPath": "data://demo/characterdemo/character/char-player.ag",
+    "m_variationID": "Default"
+}

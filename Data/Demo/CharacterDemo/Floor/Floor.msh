@@ -1,9 +1,9 @@
 {
     "TypeID": "EE::Render::StaticMeshResourceDescriptor",
-    "m_meshPath": "data://demo/renderdemo/floor/floor.fbx",
+    "m_meshPath": "data://demo/characterdemo/floor/floor.fbx",
     "m_meshesToInclude": [],
     "m_materials": [
-        "data://demo/renderdemo/floor/floor.mtrl"
+        "data://demo/characterdemo/floor/floor.mtrl"
     ],
     "m_mergeSectionsByMaterial": "True",
     "m_scale": "1.000000,1.000000,1.000000"

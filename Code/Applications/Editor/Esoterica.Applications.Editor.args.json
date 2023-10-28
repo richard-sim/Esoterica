@@ -3,6 +3,18 @@
   "Id": "d6bdd49c-ef46-4637-844a-4ffdd6a25dc5",
   "Items": [
     {
+      "Id": "5cfc3c5f-8762-4982-ba69-3b986e86beac",
+      "Command": "-map data://demo/renderdemo/matball.map"
+    },
+    {
+      "Id": "3144d4fa-c73f-470a-8cd2-045d7636faf5",
+      "Command": "-map data://demo/characterdemo/characterdemo.map"
+    },
+    {
+      "Id": "4e2209a4-90e7-4b3b-91a1-a38036ec40a1",
+      "Command": "-map data://editor/editormap.map"
+    },
+    {
       "Id": "a49018a4-25fb-495f-9d0f-f8b9a787430c",
       "Command": "-map data://citadel/CitadelTest.map"
     },
