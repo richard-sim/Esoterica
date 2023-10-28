@@ -86,7 +86,7 @@ namespace EE::Fbx
             auto const T = fbxMatrix.GetT();
             auto const S = fbxMatrix.GetS();
 
-            EE_ASSERT( Math::IsNearEqual( S[0], S[1] ) && Math::IsNearEqual( S[1], S[2] ) );
+            EE_ASSERT( Math::IsNearEqual( S[0], S[1], S[0] ) && Math::IsNearEqual( S[1], S[2], S[0] ) );
 
             auto const rotation = Quaternion( (float) Q[0], (float) Q[1], (float) Q[2], (float) Q[3] ).GetNormalized();
             auto const translation = Vector( (float) T[0], (float) T[1], (float) T[2] );
@@ -102,7 +102,7 @@ namespace EE::Fbx
             auto const T = fbxMatrix.GetT();
             auto const S = fbxMatrix.GetS();
 
-            EE_ASSERT( S[0] == S[1] && S[1] == S[2] );
+            EE_ASSERT( Math::IsNearEqual( S[0], S[1], S[0] ) && Math::IsNearEqual( S[1], S[2], S[0] ) );
 
             auto const rotation = Quaternion( (float) Q[0], (float) Q[1], (float) Q[2], (float) Q[3] ).GetNormalized();
             auto const translation = Vector( (float) T[0] * m_scaleConversionMultiplier, (float) T[1] * m_scaleConversionMultiplier, (float) T[2] * m_scaleConversionMultiplier );
