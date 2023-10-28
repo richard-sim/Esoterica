@@ -338,7 +338,7 @@ namespace EE::EntityModel
 
     bool Serializer::SerializeEntityMap( TypeSystem::TypeRegistry const& typeRegistry, EntityMap const* pMap, SerializedEntityCollection& outCollection )
     {
-        EE_ASSERT( pMap->IsLoaded() );
+        EE_ASSERT( pMap->IsLoaded() || pMap->IsTransientMap() );
         EE_ASSERT( pMap->m_entitiesToLoad.empty() && pMap->m_entitiesToRemove.empty() );
         EE_ASSERT( pMap->m_entitiesToHotReload.empty() );
 
